@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\GMS.DB\GMS.DB.csproj" />
     <ProjectReference Include="..\..\GMS.Models\GMS.Models.csproj" />
     <ProjectReference Include="..\..\GMS.Repositories\GMS.Repositories.csproj" />
     <ProjectReference Include="..\..\GMS.Services\GMS.Services.csproj" />
