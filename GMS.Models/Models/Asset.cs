@@ -6,12 +6,11 @@ using System.Threading.Tasks;
 
 namespace GMS.Models.Models
 {
-    public class Employee
+    public class Asset
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public string Position { get; set; }
-        public decimal Salary { get; set; }
-        public ICollection<Attendance> Attendances { get; set; }
+        public decimal Value { get; set; }
+        public DateTime PurchaseDate { get; set; }
     }
 }
