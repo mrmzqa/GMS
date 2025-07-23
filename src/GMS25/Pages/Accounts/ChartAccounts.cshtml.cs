@@ -7,6 +7,7 @@ namespace GMS25.Pages.Accounts
     {
         public void OnGet()
         {
+
         }
     }
 }
