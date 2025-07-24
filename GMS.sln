@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36221.1 d17.14
+VisualStudioVersion = 17.14.36221.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GMS25", "src\GMS25\GMS25.csproj", "{60DEE730-DF2A-4080-A97F-8CEC00E9DBAD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GMS.Repositories", "GMS.Repositories\GMS.Repositories.csproj", "{DF7E3849-9D9E-4648-9F96-0C7F1D2D98C4}"
 EndProject
@@ -21,10 +19,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{60DEE730-DF2A-4080-A97F-8CEC00E9DBAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{60DEE730-DF2A-4080-A97F-8CEC00E9DBAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{60DEE730-DF2A-4080-A97F-8CEC00E9DBAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{60DEE730-DF2A-4080-A97F-8CEC00E9DBAD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DF7E3849-9D9E-4648-9F96-0C7F1D2D98C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DF7E3849-9D9E-4648-9F96-0C7F1D2D98C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF7E3849-9D9E-4648-9F96-0C7F1D2D98C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -46,7 +40,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{60DEE730-DF2A-4080-A97F-8CEC00E9DBAD} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{DF7E3849-9D9E-4648-9F96-0C7F1D2D98C4} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{5610F091-C983-4FB5-A775-BC9976312AED} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{278E9131-A521-4AB0-82E4-5B7D2A18C537} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
