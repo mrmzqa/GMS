@@ -225,8 +225,8 @@
           BorderThickness="0,1,0,0">
                     <StackPanel x:Uid="StackPanel_5" Orientation="Vertical">
                         <TextBlock x:Uid="TextBlock_6" FontWeight="Bold">HRMS</TextBlock>
-                        <Button x:Uid="Button_17" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Events</Button>
-                        <Button x:Uid="Button_18" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Security</Button>
+                        <Button x:Uid="Button_17" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Employee</Button>
+                        <Button x:Uid="Button_18" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Attendance</Button>
                         <Button x:Uid="Button_19" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Support</Button>
                         <Button x:Uid="Button_20" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Downloads</Button>
                         <Button x:Uid="Button_21" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Windows Update</Button>
