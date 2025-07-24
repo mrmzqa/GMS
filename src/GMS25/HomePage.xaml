@@ -227,14 +227,6 @@
                         <TextBlock x:Uid="TextBlock_6" FontWeight="Bold">HRMS</TextBlock>
                         <Button x:Uid="Button_17" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Employee</Button>
                         <Button x:Uid="Button_18" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Attendance</Button>
-                        <Button x:Uid="Button_19" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Support</Button>
-                        <Button x:Uid="Button_20" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Downloads</Button>
-                        <Button x:Uid="Button_21" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Windows Update</Button>
-                        <Button x:Uid="Button_22" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Communities</Button>
-                        <Button x:Uid="Button_23" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Learning Tools</Button>
-                        <Button x:Uid="Button_24" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Licensing</Button>
-                        <Button x:Uid="Button_25" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Careers</Button>
-                        <Button x:Uid="Button_26" Style="{StaticResource SidebarButtonStyle}" Margin="10,0,0,0">Find a Partner</Button>
                     </StackPanel>
                 </Border>
             </StackPanel>
