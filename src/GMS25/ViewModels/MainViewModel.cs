@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using WpfPosApp.Services;
-using WpfPosApp.Views;
+using GMS25.Services;
+using GMS25.Views;
 
-namespace WpfPosApp.ViewModels
+namespace GMS25.ViewModels
 {
     public partial class MainViewModel : ObservableObject
     {

@@ -1,23 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GMS25.ViewModels
-{
-    internal class OrdersViewModel
-    {
-    }
-}
+﻿
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GMS25.Models;
+using GMS25.Services;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
-using WpfPosApp.Models;
-using WpfPosApp.Services;
 
-namespace WpfPosApp.ViewModels
+namespace GMS25.ViewModels
 {
     public partial class OrdersViewModel : ObservableObject
     {

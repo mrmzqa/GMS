@@ -6,7 +6,7 @@ using GMS25.Views;
 using GMS25.Services;
 using GMS25.ViewModels;
 
-namespace WpfPosApp
+namespace GMS25
 {
     public partial class App : Application
     {

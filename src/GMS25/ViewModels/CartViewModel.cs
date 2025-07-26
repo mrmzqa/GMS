@@ -1,23 +1,15 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using GMS25.Models;
+using GMS25.Services;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace GMS25.ViewModels
-{
-    internal class CartViewModel
-    {
-    }
-}
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
-using System.Threading.Tasks;
-using WpfPosApp.Models;
-using WpfPosApp.Services;
-
-namespace WpfPosApp.ViewModels
 {
     public partial class CartViewModel : ObservableObject
     {
