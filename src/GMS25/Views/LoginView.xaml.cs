@@ -1,27 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using CommunityToolkit.Mvvm.Input;
+using GMS25.ViewModels;
 
 namespace GMS25.Views
 {
-    /// <summary>
-    /// Interaction logic for LoginView.xaml
-    /// </summary>
-    public partial class LoginView : Window
+    public partial class LoginView : UserControl
     {
         public LoginView()
         {
             InitializeComponent();
+            Loaded += OnLoaded;
+        }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is LoginViewModel viewModel)
+            {
+                // Handle password box binding
+                PasswordBox.PasswordChanged += (s, args) =>
+                {
+                    viewModel.Password = PasswordBox.Password;
+                };
+                
+                // Clear password on load
+                PasswordBox.Clear();
+                viewModel.Password = string.Empty;
+                viewModel.ErrorMessage = string.Empty;
+            }
         }
     }
 }
