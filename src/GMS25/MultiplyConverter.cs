@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace WpfPosApp
+namespace GMS25
 {
     public class MultiplyConverter : IMultiValueConverter
     {

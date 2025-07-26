@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
-using WpfPosApp.Data;
-using WpfPosApp.Services;
-using WpfPosApp.ViewModels;
-using WpfPosApp.Views;
 using Microsoft.EntityFrameworkCore;
+using GMS25.Data;
+using GMS25.Views;
+using GMS25.Services;
+using GMS25.ViewModels;
 
 namespace WpfPosApp
 {
