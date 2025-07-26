@@ -1,9 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
-using CommunityToolkit.Mvvm.Input;
-using GMS25.ViewModels;
+using WpfPosApp.ViewModels;
 
-namespace GMS25.Views
+namespace WpfPosApp.Views
 {
     public partial class LoginView : UserControl
     {
@@ -17,16 +16,15 @@ namespace GMS25.Views
         {
             if (DataContext is LoginViewModel viewModel)
             {
-                // Handle password box binding
                 PasswordBox.PasswordChanged += (s, args) =>
                 {
                     viewModel.Password = PasswordBox.Password;
                 };
                 
-                // Clear password on load
                 PasswordBox.Clear();
                 viewModel.Password = string.Empty;
                 viewModel.ErrorMessage = string.Empty;
+                PasswordBox.Focus();
             }
         }
     }
