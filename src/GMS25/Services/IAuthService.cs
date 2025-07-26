@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace GMS25.Services
 {
-    internal interface IAuthService
+    public interface IAuthService
     {
+        bool Login(string username, string password);
+        void Logout();
+        bool IsLoggedIn { get; }
     }
 }
+
