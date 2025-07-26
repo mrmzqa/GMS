@@ -4,6 +4,24 @@
              xmlns:local="clr-namespace:GMS25"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+<!-- Converters -->
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    <local:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+    <local:MultiplyConverter x:Key="MultiplyConverter"/>
+
+    <!-- Styles -->
+    <Style x:Key="NavButtonStyle" TargetType="Button">
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Margin" Value="0,0,10,0"/>
+        <Setter Property="Padding" Value="10,5"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#555"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
          
     </Application.Resources>
 </Application>
