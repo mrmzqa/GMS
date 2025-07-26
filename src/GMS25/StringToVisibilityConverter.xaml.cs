@@ -9,19 +9,23 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using System;
+using System.Globalization;
+using System.Windows;
+using System.Windows.Data;
 
-namespace GMS25
+namespace WpfAuthApp
 {
-    /// <summary>
-    /// Interaction logic for StringToVisibilityConverter.xaml
-    /// </summary>
-    public partial class StringToVisibilityConverter : Window
+    public class StringToVisibilityConverter : IValueConverter
     {
-        public StringToVisibilityConverter()
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            InitializeComponent();
+            return string.IsNullOrEmpty(value as string) ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
         }
     }
 }
