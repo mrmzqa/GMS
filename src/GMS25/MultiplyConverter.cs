@@ -1,13 +1,12 @@
-﻿< Window x: Class = "GMS25.MultiplyConverter"
-        xmlns = "http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns: x = "http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns: d = "http://schemas.microsoft.com/expression/blend/2008"
-        xmlns: mc = "http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns: local = "clr-namespace:GMS25"
-        mc: Ignorable = "d"
-        Title = "MultiplyConverter" Height = "450" Width = "800" >
-    < Grid >
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-
-    </ Grid >
-</ Window >
+namespace GMS25
+{
+    internal class MultiplyConverter
+    {
+    }
+}
