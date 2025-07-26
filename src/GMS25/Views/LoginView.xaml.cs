@@ -1,8 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
-using WpfPosApp.ViewModels;
+using GMS25.ViewModels;
 
-namespace WpfPosApp.Views
+namespace GMS25.Views
 {
     public partial class LoginView : UserControl
     {
