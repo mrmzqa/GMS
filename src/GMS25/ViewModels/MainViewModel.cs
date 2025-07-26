@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMS25.Services;
 using GMS25.Views;
+using System.ComponentModel;
 
 namespace GMS25.ViewModels
 {
@@ -21,8 +22,8 @@ namespace GMS25.ViewModels
         private string _title = "POS System";
 
         public MainViewModel(
-            IAuthService authService, 
-            LoginView loginView, 
+            IAuthService authService,
+            LoginView loginView,
             HomeView homeView,
             ProductsView productsView,
             CartView cartView,
@@ -37,15 +38,18 @@ namespace GMS25.ViewModels
 
             _authService.Logout(); // Start with logout state
             CurrentView = _loginView;
-            
-            // Subscribe to authentication state changes
-            _authService.PropertyChanged += (s, e) =>
+
+            // Subscribe to authentication state changes (PropertyChanged)
+            _authService.PropertyChanged += OnAuthServicePropertyChanged;
+        }
+
+        // Handle PropertyChanged event to update the view when IsLoggedIn changes
+        private void OnAuthServicePropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(IAuthService.IsLoggedIn))
             {
-                if (e.PropertyName == nameof(IAuthService.IsLoggedIn))
-                {
-                    UpdateView();
-                }
-            };
+                UpdateView();
+            }
         }
 
         private void UpdateView()

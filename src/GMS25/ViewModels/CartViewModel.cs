@@ -14,7 +14,7 @@ namespace GMS25.ViewModels
     public partial class CartViewModel : ObservableObject
     {
         private readonly IPosService _posService;
-        private readonly IAuthService _authService;
+        private readonly AuthService _authService;
 
         [ObservableProperty]
         private ObservableCollection<CartItem> _cartItems = new();
@@ -22,7 +22,7 @@ namespace GMS25.ViewModels
         [ObservableProperty]
         private decimal _total;
 
-        public CartViewModel(IPosService posService, IAuthService authService)
+        public CartViewModel(IPosService posService, AuthService authService)
         {
             _posService = posService;
             _authService = authService;

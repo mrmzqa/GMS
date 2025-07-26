@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using GMS25.Models;
+using System.ComponentModel;
 using System.Threading.Tasks;
 
 namespace GMS25.Services
 {
-    public interface IAuthService
+    public interface IAuthService : INotifyPropertyChanged
     {
-        bool Login(string username, string password);
+        Task<bool> LoginAsync(string username, string password);
         void Logout();
         bool IsLoggedIn { get; }
+        User CurrentUser { get; }
     }
 }
-

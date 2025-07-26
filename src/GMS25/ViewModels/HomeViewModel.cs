@@ -1,20 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GMS25.ViewModels
-{
-    internal class HomeViewModel
-    {
-    }
-}
+﻿
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using WpfAuthApp.Services;
+using GMS25.Services;
 
-namespace WpfAuthApp.ViewModels
+namespace GMS25.ViewModels
 {
     public partial class HomeViewModel : ObservableObject
     {

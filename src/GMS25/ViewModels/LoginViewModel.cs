@@ -1,20 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using GMS25.Services;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace GMS25.ViewModels
-{
-    internal class LoginViewModel
-    {
-    }
-}
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using WpfAuthApp.Services;
-
-namespace WpfAuthApp.ViewModels
 {
     public partial class LoginViewModel : ObservableObject
     {
@@ -29,13 +19,16 @@ namespace WpfAuthApp.ViewModels
         [ObservableProperty]
         private string _errorMessage = string.Empty;
 
+        [ObservableProperty]
+        private bool _isLoggingIn = false;
+
         public LoginViewModel(IAuthService authService)
         {
             _authService = authService;
         }
 
         [RelayCommand]
-        private void Login()
+        private async Task Login()
         {
             if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
             {
@@ -43,11 +36,34 @@ namespace WpfAuthApp.ViewModels
                 return;
             }
 
-            if (!_authService.Login(Username, Password))
+            // Disable login button while processing
+            IsLoggingIn = true;
+            ErrorMessage = string.Empty;
+
+            // Attempt login asynchronously
+            bool loginSuccessful = await _authService.LoginAsync(Username, Password);
+
+            // Update UI based on login success or failure
+            IsLoggingIn = false;
+
+            if (loginSuccessful)
             {
-                ErrorMessage = "Invalid username or password";
-                Password = string.Empty;
+                // Handle successful login (e.g., navigate to the main app view)
+                MessageBox.Show("Login successful!");
             }
+            else
+            {
+                // Handle failed login
+                ErrorMessage = "Invalid username or password";
+                Password = string.Empty;  // Clear the password field
+            }
+        }
+
+        [RelayCommand]
+        private void Logout()
+        {
+            _authService.Logout();
+            MessageBox.Show("You have logged out");
         }
     }
 }
