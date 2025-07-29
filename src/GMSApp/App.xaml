@@ -1,9 +1,9 @@
-﻿<Application x:Class="GMSApp.App"
+<Application x:Class="GMSApp.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:conv="clr-namespace:GarageApp.Converters"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:GMSApp"
              StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
-         
+        <conv:NullToBoolConverter x:Key="NullToBoolConverter" />
     </Application.Resources>
 </Application>
