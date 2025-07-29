@@ -1,39 +1,27 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 
 namespace Gms25.Views
 {
-    public partial class MainWindow : Window
+    /// <summary>
+    /// Interaction logic for Window1.xaml
+    /// </summary>
+    public partial class Window1 : Window
     {
-        public bool IsLoginPopupOpen
-        {
-            get { return (bool)GetValue(IsLoginPopupOpenProperty); }
-            set { SetValue(IsLoginPopupOpenProperty, value); }
-        }
-
-        public static readonly DependencyProperty IsLoginPopupOpenProperty =
-            DependencyProperty.Register("IsLoginPopupOpen", typeof(bool), typeof(MainWindow), new PropertyMetadata(false));
-
-        public MainWindow()
+        public Window1()
         {
             InitializeComponent();
-            DataContext = this;
-        }
-
-        private void LoginMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            IsLoginPopupOpen = true;
-        }
-
-        private void CancelLogin_Click(object sender, RoutedEventArgs e)
-        {
-            IsLoginPopupOpen = false;
-        }
-
-        private void LoginButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Add your login logic here
-            IsLoginPopupOpen = false;
         }
     }
 }
