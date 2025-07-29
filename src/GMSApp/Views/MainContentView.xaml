@@ -4,6 +4,8 @@
              xmlns:local="clr-namespace:GMSApp.Views"
              Height="Auto" Width="Auto">
     <Grid>
+
+        <ContentControl x:Name="VehiclesPageControl"/>
         <TabControl>
             <TabItem Header="Dashboard">
                 <TextBlock Text="Dashboard content (statistics, quick links, etc.)"
