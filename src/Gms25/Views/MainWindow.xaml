@@ -7,9 +7,7 @@
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         mc:Ignorable="d"
         Title="GMS" Height="450" Width="800"
-        Background="Transparent"
-        WindowStyle="None"
-        AllowsTransparency="True"
+       
         >
     <Window.Resources>
         <shell:WindowChrome x:Key="WindowChrome"
@@ -29,7 +27,7 @@
                             <StackPanel>
                                 <TextBlock FontWeight="Bold" Text="GMS Application" />
                                 <TextBlock Text="Version 1.0" />
-                                <TextBlock Text="A modern WPF app for .NET 9." />
+                                <TextBlock Text="Created by Mohammed Rameez PP" />
                             </StackPanel>
                         </MenuItem.ToolTip>
                     </MenuItem>
