@@ -1,27 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using GarageApp.ViewModels;
 
-namespace GMSApp.Views
+namespace GmsApp.Views
 {
-    /// <summary>
-    /// Interaction logic for VehiclesPage.xaml
-    /// </summary>
-    public partial class VehiclesPage : Window
+    public partial class VehiclesPage : UserControl
     {
         public VehiclesPage()
         {
             InitializeComponent();
+        }
+
+        private async void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (DataContext is VehicleViewModel vm)
+            {
+                await vm.SearchVehiclesAsync((sender as TextBox)?.Text ?? string.Empty);
+            }
+        }
+
+        private async void ClearSearch_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (DataContext is VehicleViewModel vm)
+            {
+                if (SearchBox != null)
+                    SearchBox.Text = string.Empty;
+
+                await vm.LoadVehiclesAsync();
+            }
         }
     }
 }
