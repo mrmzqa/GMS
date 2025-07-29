@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace Gms25
+namespace GMSApp
 {
     /// <summary>
     /// Interaction logic for App.xaml
