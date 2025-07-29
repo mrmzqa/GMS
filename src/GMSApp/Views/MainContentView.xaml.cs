@@ -1,27 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+using GarageApp.ViewModels;
+using GarageApp.Views;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
-namespace GMSApp.Views
+namespace GarageApp.Views
 {
-    /// <summary>
-    /// Interaction logic for MainContentView.xaml
-    /// </summary>
-    public partial class MainContentView : Window
+    public partial class MainContentView : UserControl
     {
-        public MainContentView()
+        private readonly VehicleViewModel _vehicleViewModel;
+
+        public MainContentView(VehicleViewModel vehicleViewModel)
         {
             InitializeComponent();
+            _vehicleViewModel = vehicleViewModel;
+            VehiclesPageControl.DataContext = _vehicleViewModel;
         }
     }
 }
