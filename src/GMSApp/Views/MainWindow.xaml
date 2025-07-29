@@ -1,7 +1,8 @@
 <Window x:Class="GMSApp.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="clr-namespace:GMSApp.ViewModels"
+       xmlns:sys="clr-namespace:System;assembly=mscorlib"
+ xmlns:vm="clr-namespace:GMSApp.ViewModels"
         xmlns:local="clr-namespace:GMSApp.Views"
         Title="Garage Management" Height="900" Width="1300">
     <Grid>
@@ -38,4 +39,18 @@
             </ContentControl.Style>
         </ContentControl>
     </Grid>
+<Window.Resources>
+    <ObjectDataProvider x:Key="LoginPage" MethodName="Parse" ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type TypeName="vm:AppPage" />
+            <x:String>Login</x:String>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+    <ObjectDataProvider x:Key="MainPage" MethodName="Parse" ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type TypeName="vm:AppPage" />
+            <x:String>Main</x:String>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+</Window.Resources>
 </Window>
