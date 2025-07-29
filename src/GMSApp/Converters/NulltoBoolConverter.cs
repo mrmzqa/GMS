@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace GarageApp.Converters
+namespace GMSApp.Converters
 {
     [ValueConversion(typeof(object), typeof(bool))]
     public class NullToBoolConverter : IValueConverter
