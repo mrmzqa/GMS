@@ -1,12 +1,34 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
-namespace GMSApp.Models
+namespace GarageApp.Models
 {
-    internal class Vehicle
+    public class Vehicle
     {
+        [Key]
+        public Guid VehicleId { get; set; } = Guid.NewGuid();
+
+        [Required]
+        public string OwnerName { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(20)]
+        public string LicensePlate { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string Brand { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string Model { get; set; } = string.Empty;
+
+        public int Year { get; set; }
+
+        [MaxLength(50)]
+        public string VIN { get; set; } = string.Empty;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public ICollection<ServiceJob> ServiceJobs { get; set; } = new List<ServiceJob>();
     }
 }
