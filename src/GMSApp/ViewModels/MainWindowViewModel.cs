@@ -32,7 +32,7 @@ namespace GMSApp.ViewModels
             };
         }
 
-        [RelayCommand]
+        [ICommand]
         public void Logout()
         {
             _authService.Logout();

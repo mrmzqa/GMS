@@ -31,7 +31,7 @@ namespace GMSApp.ViewModels
             Vehicles = new ObservableCollection<Vehicle>(all);
         }
 
-        [RelayCommand]
+        [ICommand]
         public async Task AddVehicleAsync()
         {
             var newVehicle = new Vehicle
@@ -50,7 +50,7 @@ namespace GMSApp.ViewModels
             SelectedVehicle = newVehicle;
         }
 
-        [RelayCommand(CanExecute = nameof(CanEditOrDelete))]
+        [ICommand(CanExecute = nameof(CanEditOrDelete))]
         public async Task DeleteVehicleAsync()
         {
             if (SelectedVehicle != null)
@@ -64,7 +64,7 @@ namespace GMSApp.ViewModels
 
         private bool CanEditOrDelete() => SelectedVehicle != null;
 
-        [RelayCommand(CanExecute = nameof(CanEditOrDelete))]
+        [ICommand(CanExecute = nameof(CanEditOrDelete))]
         public async Task UpdateVehicleAsync()
         {
             if (SelectedVehicle != null)
@@ -74,7 +74,7 @@ namespace GMSApp.ViewModels
             }
         }
 
-        [RelayCommand]
+        [ICommand]
         public async Task SearchVehiclesAsync(string query)
         {
             if (string.IsNullOrWhiteSpace(query))

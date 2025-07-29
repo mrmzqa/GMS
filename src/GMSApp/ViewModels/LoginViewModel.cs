@@ -23,7 +23,7 @@ namespace GMSApp.ViewModels
             _authService = authService;
         }
 
-        [RelayCommand]
+        [ICommand]
         public async Task LoginAsync()
         {
             ErrorMessage = string.Empty;
