@@ -1,12 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
+using System.ComponentModel.DataAnnotations;
 
-namespace GMSApp.Models
+namespace GarageApp.Models
 {
-    internal class VehicleMakeModel
+    public class VehicleMakeModel
     {
+        [Key]
+        public Guid MakeModelId { get; set; } = Guid.NewGuid();
+
+        public string Make { get; set; } = string.Empty;
+        public string Model { get; set; } = string.Empty;
+        public string? EngineType { get; set; }
+        public string? Transmission { get; set; }
+        public int ServiceInterval { get; set; }  // in km or months
+        public string? Notes { get; set; }
     }
 }
