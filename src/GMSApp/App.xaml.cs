@@ -1,11 +1,11 @@
-﻿using GMSApp.Data;
+﻿
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 
 public partial class App : Application
 {
-    public static IServiceProvider ServiceProvider { get; private set; }
+    /*public static IServiceProvider ServiceProvider { get; private set; }
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -16,5 +16,5 @@ public partial class App : Application
         ServiceProvider = services.BuildServiceProvider();
 
         base.OnStartup(e);
-    }
+    }*/
 }
