@@ -1,11 +1,11 @@
-using GarageApp.Data;
-using GarageApp.Models;
+using GMSApp.Data;
+using GMSApp.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GarageApp.Services
+namespace GMSApp.Services
 {
     public class AuthenticationService
     {

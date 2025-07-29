@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GarageApp.Services;
+using GMSApp.Services;
 
-namespace GarageApp.ViewModels
+namespace GMSApp.ViewModels
 {
     public enum AppPage
     {
@@ -32,7 +32,7 @@ namespace GarageApp.ViewModels
             };
         }
 
-        [ICommand]
+        [RelayCommand]
         public void Logout()
         {
             _authService.Logout();

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace GarageApp.Models
+namespace GMSApp.Models
 {
     public class Vehicle
     {

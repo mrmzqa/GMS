@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GarageApp.Models
+namespace GMSApp.Models
 {
     public class ServiceJob
     {

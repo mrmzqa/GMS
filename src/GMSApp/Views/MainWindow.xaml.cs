@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace GarageApp.Views
+namespace GMSApp.Views
 {
     public partial class MainWindow : Window
     {

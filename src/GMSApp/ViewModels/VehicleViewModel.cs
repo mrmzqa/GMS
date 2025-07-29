@@ -1,12 +1,12 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GarageApp.Models;
-using GarageApp.Data;
+using GMSApp.Models;
+using GMSApp.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
-namespace GarageApp.ViewModels
+namespace GMSApp.ViewModels
 {
     public partial class VehicleViewModel : BaseViewModel
     {
@@ -24,14 +24,14 @@ namespace GarageApp.ViewModels
             Task.Run(async () => await LoadVehiclesAsync());
         }
 
-        [ICommand]
+        [RelayCommand]
         public async Task LoadVehiclesAsync()
         {
             var all = await _dbContext.Vehicles.ToListAsync();
             Vehicles = new ObservableCollection<Vehicle>(all);
         }
 
-        [ICommand]
+        [RelayCommand]
         public async Task AddVehicleAsync()
         {
             var newVehicle = new Vehicle
@@ -50,7 +50,7 @@ namespace GarageApp.ViewModels
             SelectedVehicle = newVehicle;
         }
 
-        [ICommand(CanExecute = nameof(CanEditOrDelete))]
+        [RelayCommand(CanExecute = nameof(CanEditOrDelete))]
         public async Task DeleteVehicleAsync()
         {
             if (SelectedVehicle != null)
@@ -64,7 +64,7 @@ namespace GarageApp.ViewModels
 
         private bool CanEditOrDelete() => SelectedVehicle != null;
 
-        [ICommand(CanExecute = nameof(CanEditOrDelete))]
+        [RelayCommand(CanExecute = nameof(CanEditOrDelete))]
         public async Task UpdateVehicleAsync()
         {
             if (SelectedVehicle != null)
@@ -74,7 +74,7 @@ namespace GarageApp.ViewModels
             }
         }
 
-        [ICommand]
+        [RelayCommand]
         public async Task SearchVehiclesAsync(string query)
         {
             if (string.IsNullOrWhiteSpace(query))

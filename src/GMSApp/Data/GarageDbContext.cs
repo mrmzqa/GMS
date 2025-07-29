@@ -1,11 +1,11 @@
-using GarageApp.Models;
+using GMSApp.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace GarageApp.Data
+namespace GMSApp.Data
 {
     public class GarageDbContext : DbContext
     {

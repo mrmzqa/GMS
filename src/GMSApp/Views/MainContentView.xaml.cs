@@ -1,8 +1,8 @@
-using GarageApp.ViewModels;
-using GarageApp.Views;
+using GMSApp.ViewModels;
+using GMSApp.Views;
 using System.Windows.Controls;
 
-namespace GarageApp.Views
+namespace GMSApp.Views
 {
     public partial class MainContentView : UserControl
     {

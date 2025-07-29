@@ -1,7 +1,7 @@
 using System.Windows.Controls;
-using GarageApp.ViewModels;
+using GMSApp.ViewModels;
 
-namespace GarageApp.Views
+namespace GMSApp.Views
 {
     public partial class LoginView : UserControl
     {

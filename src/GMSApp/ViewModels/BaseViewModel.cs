@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace GarageApp.ViewModels
+namespace GMSApp.ViewModels
 {
     public class BaseViewModel : ObservableObject
     { }

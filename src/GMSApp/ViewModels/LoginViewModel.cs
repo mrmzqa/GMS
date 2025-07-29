@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GarageApp.Services;
+using GMSApp.Services;
 using System.Threading.Tasks;
 
-namespace GarageApp.ViewModels
+namespace GMSApp.ViewModels
 {
     public partial class LoginViewModel : BaseViewModel
     {
@@ -23,13 +23,13 @@ namespace GarageApp.ViewModels
             _authService = authService;
         }
 
-        [ICommand]
+        [RelayCommand]
         public async Task LoginAsync()
         {
             ErrorMessage = string.Empty;
             var success = await _authService.LoginAsync(Username.Trim(), Password);
 
-            if(success)
+            if (success)
             {
                 OnLoginSucceeded?.Invoke(this, System.EventArgs.Empty);
             }

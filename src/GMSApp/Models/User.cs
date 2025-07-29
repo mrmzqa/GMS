@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace GarageApp.Models
+namespace GMSApp.Models
 {
     public enum UserRole
     {

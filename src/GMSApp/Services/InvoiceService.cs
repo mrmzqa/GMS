@@ -1,10 +1,10 @@
-using GarageApp.Models;
+using GMSApp.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using System;
 
-namespace GarageApp.Services
+namespace GMSApp.Services
 {
     public class InvoiceService
     {
