@@ -1,7 +1,7 @@
-using GarageApp.Data;
-using GarageApp.Services;
-using GarageApp.ViewModels;
-using GarageApp.Views;
+using GMSApp.Data;
+using GMSApp.Services;
+using GMSApp.ViewModels;
+using GMSApp.Views;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
