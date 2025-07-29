@@ -1,7 +1,8 @@
 <UserControl x:Class="GMSApp.Views.MainContentView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:GMSApp.Views">
+             xmlns:local="clr-namespace:GMSApp.Views"
+             Height="Auto" Width="Auto">
     <Grid>
         <TabControl>
             <TabItem Header="Dashboard">
@@ -9,22 +10,33 @@
                            VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="22"/>
             </TabItem>
             <TabItem Header="Vehicles">
-                <local:VehiclesPage x:Name="VehiclesPageControl" />
+                <local:VehiclesPage />
             </TabItem>
             <TabItem Header="Service Jobs">
+                <!-- Add your ServiceJobsPage here -->
                 <TextBlock Text="Service Jobs tab content here" />
             </TabItem>
             <TabItem Header="Workers">
+                <!-- Add your WorkersPage here -->
                 <TextBlock Text="Workers tab content here" />
             </TabItem>
             <TabItem Header="Receipts">
+                <!-- Add your ReceiptsPage here -->
                 <TextBlock Text="Receipts tab content here" />
             </TabItem>
             <TabItem Header="Accounts">
+                <!-- Add your AccountsPage here -->
                 <TextBlock Text="Accounts tab content here" />
             </TabItem>
             <TabItem Header="Make/Model Info">
+                <!-- Add your VehicleMakeModelInfoPage here -->
                 <TextBlock Text="Vehicle Make/Model Info content here" />
+            </TabItem>
+            <TabItem Header="Spare Parts">
+                <local:SparePartsPage />
+            </TabItem>
+            <TabItem Header="Vehicle Delivery">
+                <local:VehicleDeliveryPage />
             </TabItem>
         </TabControl>
     </Grid>
