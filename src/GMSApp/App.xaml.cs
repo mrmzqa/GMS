@@ -9,7 +9,7 @@ using Serilog;
 using System;
 using System.Windows;
 
-namespace GarageApp
+namespace GMSApp
 {
     public partial class App : Application
     {
