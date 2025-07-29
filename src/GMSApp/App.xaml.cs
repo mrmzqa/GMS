@@ -1,14 +1,20 @@
-﻿using System.Configuration;
-using System.Data;
+﻿using GMSApp.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 
-namespace GMSApp
+public partial class App : Application
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : Application
-    {
-    }
+    public static IServiceProvider ServiceProvider { get; private set; }
 
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        var services = new ServiceCollection();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlServer("YourConnectionStringHere"));
+        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        ServiceProvider = services.BuildServiceProvider();
+
+        base.OnStartup(e);
+    }
 }
