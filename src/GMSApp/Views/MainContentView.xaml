@@ -1,7 +1,7 @@
-<UserControl x:Class="GarageApp.Views.MainContentView"
+<UserControl x:Class="GMSApp.Views.MainContentView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:GarageApp.Views"
+             xmlns:local="clr-namespace:GMSApp.Views"
              Height="Auto" Width="Auto">
     <Grid>
         <TabControl>
