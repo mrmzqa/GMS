@@ -4,6 +4,7 @@
         xmlns:vm="clr-namespace:GMSApp.ViewModels"
         xmlns:local="clr-namespace:GMSApp.Views"
         Title="Garage Management" Height="900" Width="1300">
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -38,4 +39,6 @@
             </ContentControl.Style>
         </ContentControl>
     </Grid>
+
 </Window>
+   

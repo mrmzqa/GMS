@@ -32,12 +32,8 @@
                 <!-- Add your VehicleMakeModelInfoPage here -->
                 <TextBlock Text="Vehicle Make/Model Info content here" />
             </TabItem>
-            <TabItem Header="Spare Parts">
-                <local:SparePartsPage />
-            </TabItem>
-            <TabItem Header="Vehicle Delivery">
-                <local:VehicleDeliveryPage />
-            </TabItem>
+           
+           
         </TabControl>
     </Grid>
 </UserControl>
