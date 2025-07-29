@@ -1,5 +1,5 @@
-using System.Windows.Controls;
 using GMSApp.ViewModels;
+using System.Windows.Controls;
 
 namespace GMSApp.Views
 {
@@ -22,9 +22,7 @@ namespace GMSApp.Views
         {
             if (DataContext is VehicleViewModel vm)
             {
-                if (SearchBox != null)
-                    SearchBox.Text = string.Empty;
-
+                SearchBox.Text = string.Empty;
                 await vm.LoadVehiclesAsync();
             }
         }
