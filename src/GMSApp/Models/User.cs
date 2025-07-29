@@ -1,12 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
+using System.ComponentModel.DataAnnotations;
 
-namespace GMSApp.Models
+namespace GarageApp.Models
 {
-    internal class User
+    public enum UserRole
     {
+        User,
+        Admin,
+        SuperAdmin
+    }
+
+    public class User
+    {
+        [Key]
+        public Guid UserId { get; set; } = Guid.NewGuid();
+
+        [Required]
+        [MaxLength(100)]
+        public string Username { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(256)]
+        public string PasswordHash { get; set; } = string.Empty;
+
+        [Required]
+        public UserRole Role { get; set; } = UserRole.User;
+
+        public bool IsActive { get; set; } = true;
     }
 }
