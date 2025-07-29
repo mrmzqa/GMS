@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace GMSApp.Converters
+namespace GarageApp.Converters
 {
     [ValueConversion(typeof(object), typeof(bool))]
     public class NullToBoolConverter : IValueConverter
@@ -17,7 +17,7 @@ namespace GMSApp.Converters
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }
