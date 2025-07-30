@@ -47,19 +47,19 @@
                 </Grid.RowDefinitions>
 
                 <Label Content="Owner Name:" Grid.Column="0" VerticalAlignment="Center" Grid.Row="0"/>
-                <TextBox Text="{Binding SelectedVehicle.OwnerName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Margin="5" Grid.Row="0"/>
+                <TextBox Text="{Binding SelectedVehicle.OwnerName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="91,5,5,5" Grid.Row="0"/>
 
                 <Label Content="License Plate:" Grid.Column="2" VerticalAlignment="Center" Grid.Row="0"/>
                 <TextBox Text="{Binding SelectedVehicle.LicensePlate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="3" Margin="5" Grid.Row="0"/>
 
                 <Label Content="Brand:" Grid.Column="0" VerticalAlignment="Center" Grid.Row="1"/>
-                <TextBox Text="{Binding SelectedVehicle.Brand, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Margin="5" Grid.Row="1"/>
+                <TextBox Text="{Binding SelectedVehicle.Brand, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="91,5,5,5" Grid.Row="1" Grid.ColumnSpan="2"/>
 
                 <Label Content="Model:" Grid.Column="2" VerticalAlignment="Center" Grid.Row="1"/>
                 <TextBox Text="{Binding SelectedVehicle.Model, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="3" Margin="5" Grid.Row="1"/>
 
                 <Label Content="Year:" Grid.Column="0" VerticalAlignment="Center" Grid.Row="2"/>
-                <TextBox Text="{Binding SelectedVehicle.Year, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Margin="5" Grid.Row="2"/>
+                <TextBox Text="{Binding SelectedVehicle.Year, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="91,5,5,5" Grid.Row="2" Grid.ColumnSpan="2"/>
 
                 <Label Content="VIN:" Grid.Column="2" VerticalAlignment="Center" Grid.Row="2"/>
                 <TextBox Text="{Binding SelectedVehicle.VIN, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="3" Margin="5" Grid.Row="2"/>
