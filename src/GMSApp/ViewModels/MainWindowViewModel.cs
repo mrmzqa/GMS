@@ -4,18 +4,13 @@ using GMSApp.Services;
 
 namespace GMSApp.ViewModels
 {
-    public enum AppPage
-    {
-        Login,
-        Main
-    }
-
+  
     public partial class MainWindowViewModel : BaseViewModel
     {
         private readonly AuthenticationService _authService;
 
         [ObservableProperty]
-        private AppPage currentPage = AppPage.Login;
+        public AppPage currentPage = AppPage.Login;
 
         public LoginViewModel LoginVM { get; }
         public VehicleViewModel VehicleVM { get; }
@@ -32,7 +27,7 @@ namespace GMSApp.ViewModels
             };
         }
 
-        [ICommand]
+        [RelayCommand]
         public void Logout()
         {
             _authService.Logout();
