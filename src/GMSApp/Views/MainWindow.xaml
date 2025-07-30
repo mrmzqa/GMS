@@ -21,20 +21,21 @@
             <ContentControl.Style>
                 <Style TargetType="ContentControl">
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding CurrentPage}" Value="{x:Static vm:AppPage.Login}">
-                            <Setter Property="Content">
-                                <Setter.Value>
-                                    <local:LoginView DataContext="{Binding LoginVM}" />
-                                </Setter.Value>
-                            </Setter>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding CurrentPage}" Value="{x:Static vm:AppPage.Main}">
-                            <Setter Property="Content">
-                                <Setter.Value>
-                                    <local:MainContentView />
-                                </Setter.Value>
-                            </Setter>
-                        </DataTrigger>
+<DataTrigger Binding="{Binding CurrentPage}" Value="{x:Static vm:AppPage.Login}">
+    <Setter Property="Content">
+        <Setter.Value>
+            <local:LoginView DataContext="{Binding LoginVM}"/>
+        </Setter.Value>
+    </Setter>
+</DataTrigger>
+<DataTrigger Binding="{Binding CurrentPage}" Value="{x:Static vm:AppPage.Main}">
+    <Setter Property="Content">
+        <Setter.Value>
+            <local:MainContentView />
+        </Setter.Value>
+    </Setter>
+</DataTrigger>
+                        
                     </Style.Triggers>
                 </Style>
             </ContentControl.Style>
