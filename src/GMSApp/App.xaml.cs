@@ -1,4 +1,5 @@
 using GMSApp.Data;
+using GMSApp.Repositories;
 using GMSApp.Services;
 using GMSApp.ViewModels;
 using GMSApp.Views;
@@ -27,16 +28,16 @@ namespace GMSApp
                     services.AddDbContext<GarageDbContext>(options =>
                         options.UseSqlite("Data Source=garage.db"));
 
-                    services.AddScoped<AuthenticationService>();
+             
 
-                    services.AddTransient<LoginViewModel>();
+                    
                     services.AddTransient<VehicleViewModel>();
 
-                    services.AddTransient<MainWindowViewModel>();
+                    
 
                     // Views
                     services.AddSingleton<MainWindow>();
-                    services.AddTransient<LoginView>();
+             
                     services.AddTransient<VehiclesPage>();
                     services.AddTransient<MainContentView>();
 
@@ -55,8 +56,8 @@ namespace GMSApp
             await _host.StartAsync();
 
             var mainWindow = _host.Services.GetRequiredService<MainWindow>();
-            var mainVm = _host.Services.GetRequiredService<MainWindowViewModel>();
-            mainWindow.DataContext = mainVm;
+           
+           
             mainWindow.Show();
 
             base.OnStartup(e);
