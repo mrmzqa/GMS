@@ -1,97 +1,85 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
-using GMSApp.Data;
-using Microsoft.EntityFrameworkCore;
+using GMSApp.Repositories;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-namespace GMSApp.ViewModels
+public class VehicleViewModel : INotifyPropertyChanged
 {
-    public partial class VehicleViewModel : BaseViewModel
+    private readonly IRepository<Vehicle> _vehicleRepository;
+
+    public ObservableCollection<Vehicle> Vehicles { get; } = new();
+
+    private Vehicle _selectedVehicle = new();
+    public Vehicle SelectedVehicle
     {
-        private readonly GarageDbContext _dbContext;
-
-        [ObservableProperty]
-        private ObservableCollection<Vehicle> vehicles = new();
-
-        [ObservableProperty]
-        private Vehicle? selectedVehicle;
-
-        public VehicleViewModel(GarageDbContext dbContext)
+        get => _selectedVehicle;
+        set
         {
-            _dbContext = dbContext;
-            Task.Run(async () => await LoadVehiclesAsync());
+            _selectedVehicle = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public VehicleViewModel(IRepository<Vehicle> vehicleRepository)
+    {
+        _vehicleRepository = vehicleRepository;
+    }
+
+    public async Task LoadVehiclesAsync()
+    {
+        var vehicles = await _vehicleRepository.GetAllAsync();
+        Vehicles.Clear();
+        foreach (var vehicle in vehicles)
+            Vehicles.Add(vehicle);
+    }
+
+    public async Task AddVehicleAsync()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedVehicle.Make)) return;
+        await _vehicleRepository.AddAsync(SelectedVehicle);
+        await LoadVehiclesAsync();
+        SelectedVehicle = new Vehicle();
+    }
+
+    public async Task UpdateVehicleAsync()
+    {
+        if (SelectedVehicle.Id == 0) return;
+        await _vehicleRepository.UpdateAsync(SelectedVehicle);
+        await LoadVehiclesAsync();
+        SelectedVehicle = new Vehicle();
+    }
+
+    public async Task DeleteVehicleAsync()
+    {
+        if (SelectedVehicle.Id == 0) return;
+        await _vehicleRepository.DeleteAsync(SelectedVehicle.Id);
+        await LoadVehiclesAsync();
+        SelectedVehicle = new Vehicle();
+    }
+
+    public async Task SearchVehiclesAsync(string searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            await LoadVehiclesAsync();
+            return;
         }
 
-        [RelayCommand]
-        public async Task LoadVehiclesAsync()
-        {
-            var all = await _dbContext.Vehicles.ToListAsync();
-            Vehicles = new ObservableCollection<Vehicle>(all);
-        }
+        var results = await _vehicleRepository.FindAsync(v =>
+            v.Make.ToLower().Contains(searchTerm.ToLower()) ||
+            v.Model.ToLower().Contains(searchTerm.ToLower()) ||
+            v.LicensePlate.ToLower().Contains(searchTerm.ToLower()));
 
-        [RelayCommand]
-        public async Task AddVehicleAsync()
-        {
-            var newVehicle = new Vehicle
-            {
-                OwnerName = "New Owner",
-                LicensePlate = "NEW000",
-                Brand = "Brand",
-                Model = "Model",
-                Year = System.DateTime.Now.Year
-            };
+        Vehicles.Clear();
+        foreach (var v in results)
+            Vehicles.Add(v);
+    }
 
-            _dbContext.Vehicles.Add(newVehicle);
-            await _dbContext.SaveChangesAsync();
-
-            Vehicles.Add(newVehicle);
-            SelectedVehicle = newVehicle;
-        }
-
-        [RelayCommand(CanExecute = nameof(CanEditOrDelete))]
-        public async Task DeleteVehicleAsync()
-        {
-            if (SelectedVehicle != null)
-            {
-                _dbContext.Vehicles.Remove(SelectedVehicle);
-                await _dbContext.SaveChangesAsync();
-                Vehicles.Remove(SelectedVehicle);
-                SelectedVehicle = null;
-            }
-        }
-
-        private bool CanEditOrDelete() => SelectedVehicle != null;
-
-        [RelayCommand(CanExecute = nameof(CanEditOrDelete))]
-        public async Task UpdateVehicleAsync()
-        {
-            if (SelectedVehicle != null)
-            {
-                _dbContext.Vehicles.Update(SelectedVehicle);
-                await _dbContext.SaveChangesAsync();
-            }
-        }
-
-        [RelayCommand]
-        public async Task SearchVehiclesAsync(string query)
-        {
-            if (string.IsNullOrWhiteSpace(query))
-            {
-                await LoadVehiclesAsync();
-                return;
-            }
-
-            var q = query.Trim().ToLower();
-
-            var filtered = await _dbContext.Vehicles
-                .Where(v => v.LicensePlate.ToLower().Contains(q)
-                         || v.VIN.ToLower().Contains(q)
-                         || v.OwnerName.ToLower().Contains(q))
-                .ToListAsync();
-
-            Vehicles = new ObservableCollection<Vehicle>(filtered);
-        }
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged([CallerMemberName] string? name = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

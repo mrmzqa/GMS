@@ -39,6 +39,10 @@ namespace GMSApp
                     services.AddTransient<LoginView>();
                     services.AddTransient<VehiclesPage>();
                     services.AddTransient<MainContentView>();
+
+                    // Repository
+                    services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
                 })
                 .UseSerilog()
                 .Build();
