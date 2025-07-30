@@ -10,7 +10,7 @@ namespace GMSApp.ViewModels
         private readonly AuthenticationService _authService;
 
         [ObservableProperty]
-        public AppPage currentPage = AppPage.Login;
+        private AppPage currentPage = AppPage.Login;
 
         public LoginViewModel LoginVM { get; }
         public VehicleViewModel VehicleVM { get; }
