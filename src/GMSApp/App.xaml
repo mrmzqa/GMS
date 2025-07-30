@@ -3,7 +3,9 @@
              xmlns:conv="clr-namespace:GMSApp.Converters"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="Views/MainWindow.xaml">
-    <Application.Resources>
-        <conv:NullToBoolConverter x:Key="NullToBoolConverter" />
-    </Application.Resources>
+    
+<Application.Resources>
+    <converters:NullToBoolConverter x:Key="NullToBoolConverter" xmlns:converters="clr-namespace:GMSApp.Converters" />
+</Application.Resources>
+    
 </Application>
