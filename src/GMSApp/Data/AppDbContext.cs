@@ -12,6 +12,7 @@ namespace GMSApp.Data
 
         // DbSets go here
         public DbSet<FileItem> Files { get; set; }
+public DbSet<Vehicle> Vehicles { get; set; }
         // Add other DbSets like Vehicles, Users, etc.
     }
 }
