@@ -4,19 +4,37 @@
         Title="Garage Management System"
         Height="600" Width="1000"
         WindowStartupLocation="CenterScreen">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
 
-        <!-- Navigation -->
-        <StackPanel Background="#FF2D2D30" Grid.Column="0">
-            <TextBlock Text="GMS" Foreground="White" FontSize="22" Margin="10" HorizontalAlignment="Center"/>
-            <Button Content="Files" Click="FilesButton_Click" Margin="10"/>
-        </StackPanel>
+    <DockPanel>
+        <!-- Top Menu -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="File">
+                <MenuItem Header="Open" Click="FileOpen_Click"/>
+                <MenuItem Header="Exit" Click="FileExit_Click"/>
+            </MenuItem>
 
-        <!-- Main content area -->
-        <ContentControl x:Name="MainContent" Grid.Column="1"/>
-    </Grid>
+            <MenuItem Header="Help">
+                <MenuItem Header="User Guide" Click="HelpGuide_Click"/>
+            </MenuItem>
+
+            <MenuItem Header="About" Click="About_Click"/>
+        </Menu>
+
+        <!-- Main Grid -->
+        <Grid DockPanel.Dock="Bottom">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Navigation -->
+            <StackPanel Background="#FF2D2D30" Grid.Column="0">
+                <TextBlock Text="GMS" Foreground="White" FontSize="22" Margin="10" HorizontalAlignment="Center"/>
+                <Button Content="Files" Click="FilesButton_Click" Margin="10"/>
+            </StackPanel>
+
+            <!-- Main Content Area -->
+            <ContentControl x:Name="MainContent" Grid.Column="1"/>
+        </Grid>
+    </DockPanel>
 </Window>

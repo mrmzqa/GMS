@@ -39,12 +39,11 @@ namespace GMSApp
                     services.AddScoped<MainWindow>();
 
                     services.AddScoped<FilesPage>();
+                   
                 })
 
 
-// Add Vehicle repository
-services.AddScoped<VehicleViewModel>();
-services.AddScoped<VehiclePage>();
+
 
                 .UseSerilog()
                 .Build();
