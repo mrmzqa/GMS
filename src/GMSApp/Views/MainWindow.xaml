@@ -12,6 +12,7 @@
             <MenuItem Header="File">
                 <MenuItem Header="Open" Click="FileOpen_Click"/>
                 <MenuItem Header="Exit" Click="FileExit_Click"/>
+
             </MenuItem>
 
             <MenuItem Header="Help">
@@ -32,6 +33,7 @@
             <StackPanel Background="#FF2D2D30" Grid.Column="0">
                 <TextBlock Text="GMS" Foreground="White" FontSize="22" Margin="10" HorizontalAlignment="Center"/>
                 <Button Content="Files" Click="FilesButton_Click" Margin="10"/>
+                <Button Content="Garage" Click="FilesButton_Click" Margin="10"/>
             </StackPanel>
 
             <!-- Main Content Area -->
