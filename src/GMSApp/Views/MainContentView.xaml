@@ -4,9 +4,13 @@
              xmlns:local="clr-namespace:GMSApp.Views"
              Height="Auto" Width="Auto">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0*"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
 
-        <ContentControl x:Name="VehiclesPageControl"/>
-        <TabControl>
+        <ContentControl x:Name="VehiclesPageControl" Grid.ColumnSpan="2"/>
+        <TabControl Grid.ColumnSpan="2">
             <TabItem Header="Dashboard">
                 <TextBlock Text="Dashboard content (statistics, quick links, etc.)"
                            VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="22"/>
@@ -34,8 +38,8 @@
                 <!-- Add your VehicleMakeModelInfoPage here -->
                 <TextBlock Text="Vehicle Make/Model Info content here" />
             </TabItem>
-           
-           
+
+
         </TabControl>
     </Grid>
 </UserControl>
