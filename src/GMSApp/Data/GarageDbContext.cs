@@ -10,24 +10,14 @@ namespace GMSApp.Data
         {
         }
 
-        // DbSets for each table
-        public DbSet<Vehicle> Vehicles { get; set; } = null!;
+       public DbSet<Vehicle> Vehicles { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Example: Composite key (if needed)
-            // modelBuilder.Entity<VehicleMakeModel>()
-            //     .HasKey(v => new { v.Make, v.Model });
-
-            // Example: Relationship setup (if any)
-            // modelBuilder.Entity<ServiceJob>()
-            //     .HasOne(j => j.Vehicle)
-            //     .WithMany()
-            //     .HasForeignKey(j => j.VehicleId)
-            //     .OnDelete(DeleteBehavior.Cascade);
+            
         }
     }
 }

@@ -1,38 +1,26 @@
-using GMSApp.ViewModels;
+using GMSApp.Views;
 using System.Windows;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GMSApp.Views
 {
     public partial class MainWindow : Window
     {
-        private readonly VehicleViewModel _vm;
+        private readonly IServiceProvider _serviceProvider;
 
-        public MainWindow(VehicleViewModel vm)
+        public MainWindow(IServiceProvider serviceProvider)
         {
             InitializeComponent();
-            _vm = vm;
-            DataContext = _vm;
-            Loaded += async (_, __) => await _vm.LoadVehiclesAsync();
-        }
+            _serviceProvider = serviceProvider;
 
-        private async void Add_Click(object sender, RoutedEventArgs e)
-        {
-            await _vm.AddVehicleAsync();
+            // Load default page
+            MainFrame.Navigate(_serviceProvider.GetRequiredService<VehiclesPage>());
         }
+     
 
-        private async void Update_Click(object sender, RoutedEventArgs e)
+        private void VehiclesButton_Click(object sender, RoutedEventArgs e)
         {
-            await _vm.UpdateVehicleAsync();
-        }
-
-        private async void Delete_Click(object sender, RoutedEventArgs e)
-        {
-            await _vm.DeleteVehicleAsync();
-        }
-
-        private async void Search_Click(object sender, RoutedEventArgs e)
-        {
-            await _vm.SearchVehiclesAsync(SearchBox.Text);
+            MainFrame.Navigate(_serviceProvider.GetRequiredService<VehiclesPage>());
         }
     }
 }

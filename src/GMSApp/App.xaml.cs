@@ -27,22 +27,16 @@ namespace GMSApp
                 {
                     services.AddDbContext<GarageDbContext>(options =>
                         options.UseSqlite("Data Source=garage.db"));
+                   
 
-             
-
-                    
-                    services.AddTransient<VehicleViewModel>();
-
-                    
-
-                    // Views
+                   
                     services.AddSingleton<MainWindow>();
-             
-                    services.AddTransient<VehiclesPage>();
-                    services.AddTransient<MainContentView>();
-
-                    // Repository
                     services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+                    services.AddTransient<VehicleViewModel>();
+                    services.AddTransient<VehiclesPage>();
+
+
+                   
 
                 })
                 .UseSerilog()

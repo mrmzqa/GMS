@@ -1,85 +1,57 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
 using GMSApp.Repositories;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-public class VehicleViewModel : INotifyPropertyChanged
+namespace GMSApp.ViewModels
 {
-    private readonly IRepository<Vehicle> _vehicleRepository;
-
-    public ObservableCollection<Vehicle> Vehicles { get; } = new();
-
-    private Vehicle _selectedVehicle = new();
-    public Vehicle SelectedVehicle
+    public partial class VehicleViewModel : ObservableObject
     {
-        get => _selectedVehicle;
-        set
+        private readonly IRepository<Vehicle> _vehicleRepo;
+
+        public ObservableCollection<Vehicle> Vehicles { get; } = new();
+
+        [ObservableProperty]
+        private Vehicle selectedVehicle = new();
+
+        public VehicleViewModel(IRepository<Vehicle> vehicleRepo)
         {
-            _selectedVehicle = value;
-            OnPropertyChanged();
+            _vehicleRepo = vehicleRepo;
+            _ = LoadVehiclesAsync();
         }
-    }
 
-    public VehicleViewModel(IRepository<Vehicle> vehicleRepository)
-    {
-        _vehicleRepository = vehicleRepository;
-    }
-
-    public async Task LoadVehiclesAsync()
-    {
-        var vehicles = await _vehicleRepository.GetAllAsync();
-        Vehicles.Clear();
-        foreach (var vehicle in vehicles)
-            Vehicles.Add(vehicle);
-    }
-
-    public async Task AddVehicleAsync()
-    {
-        if (string.IsNullOrWhiteSpace(SelectedVehicle.Make)) return;
-        await _vehicleRepository.AddAsync(SelectedVehicle);
-        await LoadVehiclesAsync();
-        SelectedVehicle = new Vehicle();
-    }
-
-    public async Task UpdateVehicleAsync()
-    {
-        if (SelectedVehicle.Id == 0) return;
-        await _vehicleRepository.UpdateAsync(SelectedVehicle);
-        await LoadVehiclesAsync();
-        SelectedVehicle = new Vehicle();
-    }
-
-    public async Task DeleteVehicleAsync()
-    {
-        if (SelectedVehicle.Id == 0) return;
-        await _vehicleRepository.DeleteAsync(SelectedVehicle.Id);
-        await LoadVehiclesAsync();
-        SelectedVehicle = new Vehicle();
-    }
-
-    public async Task SearchVehiclesAsync(string searchTerm)
-    {
-        if (string.IsNullOrWhiteSpace(searchTerm))
+        [RelayCommand]
+        private async Task LoadVehiclesAsync()
         {
+            Vehicles.Clear();
+            var items = await _vehicleRepo.GetAllAsync();
+            foreach (var item in items)
+                Vehicles.Add(item);
+        }
+
+        [RelayCommand]
+        private async Task AddVehicleAsync()
+        {
+            await _vehicleRepo.AddAsync(SelectedVehicle);
             await LoadVehiclesAsync();
-            return;
+            SelectedVehicle = new Vehicle();
         }
 
-        var results = await _vehicleRepository.FindAsync(v =>
-            v.Make.ToLower().Contains(searchTerm.ToLower()) ||
-            v.Model.ToLower().Contains(searchTerm.ToLower()) ||
-            v.LicensePlate.ToLower().Contains(searchTerm.ToLower()));
+        [RelayCommand]
+        private async Task UpdateVehicleAsync()
+        {
+            await _vehicleRepo.UpdateAsync(SelectedVehicle);
+            await LoadVehiclesAsync();
+        }
 
-        Vehicles.Clear();
-        foreach (var v in results)
-            Vehicles.Add(v);
-    }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-    protected void OnPropertyChanged([CallerMemberName] string? name = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        [RelayCommand]
+        private async Task DeleteVehicleAsync()
+        {
+            await _vehicleRepo.DeleteAsync(SelectedVehicle.Id);
+            await LoadVehiclesAsync();
+            SelectedVehicle = new Vehicle();
+        }
     }
 }
