@@ -1,26 +1,23 @@
+using GMSApp.ViewModels;
 using GMSApp.Views;
 using System.Windows;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace GMSApp.Views
 {
     public partial class MainWindow : Window
     {
-        private readonly IServiceProvider _serviceProvider;
+        private readonly FilesPage _filesPage;
 
-        public MainWindow(IServiceProvider serviceProvider)
+        public MainWindow(FilesPage filesPage)
         {
             InitializeComponent();
-            _serviceProvider = serviceProvider;
-
-            // Load default page
-            MainFrame.Navigate(_serviceProvider.GetRequiredService<VehiclesPage>());
+            _filesPage = filesPage;
         }
-     
 
-        private void VehiclesButton_Click(object sender, RoutedEventArgs e)
+        private void FilesButton_Click(object sender, RoutedEventArgs e)
         {
-            MainFrame.Navigate(_serviceProvider.GetRequiredService<VehiclesPage>());
+            MainContent.Content = _filesPage;
         }
     }
 }
+

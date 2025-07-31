@@ -2,27 +2,21 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Garage Management System"
-        Height="600" Width="900"
+        Height="600" Width="1000"
         WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Navigation Panel -->
+        <!-- Navigation -->
         <StackPanel Background="#FF2D2D30" Grid.Column="0">
-            <TextBlock Text="GMS" Foreground="White" FontSize="20"
-                       Margin="10" HorizontalAlignment="Center" />
-
-            <Button Content="Vehicles"
-                    Margin="10"
-                    Padding="5"
-                    Click="VehiclesButton_Click" />
-            <!-- Add more navigation buttons here -->
+            <TextBlock Text="GMS" Foreground="White" FontSize="22" Margin="10" HorizontalAlignment="Center"/>
+            <Button Content="Files" Click="FilesButton_Click" Margin="10"/>
         </StackPanel>
 
-        <!-- Main Content -->
-        <Frame x:Name="MainFrame" Grid.Column="1" NavigationUIVisibility="Hidden" />
+        <!-- Main content area -->
+        <ContentControl x:Name="MainContent" Grid.Column="1"/>
     </Grid>
 </Window>

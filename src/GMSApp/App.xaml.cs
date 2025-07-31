@@ -1,6 +1,5 @@
 using GMSApp.Data;
 using GMSApp.Repositories;
-using GMSApp.Services;
 using GMSApp.ViewModels;
 using GMSApp.Views;
 using Microsoft.EntityFrameworkCore;
@@ -19,39 +18,54 @@ namespace GMSApp
         public App()
         {
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.File("logs\\garage.log", rollingInterval: RollingInterval.Day)
+                .WriteTo.File("logs\\Appdb.log", rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
             _host = Host.CreateDefaultBuilder()
                 .ConfigureServices((context, services) =>
                 {
-                    services.AddDbContext<GarageDbContext>(options =>
-                        options.UseSqlite("Data Source=garage.db"));
-                   
+                    // DbContext
+                    services.AddDbContext<AppDbContext>(options =>
+                        options.UseSqlite("DataSource=app.db"));
 
-                   
-                    services.AddSingleton<MainWindow>();
+                    // Repositories
                     services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-                    services.AddTransient<VehicleViewModel>();
-                    services.AddTransient<VehiclesPage>();
+                    services.AddScoped<IFileRepository, FileRepository>();
 
+                    // ViewModels
+                    services.AddScoped<FileViewModel>();
 
-                   
+                    // Views
+                    services.AddScoped<MainWindow>();
 
+                    services.AddScoped<FilesPage>();
                 })
                 .UseSerilog()
                 .Build();
         }
 
-        protected override async void OnStartup(StartupEventArgs e)
+       /* protected override async void OnStartup(StartupEventArgs e)
         {
             Log.Information("Application starting");
 
             await _host.StartAsync();
 
             var mainWindow = _host.Services.GetRequiredService<MainWindow>();
-           
-           
+
+            mainWindow.Show();
+
+            base.OnStartup(e);
+        }*/
+        protected override async void OnStartup(StartupEventArgs e)
+        {
+            Log.Information("Application starting");
+
+            await _host.StartAsync();
+
+            var dbContext = _host.Services.GetRequiredService<AppDbContext>();
+            await dbContext.Database.EnsureCreatedAsync(); // ?? Add this
+
+            var mainWindow = _host.Services.GetRequiredService<MainWindow>();
             mainWindow.Show();
 
             base.OnStartup(e);
@@ -60,8 +74,10 @@ namespace GMSApp
         protected override async void OnExit(ExitEventArgs e)
         {
             Log.Information("Application exiting");
+
             await _host.StopAsync();
             Log.CloseAndFlush();
+
             base.OnExit(e);
         }
     }
