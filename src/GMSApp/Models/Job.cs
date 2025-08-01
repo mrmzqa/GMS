@@ -16,18 +16,21 @@ namespace GMSApp.Models
         public string JobTitle { get; set; }
         public Type JobType { get; set; }
 
-        public JobProduct Jobproduct { get; set; }
+        public Joblabels Jobplabels { get; set; }
 
         public string JobDescription { get; set; }
 
-        public class Jobproduct
+        public class Joblabels
         {
             [Key]
             public int Id { get; set; }
-
-            public string JobProductTitle     { get; set; }
-            public string JobProductlabels
+            public jobquotationlabel quotationlabels {get;set;}
+            public jobinventorylabel inventorylabels     { get; set; }
+            public jobproductlabel Productlabels
 {get; set;}
+            public jobvendorlabel 
+vendorlabels{get;set;}
+            public jobinvoicelabel invoicelabels {get;set;}
 
 
 
