@@ -8,7 +8,7 @@ using System.Windows.Controls.Primitives;
 
 namespace GMSApp.Models
 {
-    public class Prop
+    public class Job
     {
         [Key]
         public int Id { get; set; }
