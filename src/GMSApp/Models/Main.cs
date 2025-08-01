@@ -23,16 +23,23 @@ namespace GMSApp.Models
         public labels label { get; set; }
 
         public string Description { get; set; }
+        public Inventory Inventory { get; set; }
+        public Account Account { get; set; }
+        public Vendor Vendor { get; set; }
+        public Payment Payment { get; set; }
 
-        public virtual ICollection<Inventory> Inventory { get; set; }
+        public Job Job { get; set; }
+        public virtual ICollection<Inventory> Inventorydetail { get; set; }
 
-        public virtual ICollection<Account> account { get; set; }
+        public virtual ICollection<Account> accountdetail { get; set; }
 
-        public virtual ICollection<Vendor> Vendor { get; set; }
+        public virtual ICollection<Vendor> Vendordetail { get; set; }
 
-        public virtual ICollection<Payment> Payment { get; set; }
+        public virtual ICollection<Payment> Paymentdetail { get; set; }
 
-        public virtual ICollection<Job> Job { get; set; }
+        public virtual ICollection<Job> Jobdetail { get; set; }
+
+     
 
         public class labels
         {
