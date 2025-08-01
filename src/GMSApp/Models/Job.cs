@@ -12,6 +12,8 @@ namespace GMSApp.Models
     {
         [Key]
         public int Id { get; set; }
+        
+        public Account Account {get;set;}
 
         public string PropTitle { get; set; }
         public Type   Type { get; set; }
