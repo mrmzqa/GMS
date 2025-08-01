@@ -16,7 +16,7 @@ namespace GMSApp.ViewModels
 
         public List<PurchaseOrder> PurchaseOrders { get; set; }
 
-
+        public List<Inventory> Inventory { get; set; }
 
 
         public class JobcardViewModel

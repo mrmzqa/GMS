@@ -12,7 +12,7 @@ namespace GMSApp.Data
 
         // DbSets go here
         public DbSet<FileItem> Files { get; set; }
-         
+         public DbSet<Main> mains { get; set; }
         
     }
 }

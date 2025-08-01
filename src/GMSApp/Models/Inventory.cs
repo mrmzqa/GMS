@@ -11,6 +11,18 @@ namespace GMSApp.Models
         public int Id { get; set; }
         public string Name { get; set; }
 
+        public class Stock
+        {
+            public int Id { get; set; }
+
+            public int StockId { get; set; }
+
+            public InventoryItem Item { get; set; }
+
+            public InventoryCategory Category { get; set; }
+
+        }
+
         public class InventoryItem
         {
             public int Id { get; set; }

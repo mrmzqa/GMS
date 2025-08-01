@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
 
+
+
 namespace GMSApp.Models
 {
     public class Job
@@ -13,31 +15,9 @@ namespace GMSApp.Models
         [Key]
         public int Id { get; set; }
         
-        public Account Account {get;set;}
-
-        public string JobTitle { get; set; }
-        public Type   Type { get; set; }
-
-        public labels labels { get; set; }
-
-        public string Description { get; set; }
-
-        public class labels
-        {
-            [Key]
-            public int Id { get; set; }
-            public quotationlabel quotationlabels {get;set;}
-            public inventorylabel inventorylabels     { get; set; }
-            public productlabel Productlabels
-{get; set;}
-            public vendorlabel 
-vendorlabels{get;set;}
-            public invoicelabel invoicelabels {get;set;}
+     
 
 
-
-
-        }
        
 
         public class Quotation
@@ -101,26 +81,6 @@ vendorlabels{get;set;}
             public Payment Payment { get; set; }
 
         }
-        public class Vendor
-        {
-            public int Id { get; set; }
-            public string Name { get; set; }
-            public string ContactPerson { get; set; }
-            public Address Address { get; set; }
-            
-            public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        }
-
-        public class Address
-        {
-            public string Street { get; set; }
-            public string City { get; set; }
-            public string State { get; set; }
-            public string ZipCode { get; set; }
-            public string Country { get; set; }
-            public string email { get; set; }
-            public int phone { get; set; }
-
-        }
+       
     }
 }
