@@ -46,10 +46,11 @@ namespace GMSApp.Models
             public Status Status { get; set; }
             public DateTime? CompletionDate { get; set; }
 
-            public Jobcard Jobcardid { get; set; }
+            public Jobcard Jobcard { get; set; }
+            public string Jobcardid { get; set;}
 
             public Payment Payment { get; set; }
-
+            public string paymentid {get; set;}
 
         }
         public class Jobcard
@@ -84,7 +85,7 @@ namespace GMSApp.Models
 
             public List<Vendor> Vendor { get; set; }
             public DateTime OrderDate { get; set; }
-            public List<Job> Jobs { get; set; }
+            public List<Jobcard> Jobcards { get; set; }
 
             public List<Quotation> Quotations { get; set; }
 
