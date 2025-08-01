@@ -15,7 +15,7 @@ namespace GMSApp.Models
         
         public Account Account {get;set;}
 
-        public string PropTitle { get; set; }
+        public string JobTitle { get; set; }
         public Type   Type { get; set; }
 
         public labels labels { get; set; }
