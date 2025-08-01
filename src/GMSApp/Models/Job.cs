@@ -8,29 +8,29 @@ using System.Windows.Controls.Primitives;
 
 namespace GMSApp.Models
 {
-    public class Job
+    public class Prop
     {
         [Key]
         public int Id { get; set; }
 
-        public string JobTitle { get; set; }
-        public Type JobType { get; set; }
+        public string PropTitle { get; set; }
+        public Type   Type { get; set; }
 
-        public Joblabels Jobplabels { get; set; }
+        public labels labels { get; set; }
 
-        public string JobDescription { get; set; }
+        public string Description { get; set; }
 
-        public class Joblabels
+        public class labels
         {
             [Key]
             public int Id { get; set; }
-            public jobquotationlabel quotationlabels {get;set;}
-            public jobinventorylabel inventorylabels     { get; set; }
-            public jobproductlabel Productlabels
+            public quotationlabel quotationlabels {get;set;}
+            public inventorylabel inventorylabels     { get; set; }
+            public productlabel Productlabels
 {get; set;}
-            public jobvendorlabel 
+            public vendorlabel 
 vendorlabels{get;set;}
-            public jobinvoicelabel invoicelabels {get;set;}
+            public invoicelabel invoicelabels {get;set;}
 
 
 
