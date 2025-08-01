@@ -56,7 +56,9 @@ namespace GMSApp.Models
             public Status Status { get; set; }
             public DateTime? CompletionDate { get; set; }
 
-            public Quotation Quotationid { get; set; }
+            public Quotation Quotation { get; set; }
+
+            public int Quotationid { get; set; }
 
             public Payment Payment { get; set; }
 
