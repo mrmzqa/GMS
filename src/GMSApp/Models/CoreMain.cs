@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GMSApp.Models
 {
-    public class Main
+    public class CoreMain
     {
         [Key]
         public int Id { get; set; }
@@ -16,10 +16,6 @@ namespace GMSApp.Models
         [Required]
         public string Name { get; set; } = string.Empty;
 
-        
-        [ForeignKey(nameof(CoreMain))]
-        public int CoreMainId { get; set; }
-
-        public CoreMain CoreMain { get; set; }
+        public Virtual icollection<main> main {get; set;}
     }
 }
