@@ -25,7 +25,9 @@ namespace GMSApp.Models
             [Key]
             public int Id { get; set; }
 
-            public string JobTitle { get; set; }
+            public string JobProductTitle     { get; set; }
+            public string JobProductlabels
+{get; set;}
 
 
 
