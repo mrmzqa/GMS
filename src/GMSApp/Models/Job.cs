@@ -105,7 +105,7 @@ vendorlabels{get;set;}
             public string Name { get; set; }
             public string ContactPerson { get; set; }
             public Address Address { get; set; }
-            public int CR { get; set; }
+            
             public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         }
 
