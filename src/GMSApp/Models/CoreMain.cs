@@ -3,17 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GMSApp.Models
 {
-    public class CoreMain
+    public class Main
     {
-        public int id { get; set; }
+        [Key]
+        public int Id { get; set; }
 
-        public string Name { get; set; }
+        [Required]
+        public string Name { get; set; } = string.Empty;
 
-        public virtual ICollection<Main> Main { get; set; } 
+        
+        [ForeignKey(nameof(CoreMain))]
+        public int CoreMainId { get; set; }
 
-
+        public CoreMain CoreMain { get; set; }
     }
 }
