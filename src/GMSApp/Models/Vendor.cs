@@ -8,6 +8,10 @@ namespace GMSApp.Models
     {
         public int Id { get; set; }
         public string Name { get; set; }
+
+        public int MainId { get; set; }
+
+        public Main Main { get; set; }
         public List<VendorData>Vendors { get; set; }
         public class VendorData
         {

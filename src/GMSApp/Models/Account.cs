@@ -12,6 +12,10 @@ namespace GMSApp.Models
 
         public string Name { get; set; }
 
+        public int Mainid { get; set; }
+
+        public Main Main { get; set; }
+
         public class AccountProcess
         {
            public int Id { get; set; }

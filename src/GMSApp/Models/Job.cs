@@ -14,11 +14,12 @@ namespace GMSApp.Models
     {
         [Key]
         public int Id { get; set; }
-        
-     
+
+        public int Mainid { get; set; }
+
+        public Main Main { get; set; }
 
 
-       
 
         public class Quotation
         {

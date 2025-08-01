@@ -13,26 +13,26 @@ namespace GMSApp.Models
         [Key]
         public int Id { get; set; }
 
-        
-        public string Name { get; set; }
-       
+        public int CoreMainId { get; set; }
 
-        public string Title { get; set; }
+        public CoreMain CoreMain { get; set; }
+        public string Name { get; set; }
+
         public Type Type { get; set; }
 
         public labels label { get; set; }
 
         public string Description { get; set; }
 
-        public Inventory Inventory { get; set; }
+        public virtual ICollection<Inventory> Inventory { get; set; }
 
-        public Account account { get; set; }
+        public virtual ICollection<Account> account { get; set; }
 
-        public Vendor Vendor { get; set; }
+        public virtual ICollection<Vendor> Vendor { get; set; }
 
-        public Payment Payment { get; set; }
+        public virtual ICollection<Payment> Payment { get; set; }
 
-        public Job Job { get; set; }
+        public virtual ICollection<Job> Job { get; set; }
 
         public class labels
         {
