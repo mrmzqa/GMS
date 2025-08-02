@@ -43,4 +43,573 @@ namespace GMSApp.ViewModels
             SelectedCoreMain = coreMain;
         }
     }
+} 
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace GMSApp.Models
+{
+public class CoreMain
+{
+[Key]
+public int Id { get; set; }
+
+[Required, MaxLength(200)]  
+    public string Name { get; set; } = string.Empty;  
+
+    // One CoreMain can have many Mains  
+    public virtual ICollection<Main> Mains { get; set; } = new List<Main>();  
+}  
+
+public class Main  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [Required, ForeignKey(nameof(CoreMain))]  
+    public int CoreMainId { get; set; }  
+    public CoreMain CoreMain { get; set; } = null!;  
+
+    [Required, MaxLength(200)]  
+    public string Name { get; set; } = string.Empty;  
+
+    [ForeignKey(nameof(Type))]  
+    public int? TypeId { get; set; }  
+    public Type? Type { get; set; }  
+
+    [ForeignKey(nameof(Label))]  
+    public int? LabelId { get; set; }  
+    public Label? Label { get; set; }  
+
+    public string? Description { get; set; }  
+
+    // Navigation collections for sub-entities  
+    public virtual ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();  
+    public virtual ICollection<Account> Accounts { get; set; } = new List<Account>();  
+    public virtual ICollection<Vendor> Vendors { get; set; } = new List<Vendor>();  
+    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();  
+    public virtual ICollection<Job> Jobs { get; set; } = new List<Job>();  
+
+    // Header/footer files  
+    public byte[]? HeaderFile { get; set; }  
+    public string? HeaderName { get; set; }  
+    public byte[]? FooterFile { get; set; }  
+    public string? FooterName { get; set; }  
+}  
+
+public class Label  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    public QuotationLabel? QuotationLabel { get; set; }  
+    public InventoryLabel? InventoryLabel { get; set; }  
+    public ProductLabel? ProductLabel { get; set; }  
+    public VendorLabel? VendorLabel { get; set; }  
+    public InvoiceLabel? InvoiceLabel { get; set; }  
+}  
+
+public class QuotationLabel  
+{  
+    [Key]  
+    public int Id { get; set; }  
+    [MaxLength(200)]  
+    public string Name { get; set; } = string.Empty;  
+    public string Field { get; set; } = string.Empty;  
+}  
+
+public class InventoryLabel  
+{  
+    [Key]  
+    public int Id { get; set; }  
+    [MaxLength(200)]  
+    public string Name { get; set; } = string.Empty;  
+    public string Field { get; set; } = string.Empty;  
+}  
+
+public class ProductLabel  
+{  
+    [Key]  
+    public int Id { get; set; }  
+    [MaxLength(200)]  
+    public string Name { get; set; } = string.Empty;  
+    public string Field { get; set; } = string.Empty;  
+}  
+
+public class VendorLabel  
+{  
+    [Key]  
+    public int Id { get; set; }  
+    [MaxLength(200)]  
+    public string Name { get; set; } = string.Empty;  
+    public string Field { get; set; } = string.Empty;  
+}  
+
+public class InvoiceLabel  
+{  
+    [Key]  
+    public int Id { get; set; }  
+    [MaxLength(200)]  
+    public string Name { get; set; } = string.Empty;  
+    public string Field { get; set; } = string.Empty;  
+}  
+
+// ================= Inventory ====================  
+
+public class Inventory  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [Required, MaxLength(200)]  
+    public string Name { get; set; } = string.Empty;  
+
+    [ForeignKey(nameof(Main))]  
+    public int MainId { get; set; }  
+    public Main Main { get; set; } = null!;  
+
+    public virtual ICollection<InventoryCategory> Categories { get; set; } = new List<InventoryCategory>();  
+
+    public virtual ICollection<InventoryItem> Items { get; set; } = new List<InventoryItem>();  
+    public virtual ICollection<InventoryTransaction> Transactions { get; set; } = new List<InventoryTransaction>();  
+}  
+
+public class InventoryCategory  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [Required, MaxLength(150)]  
+    public string Name { get; set; } = string.Empty;  
+
+    public string? Description { get; set; }  
+
+    [ForeignKey(nameof(Inventory))]  
+    public int InventoryId { get; set; }  
+    public Inventory Inventory { get; set; } = null!;  
+
+    public virtual ICollection<InventoryItem> Items { get; set; } = new List<InventoryItem>();  
+}  
+
+public class InventoryItem  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [Required, MaxLength(250)]  
+    public string ItemName { get; set; } = string.Empty;  
+
+    [ForeignKey(nameof(Quantity))]  
+    public int QuantityId { get; set; }  
+    public Quantity Quantity { get; set; } = null!;  
+
+    [ForeignKey(nameof(InventoryCategory))]  
+    public int CategoryId { get; set; }  
+    public InventoryCategory InventoryCategory { get; set; } = null!;  
+
+    [Required]  
+    public decimal Price { get; set; }  
+
+    public DateTime LastUpdated { get; set; } = DateTime.UtcNow;  
+
+    [ForeignKey(nameof(Inventory))]  
+    public int InventoryId { get; set; }  
+    public Inventory Inventory { get; set; } = null!;  
+}  
+
+public class Quantity  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [Required]  
+    public int Amount { get; set; }  
+
+    [MaxLength(64)]  
+    public string Unit { get; set; } = string.Empty;  
+}  
+
+public class InventoryTransaction  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [ForeignKey(nameof(InventoryItem))]  
+    public int InventoryItemId { get; set; }  
+    public InventoryItem InventoryItem { get; set; } = null!;  
+
+    [Required]  
+    public int Quantity { get; set; }  
+
+    [Required]  
+    public DateTime TransactionDate { get; set; } = DateTime.UtcNow;  
+
+    [Required, MaxLength(50)]  
+    public string TransactionType { get; set; } = string.Empty; // "IN", "OUT", etc.  
+
+    public string? Remarks { get; set; }  
+}  
+
+// ================= Job ====================  
+
+public class Job  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [ForeignKey(nameof(Main))]  
+    public int MainId { get; set; }  
+    public Main Main { get; set; } = null!;  
+
+    public virtual ICollection<Quotation> Quotations { get; set; } = new List<Quotation>();  
+    public virtual ICollection<Jobcard> Jobcards { get; set; } = new List<Jobcard>();  
+    public virtual ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();  
+}  
+
+public class Quotation  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [Required, MaxLength(200)]  
+    public string CustomerName { get; set; } = string.Empty;  
+
+    [Required]  
+    public DateTime QuotationDate { get; set; }  
+
+    public string? Description { get; set; }  
+
+    [Required]  
+    public decimal EstimatedCost { get; set; }  
+
+    public decimal? ActualCost { get; set; }  
+
+    [ForeignKey(nameof(Status))]  
+    public int StatusId { get; set; }  
+    public Status Status { get; set; } = null!;  
+
+    public DateTime? CompletionDate { get; set; }  
+
+    [ForeignKey(nameof(Jobcard))]  
+    public int? JobcardId { get; set; }  
+    public Jobcard? Jobcard { get; set; }  
+
+    [ForeignKey(nameof(Payment))]  
+    public int? PaymentId { get; set; }  
+    public Payment? Payment { get; set; }  
+}  
+
+public class Jobcard  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [ForeignKey(nameof(Vendor))]  
+    public int VendorId { get; set; }  
+    public Vendor Vendor { get; set; } = null!;  
+
+    [Required, MaxLength(200)]  
+    public string CustomerName { get; set; } = string.Empty;  
+
+    [Required]  
+    public DateTime JobDate { get; set; }  
+
+    public string? JobDescription { get; set; }  
+
+    [Required]  
+    public decimal EstimatedCost { get; set; }  
+
+    public decimal? ActualCost { get; set; }  
+
+    [ForeignKey(nameof(Status))]  
+    public int StatusId { get; set; }  
+    public Status Status { get; set; } = null!;  
+
+    public DateTime? CompletionDate { get; set; }  
+
+    [ForeignKey(nameof(Quotation))]  
+    public int? QuotationId { get; set; }  
+    public Quotation? Quotation { get; set; }  
+
+    [ForeignKey(nameof(Payment))]  
+    public int? PaymentId { get; set; }  
+    public Payment? Payment { get; set; }  
+}  
+
+public class PurchaseOrder  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [Required]  
+    public DateTime OrderDate { get; set; }  
+
+    public decimal TotalAmount { get; set; }  
+
+    [ForeignKey(nameof(Payment))]  
+    public int? PaymentId { get; set; }  
+    public Payment? Payment { get; set; }  
+
+    public virtual ICollection<Vendor> Vendors { get; set; } = new List<Vendor>();  
+    public virtual ICollection<Jobcard> Jobcards { get; set; } = new List<Jobcard>();  
+    public virtual ICollection<Quotation> Quotations { get; set; } = new List<Quotation>();  
+}  
+
+// ================= Vendor ====================  
+
+public class Vendor  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [Required, MaxLength(200)]  
+    public string Name { get; set; } = string.Empty;  
+
+    [ForeignKey(nameof(Main))]  
+    public int MainId { get; set; }  
+    public Main Main { get; set; } = null!;  
+
+    public virtual ICollection<VendorData> VendorDatas { get; set; } = new List<VendorData>();  
+}  
+
+public class VendorData  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [Required, MaxLength(200)]  
+    public string Name { get; set; } = string.Empty;  
+
+    [MaxLength(200)]  
+    public string? ContactPerson { get; set; }  
+
+    public Address? Address { get; set; }  
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;  
+
+    [ForeignKey(nameof(Vendor))]  
+    public int VendorId { get; set; }  
+    public Vendor Vendor { get; set; } = null!;  
+}  
+
+public class Address  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [MaxLength(250)]  
+    public string? Street { get; set; }  
+
+    [MaxLength(100)]  
+    public string? City { get; set; }  
+
+    [MaxLength(100)]  
+    public string? State { get; set; }  
+
+    [MaxLength(20)]  
+    public string? ZipCode { get; set; }  
+
+    [MaxLength(100)]  
+    public string? Country { get; set; }  
+
+    [EmailAddress]  
+    public string? Email { get; set; }  
+
+    [Phone]  
+    public string? Phone { get; set; }  
+}  
+
+// ================= Account ====================  
+
+public class Account  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [Required, MaxLength(200)]  
+    public string Name { get; set; } = string.Empty;  
+
+    [ForeignKey(nameof(Main))]  
+    public int MainId { get; set; }  
+    public Main Main { get; set; } = null!;  
+
+    public virtual ICollection<AccountPayable> Payables { get; set; } = new List<AccountPayable>();  
+    public virtual ICollection<AccountReceivable> Receivables { get; set; } = new List<AccountReceivable>();  
+    public virtual ICollection<AccountReconcile> Reconciles { get; set; } = new List<AccountReconcile>();  
+}  
+
+public class AccountPayable  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [ForeignKey(nameof(Account))]  
+    public int AccountId { get; set; }  
+    public Account Account { get; set; } = null!;  
+
+    [Required]  
+    public decimal AmountDue { get; set; }  
+
+    [Required]  
+    public DateTime DueDate { get; set; }  
+
+    public bool IsPaid { get; set; } = false;  
+
+    public DateTime? PaidDate { get; set; }  
+
+    public string? Description { get; set; }  
+}  
+
+public class AccountReceivable  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [ForeignKey(nameof(Account))]  
+    public int AccountId { get; set; }  
+    public Account Account { get; set; } = null!;  
+
+    [Required]  
+    public decimal AmountReceivable { get; set; }  
+
+    [Required]  
+    public DateTime DueDate { get; set; }  
+
+    public bool IsCollected { get; set; } = false;  
+
+    public DateTime? CollectedDate { get; set; }  
+
+    public string? Description { get; set; }  
+}  
+
+public class AccountReconcile  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [ForeignKey(nameof(Account))]  
+    public int AccountId { get; set; }  
+    public Account Account { get; set; } = null!;  
+
+    [Required]  
+    public decimal Amount { get; set; }  
+
+    [Required]  
+    public DateTime ReconcileDate { get; set; } = DateTime.UtcNow;  
+
+    [Required, MaxLength(500)]  
+    public string Description { get; set; } = string.Empty;  
+
+    public bool IsCleared { get; set; } = false;  
+}  
+
+// ================= Payment ====================  
+
+public class Payment  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [ForeignKey(nameof(Main))]  
+    public int MainId { get; set; }  
+    public Main Main { get; set; } = null!;  
+
+    [Required]  
+    public decimal Amount { get; set; }  
+
+    [Required]  
+    public DateTime PaymentDate { get; set; }  
+
+    public virtual ICollection<PaymentReceipt> PaymentReceipts { get; set; } = new List<PaymentReceipt>();  
+}  
+
+public class PaymentReceipt  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [Required]  
+    public decimal Amount { get; set; }  
+
+    [Required]  
+    public DateTime PaymentDate { get; set; }  
+
+    [MaxLength(200)]  
+    public string? PayerName { get; set; }  
+
+    [ForeignKey(nameof(PaymentMethod))]  
+    public int? PaymentMethodId { get; set; }  
+    public PaymentMethod? PaymentMethod { get; set; }  
+
+    [MaxLength(100)]  
+    public string? ReceiptNumber { get; set; }  
+
+    public int AdvancePayment { get; set; }  
+}  
+
+public class PaymentMethod  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [Required, MaxLength(100)]  
+    public string Name { get; set; } = string.Empty;  
+
+    public string? Remarks { get; set; }  
+}  
+
+public class ReceiptStatus  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [Required, MaxLength(100)]  
+    public string Name { get; set; } = string.Empty;  
+
+    public string? Remarks { get; set; }  
+}  
+
+public class ReceiptStatusUpdate  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [ForeignKey(nameof(ReceiptStatus))]  
+    public int StatusId { get; set; }  
+    public ReceiptStatus Status { get; set; } = null!;  
+
+    [Required]  
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;  
+}  
+
+// ================= Support Entities ====================  
+
+public class Type  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [Required, MaxLength(150)]  
+    public string Name { get; set; } = string.Empty;  
+
+    public string? Description { get; set; }  
+}  
+
+public class Status  
+{  
+    [Key]  
+    public int Id { get; set; }  
+
+    [Required, MaxLength(150)]  
+    public string Name { get; set; } = string.Empty;  
+
+    public string? Description { get; set; }  
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;  
 }
+
+} Improve models add necessary things
+
