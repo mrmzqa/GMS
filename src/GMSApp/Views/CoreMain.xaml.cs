@@ -1,6 +1,4 @@
-﻿using GMSApp.ViewModels;
-using GMSApp.Views;
-using System.Windows;
+using GMSApp.ViewModels;
 using System.Windows.Controls;
 
 namespace GMSApp.Views
