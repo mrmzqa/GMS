@@ -2,6 +2,10 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:conv="clr-namespace:GMSApp.Converters"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             
              >
-   
+   <Application.Resources>
+      <conv:NullToBoolConverter x:Key="NullToBoolConverter"/>
+      <conv:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter"/>
+        </Application.Resources>
 </Application>

@@ -17,7 +17,7 @@ namespace GMSApp.ViewModels
         public ObservableCollection<CoreMain> CoreMains { get; } = new();
 
         [ObservableProperty]
-        private CoreMain? selectedCoreMain;
+        public CoreMain? selectedCoreMain;
 
         public CoreMainViewModel(IRepository<CoreMain> coreMainRepo, IFileRepository fileRepo)
         {
@@ -41,30 +41,30 @@ namespace GMSApp.ViewModels
             var newCoreMain = new CoreMain { Name = "New CoreMain" };
             await _coreMainRepo.AddAsync(newCoreMain);
             await LoadCoreMainsAsync();
-            SelectedCoreMain = newCoreMain;
+            selectedCoreMain = newCoreMain;
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
         public async Task UpdateCoreMainAsync()
         {
-            if (SelectedCoreMain == null) return;
-            await _coreMainRepo.UpdateAsync(SelectedCoreMain);
+            if (selectedCoreMain == null) return;
+            await _coreMainRepo.UpdateAsync(selectedCoreMain);
             await LoadCoreMainsAsync();
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
         public async Task DeleteCoreMainAsync()
         {
-            if (SelectedCoreMain == null) return;
-            await _coreMainRepo.DeleteAsync(SelectedCoreMain.Id);
-            SelectedCoreMain = null;
+            if (selectedCoreMain == null) return;
+            await _coreMainRepo.DeleteAsync(selectedCoreMain.Id);
+            selectedCoreMain = null;
             await LoadCoreMainsAsync();
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
         public void UploadHeaderFile()
         {
-            if (SelectedCoreMain == null) return;
+            if (selectedCoreMain == null) return;
 
             var dialog = new OpenFileDialog
             {
@@ -73,16 +73,16 @@ namespace GMSApp.ViewModels
             };
             if (dialog.ShowDialog() == true)
             {
-                SelectedCoreMain.HeaderFile = File.ReadAllBytes(dialog.FileName);
-                SelectedCoreMain.HeaderName = Path.GetFileName(dialog.FileName);
-                OnPropertyChanged(nameof(SelectedCoreMain));
+                selectedCoreMain.HeaderFile = File.ReadAllBytes(dialog.FileName);
+                selectedCoreMain.HeaderName = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(selectedCoreMain));
             }
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
         public void UploadFooterFile()
         {
-            if (SelectedCoreMain == null) return;
+            if (selectedCoreMain == null) return;
 
             var dialog = new OpenFileDialog
             {
@@ -91,12 +91,12 @@ namespace GMSApp.ViewModels
             };
             if (dialog.ShowDialog() == true)
             {
-                SelectedCoreMain.FooterFile = File.ReadAllBytes(dialog.FileName);
-                SelectedCoreMain.FooterName = Path.GetFileName(dialog.FileName);
-                OnPropertyChanged(nameof(SelectedCoreMain));
+                selectedCoreMain.FooterFile = File.ReadAllBytes(dialog.FileName);
+                selectedCoreMain.FooterName = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(selectedCoreMain));
             }
         }
 
-        private bool CanModify() => SelectedCoreMain != null;
+        private bool CanModify() => selectedCoreMain != null;
     }
 }
