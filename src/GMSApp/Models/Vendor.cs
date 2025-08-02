@@ -1,7 +1,3 @@
-
-
-
-
 namespace GMSApp.Models
 {
     public class Vendor

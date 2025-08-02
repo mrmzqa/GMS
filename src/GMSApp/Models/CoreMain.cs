@@ -16,6 +16,8 @@ namespace GMSApp.Models
         [Required, MaxLength(200)]
         public string Name { get; set; } = string.Empty;
 
+
+
         public virtual ICollection<Main> Mains { get; set; } = new List<Main>();
     }
 }

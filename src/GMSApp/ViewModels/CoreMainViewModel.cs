@@ -1,44 +1,127 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
+using GMSApp.Commands;
 using GMSApp.Models;
 using GMSApp.Repositories;
+using Microsoft.Win32;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace GMSApp.ViewModels
 {
-    public partial class CoreMainViewModel : ObservableObject
+    public class CoreMainViewModel : INotifyPropertyChanged
     {
-        private readonly Repository<CoreMain> _coreMainRepository;
+        private readonly IRepository<Main> _MainRepo;
+        private readonly IFileRepository _fileRepo;
 
-        public ObservableCollection<CoreMain> CoreMains { get; } = new();
+        private Main? _selectedMain;
 
-        [ObservableProperty]
-        private CoreMain? selectedCoreMain;
+        public ObservableCollection<Main> Mains { get; set; } = new();
 
-        public CoreMainViewModel(Repository<CoreMain> coreMainRepository)
+        public Main? SelectedMain
         {
-            _coreMainRepository = coreMainRepository;
-            _ = LoadAsync();
+            get => _selectedMain;
+            set
+            {
+                _selectedMain = value;
+                OnPropertyChanged();
+                RaiseCommandCanExecuteChanged();
+            }
         }
 
-        [RelayCommand]
-        public async Task LoadAsync()
+        public ICommand AddMainCommand { get; }
+        public ICommand UpdateMainCommand { get; }
+        public ICommand DeleteMainCommand { get; }
+        public ICommand UploadHeaderFileCommand { get; }
+        public ICommand UploadFooterFileCommand { get; }
+
+        public CoreMainViewModel(IRepository<Main> MainRepo, IFileRepository fileRepo)
         {
-            CoreMains.Clear();
-            var items = await _coreMainRepository.GetAllAsync();
+            _MainRepo = MainRepo;
+            _fileRepo = fileRepo;
+
+            AddMainCommand = new RelayCommand(async () => await AddCoreMain());
+            UpdateMainCommand = new RelayCommand(async () => await UpdateCoreMain(), () => SelectedMain != null);
+            DeleteMainCommand = new RelayCommand(async () => await DeleteCoreMain(), () => SelectedMain != null);
+            UploadHeaderFileCommand = new RelayCommand(() => UploadImage("Header"), () => SelectedMain != null);
+            UploadFooterFileCommand = new RelayCommand(() => UploadImage("Footer"), () => SelectedMain != null);
+
+            _ = LoadCoreMainsAsync();
+        }
+
+        private async Task LoadCoreMainsAsync()
+        {
+            var items = await _MainRepo.GetAllAsync();
+            Mains.Clear();
             foreach (var item in items)
-                CoreMains.Add(item);
+                Mains.Add(item);
         }
 
-        [RelayCommand]
-        public async Task AddAsync()
+        private async Task AddCoreMain()
         {
-            var coreMain = new CoreMain();
-
-            await _coreMainRepository.AddAsync(coreMain);
-            await LoadAsync();
-            SelectedCoreMain = coreMain;
+            var newMain = new Main { Name = "New CoreMain" };
+            await _MainRepo.AddAsync(newMain);
+            Mains.Add(newMain);
+            SelectedMain = newMain;
         }
+
+        private async Task UpdateCoreMain()
+        {
+            if (SelectedMain != null)
+                await _MainRepo.UpdateAsync(SelectedMain);
+        }
+
+        private async Task DeleteCoreMain()
+        {
+            if (SelectedMain == null) return;
+
+            await _MainRepo.DeleteAsync(SelectedMain.Id);
+            Mains.Remove(SelectedMain);
+            SelectedMain = null;
+        }
+
+        private void UploadImage(string type)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Filter = "Image files|*.jpg;*.jpeg;*.png;*.bmp"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                var fileBytes = File.ReadAllBytes(dialog.FileName);
+                var fileName = Path.GetFileName(dialog.FileName);
+
+                if (SelectedMain == null) return;
+
+                if (type == "Header")
+                {
+                    SelectedMain.HeaderFile = fileBytes;
+                    SelectedMain.HeaderName = fileName;
+                }
+                else if (type == "Footer")
+                {
+                    SelectedMain.FooterFile = fileBytes;
+                    SelectedMain.FooterName = fileName;
+                }
+
+                OnPropertyChanged(nameof(SelectedMain));
+            }
+        }
+
+        private void RaiseCommandCanExecuteChanged()
+        {
+            (UpdateMainCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (DeleteMainCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (UploadHeaderFileCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (UploadFooterFileCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string name = "") =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }
