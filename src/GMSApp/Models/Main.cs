@@ -39,11 +39,7 @@ namespace GMSApp.Models
             public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
             public virtual ICollection<Job> Jobs { get; set; } = new List<Job>();
 
-            // Header/footer files  
-            public byte[]? HeaderFile { get; set; }
-            public string? HeaderName { get; set; }
-            public byte[]? FooterFile { get; set; }
-            public string? FooterName { get; set; }
+            
         
 
 
