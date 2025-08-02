@@ -1,3 +1,126 @@
+private readonly CoreMainPage _coreMainPage;
+
+public MainWindow(FilesPage filesPage, CoreMainPage coreMainPage)
+{
+    InitializeComponent();
+    _filesPage = filesPage;
+    _coreMainPage = coreMainPage;
+}
+
+private void CoreMainButton_Click(object sender, RoutedEventArgs e)
+{
+    MainContent.Content = _coreMainPage;
+}
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using GMSApp.Models;
+using GMSApp.Repositories;
+using Microsoft.Win32;
+using System;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace GMSApp.ViewModels
+{
+    public partial class CoreMainViewModel : ObservableObject
+    {
+        private readonly IRepository<CoreMain> _coreMainRepo;
+        private readonly IFileRepository _fileRepo;
+
+        public ObservableCollection<CoreMain> CoreMains { get; } = new();
+
+        [ObservableProperty]
+        private CoreMain? selectedCoreMain;
+
+        public CoreMainViewModel(IRepository<CoreMain> coreMainRepo, IFileRepository fileRepo)
+        {
+            _coreMainRepo = coreMainRepo;
+            _fileRepo = fileRepo;
+            _ = LoadCoreMainsAsync();
+        }
+
+        [RelayCommand]
+        public async Task LoadCoreMainsAsync()
+        {
+            CoreMains.Clear();
+            var items = await _coreMainRepo.GetAllAsync();
+            foreach (var item in items)
+                CoreMains.Add(item);
+        }
+
+        [RelayCommand]
+        public async Task AddCoreMainAsync()
+        {
+            var newItem = new CoreMain { Name = "New CoreMain" };
+            await _coreMainRepo.AddAsync(newItem);
+            await LoadCoreMainsAsync();
+            SelectedCoreMain = newItem;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task UpdateCoreMainAsync()
+        {
+            if (SelectedCoreMain == null) return;
+            await _coreMainRepo.UpdateAsync(SelectedCoreMain);
+            await LoadCoreMainsAsync();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task DeleteCoreMainAsync()
+        {
+            if (SelectedCoreMain == null) return;
+            await _coreMainRepo.DeleteAsync(SelectedCoreMain.Id);
+            SelectedCoreMain = null;
+            await LoadCoreMainsAsync();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void UploadHeaderFile()
+        {
+            if (SelectedCoreMain == null) return;
+
+            var dlg = new OpenFileDialog()
+            {
+                Title = "Select Header Image",
+                Filter = "All Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif",
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                SelectedCoreMain.HeaderFile = File.ReadAllBytes(dlg.FileName);
+                SelectedCoreMain.HeaderName = Path.GetFileName(dlg.FileName);
+                OnPropertyChanged(nameof(SelectedCoreMain));
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void UploadFooterFile()
+        {
+            if (SelectedCoreMain == null) return;
+
+            var dlg = new OpenFileDialog()
+            {
+                Title = "Select Footer Image",
+                Filter = "All Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif",
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                SelectedCoreMain.FooterFile = File.ReadAllBytes(dlg.FileName);
+                SelectedCoreMain.FooterName = Path.GetFileName(dlg.FileName);
+                OnPropertyChanged(nameof(SelectedCoreMain));
+            }
+        }
+
+        private bool CanModify() => SelectedCoreMain != null;
+    }
+}
+
+
+
+
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
