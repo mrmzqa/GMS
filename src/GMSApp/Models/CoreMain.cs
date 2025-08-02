@@ -13,9 +13,9 @@ namespace GMSApp.Models
         [Key]
         public int Id { get; set; }
 
-        [Required]
+        [Required, MaxLength(200)]
         public string Name { get; set; } = string.Empty;
 
-        public Virtual icollection<main> main {get; set;}
+        public virtual ICollection<Main> Mains { get; set; } = new List<Main>();
     }
 }

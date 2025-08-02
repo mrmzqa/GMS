@@ -31,9 +31,9 @@
 
             <!-- Navigation -->
             <StackPanel Background="#FF2D2D30" Grid.Column="0">
-                <TextBlock Text="GMS" Foreground="White" FontSize="22" Margin="10" HorizontalAlignment="Center"/>
+                <TextBlock Text="JMS" Foreground="White" FontSize="22" Margin="10" HorizontalAlignment="Center"/>
                 <Button Content="Files" Click="FilesButton_Click" Margin="10"/>
-                <Button Content="Garage" Click="FilesButton_Click" Margin="10"/>
+                <Button Content="Core" Click="CoreMainButton_Click" Margin="10"/>
             </StackPanel>
 
             <!-- Main Content Area -->

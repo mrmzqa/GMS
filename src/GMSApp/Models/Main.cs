@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,38 +11,44 @@ namespace GMSApp.Models
 {
     public class Main
     {
-        [Key]
-        public int Id { get; set; }
+        
+            [Key]
+            public int Id { get; set; }
 
-        public int CoreMainId { get; set; }
+            [Required, ForeignKey(nameof(CoreMain))]
+            public int CoreMainId { get; set; }
+            public CoreMain CoreMain { get; set; } = null!;
 
-        public CoreMain CoreMain { get; set; }
-        public string Name { get; set; }
+            [Required, MaxLength(200)]
+            public string Name { get; set; } = string.Empty;
 
-        public Type Type { get; set; }
+            [ForeignKey(nameof(Type))]
+            public int? TypeId { get; set; }
+            public Type? Type { get; set; }
 
-        public labels label { get; set; }
+            [ForeignKey(nameof(Label))]
+            public int? LabelId { get; set; }
+            public Labels? Label { get; set; }
 
-        public string Description { get; set; }
-        public Inventory Inventory { get; set; }
-        public Account Account { get; set; }
-        public Vendor Vendor { get; set; }
-        public Payment Payment { get; set; }
+            public string? Description { get; set; }
 
-        public Job Job { get; set; }
-        public virtual ICollection<Inventory> Inventorydetail { get; set; }
+            // Navigation collections for sub-entities  
+            public virtual ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
+            public virtual ICollection<Account> Accounts { get; set; } = new List<Account>();
+            public virtual ICollection<Vendor> Vendors { get; set; } = new List<Vendor>();
+            public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
+            public virtual ICollection<Job> Jobs { get; set; } = new List<Job>();
 
-        public virtual ICollection<Account> accountdetail { get; set; }
+            // Header/footer files  
+            public byte[]? HeaderFile { get; set; }
+            public string? HeaderName { get; set; }
+            public byte[]? FooterFile { get; set; }
+            public string? FooterName { get; set; }
+        
 
-        public virtual ICollection<Vendor> Vendordetail { get; set; }
 
-        public virtual ICollection<Payment> Paymentdetail { get; set; }
 
-        public virtual ICollection<Job> Jobdetail { get; set; }
-
-     
-
-        public class labels
+        public class Labels
         {
             [Key]
             public int Id { get; set; }
@@ -103,13 +110,7 @@ namespace GMSApp.Models
             public string Field { get; set; }
         }
 
-        public byte[] headerfile { get; set; }
-
-        public string headername { get; set; }
-
-        public byte[] footerfile { get; set; }
-
-        public string footername { get; set; }
+  
 
        
 

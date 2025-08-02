@@ -7,14 +7,18 @@ namespace GMSApp.Views
     public partial class MainWindow : Window
     {
         private readonly FilesPage _filesPage;
-        
+        private readonly CoreMain _coreMain;
 
-        public MainWindow(FilesPage filesPage )
+        public MainWindow(FilesPage filesPage, CoreMain coreMain)
         {
             InitializeComponent();
             _filesPage = filesPage;
-           
+            _coreMain = coreMain;
+        }
 
+        private void CoreMainButton_Click(object sender, RoutedEventArgs e)
+        {
+            MainContent.Content = _coreMain;
         }
 
         private void FilesButton_Click(object sender, RoutedEventArgs e)

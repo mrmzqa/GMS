@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace GMSApp.Models
         [Key]
         public int Id { get; set; }
 
+        [ForeignKey(nameof(Main))]
         public int Mainid { get; set; }
 
         public Main Main { get; set; }
