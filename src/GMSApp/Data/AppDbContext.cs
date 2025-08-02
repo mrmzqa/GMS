@@ -14,8 +14,11 @@ namespace GMSApp.Data
         public DbSet<CoreMain> CoreMains { get; set; }
         public DbSet<Main> Mains { get; set; }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlite("Data Source=app.db");
+        }
 
 
-        
     }
 }

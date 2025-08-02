@@ -43,7 +43,7 @@ namespace GMSApp.Views
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
-            string aboutText = "Garage Management System v1.0\n© 2025 Created By Mohammed Rameez P P\nAll rights reserved.";
+            string aboutText = "Job Management System v1.0\n© 2025 Created By Mohammed Rameez P P\nAll rights reserved.";
             MessageBox.Show(aboutText, "About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
