@@ -1,127 +1,102 @@
-﻿using CommunityToolkit.Mvvm.Input;
-using GMSApp.Commands;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
 using GMSApp.Repositories;
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace GMSApp.ViewModels
 {
-    public class CoreMainViewModel : INotifyPropertyChanged
+    public partial class CoreMainViewModel : ObservableObject
     {
-        private readonly IRepository<Main> _MainRepo;
+        private readonly IRepository<CoreMain> _coreMainRepo;
         private readonly IFileRepository _fileRepo;
 
-        private Main? _selectedMain;
+        public ObservableCollection<CoreMain> CoreMains { get; } = new();
 
-        public ObservableCollection<Main> Mains { get; set; } = new();
+        [ObservableProperty]
+        private CoreMain? selectedCoreMain;
 
-        public Main? SelectedMain
+        public CoreMainViewModel(IRepository<CoreMain> coreMainRepo, IFileRepository fileRepo)
         {
-            get => _selectedMain;
-            set
-            {
-                _selectedMain = value;
-                OnPropertyChanged();
-                RaiseCommandCanExecuteChanged();
-            }
-        }
-
-        public ICommand AddMainCommand { get; }
-        public ICommand UpdateMainCommand { get; }
-        public ICommand DeleteMainCommand { get; }
-        public ICommand UploadHeaderFileCommand { get; }
-        public ICommand UploadFooterFileCommand { get; }
-
-        public CoreMainViewModel(IRepository<Main> MainRepo, IFileRepository fileRepo)
-        {
-            _MainRepo = MainRepo;
+            _coreMainRepo = coreMainRepo;
             _fileRepo = fileRepo;
-
-            AddMainCommand = new RelayCommand(async () => await AddCoreMain());
-            UpdateMainCommand = new RelayCommand(async () => await UpdateCoreMain(), () => SelectedMain != null);
-            DeleteMainCommand = new RelayCommand(async () => await DeleteCoreMain(), () => SelectedMain != null);
-            UploadHeaderFileCommand = new RelayCommand(() => UploadImage("Header"), () => SelectedMain != null);
-            UploadFooterFileCommand = new RelayCommand(() => UploadImage("Footer"), () => SelectedMain != null);
-
             _ = LoadCoreMainsAsync();
         }
 
-        private async Task LoadCoreMainsAsync()
+        [RelayCommand]
+        public async Task LoadCoreMainsAsync()
         {
-            var items = await _MainRepo.GetAllAsync();
-            Mains.Clear();
+            CoreMains.Clear();
+            var items = await _coreMainRepo.GetAllAsync();
             foreach (var item in items)
-                Mains.Add(item);
+                CoreMains.Add(item);
         }
 
-        private async Task AddCoreMain()
+        [RelayCommand]
+        public async Task AddCoreMainAsync()
         {
-            var newMain = new Main { Name = "New CoreMain" };
-            await _MainRepo.AddAsync(newMain);
-            Mains.Add(newMain);
-            SelectedMain = newMain;
+            var newCoreMain = new CoreMain { Name = "New CoreMain" };
+            await _coreMainRepo.AddAsync(newCoreMain);
+            await LoadCoreMainsAsync();
+            SelectedCoreMain = newCoreMain;
         }
 
-        private async Task UpdateCoreMain()
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task UpdateCoreMainAsync()
         {
-            if (SelectedMain != null)
-                await _MainRepo.UpdateAsync(SelectedMain);
+            if (SelectedCoreMain == null) return;
+            await _coreMainRepo.UpdateAsync(SelectedCoreMain);
+            await LoadCoreMainsAsync();
         }
 
-        private async Task DeleteCoreMain()
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task DeleteCoreMainAsync()
         {
-            if (SelectedMain == null) return;
-
-            await _MainRepo.DeleteAsync(SelectedMain.Id);
-            Mains.Remove(SelectedMain);
-            SelectedMain = null;
+            if (SelectedCoreMain == null) return;
+            await _coreMainRepo.DeleteAsync(SelectedCoreMain.Id);
+            SelectedCoreMain = null;
+            await LoadCoreMainsAsync();
         }
 
-        private void UploadImage(string type)
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void UploadHeaderFile()
         {
+            if (SelectedCoreMain == null) return;
+
             var dialog = new OpenFileDialog
             {
-                Filter = "Image files|*.jpg;*.jpeg;*.png;*.bmp"
+                Title = "Select Header Image",
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif"
             };
-
             if (dialog.ShowDialog() == true)
             {
-                var fileBytes = File.ReadAllBytes(dialog.FileName);
-                var fileName = Path.GetFileName(dialog.FileName);
-
-                if (SelectedMain == null) return;
-
-                if (type == "Header")
-                {
-                    SelectedMain.HeaderFile = fileBytes;
-                    SelectedMain.HeaderName = fileName;
-                }
-                else if (type == "Footer")
-                {
-                    SelectedMain.FooterFile = fileBytes;
-                    SelectedMain.FooterName = fileName;
-                }
-
-                OnPropertyChanged(nameof(SelectedMain));
+                SelectedCoreMain.HeaderFile = File.ReadAllBytes(dialog.FileName);
+                SelectedCoreMain.HeaderName = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(SelectedCoreMain));
             }
         }
 
-        private void RaiseCommandCanExecuteChanged()
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void UploadFooterFile()
         {
-            (UpdateMainCommand as RelayCommand)?.RaiseCanExecuteChanged();
-            (DeleteMainCommand as RelayCommand)?.RaiseCanExecuteChanged();
-            (UploadHeaderFileCommand as RelayCommand)?.RaiseCanExecuteChanged();
-            (UploadFooterFileCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            if (SelectedCoreMain == null) return;
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select Footer Image",
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif"
+            };
+            if (dialog.ShowDialog() == true)
+            {
+                SelectedCoreMain.FooterFile = File.ReadAllBytes(dialog.FileName);
+                SelectedCoreMain.FooterName = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(SelectedCoreMain));
+            }
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string name = "") =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        private bool CanModify() => SelectedCoreMain != null;
     }
 }
