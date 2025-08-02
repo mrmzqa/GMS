@@ -39,6 +39,8 @@ namespace GMSApp
                     services.AddScoped<MainWindow>();
 
                     services.AddScoped<FilesPage>();
+services.AddScoped<CoreMainViewModel>();
+services.AddScoped<CoreMainPage>();
                    
                 })
 
