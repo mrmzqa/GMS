@@ -15,13 +15,13 @@ namespace GMSApp.Models
         public int Id { get; set; }
 
        
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; } 
 
-        public byte[] HeaderFile { get; set; }
-        public string HeaderName { get; set; }
+        public byte[]? HeaderFile { get; set; }
+        public string? HeaderName { get; set; }
 
-        public byte[] FooterFile { get; set; }
-        public string FooterName { get; set; }
+        public byte[]? FooterFile { get; set; }
+        public string? FooterName { get; set; }
 
         public virtual ICollection<Main> Main { get; set; } = new List<Main>();
     }
