@@ -1,5 +1,6 @@
 using GMSApp.Models;
 using Microsoft.EntityFrameworkCore;
+using Type = GMSApp.Models.Type;
 
 namespace GMSApp.Data
 {
@@ -14,9 +15,23 @@ namespace GMSApp.Data
         public DbSet<CoreMain> CoreMains { get; set; }
         public DbSet<Main> Mains { get; set; }
 
+        public DbSet<Job> Jobs { get; set; }
+
+        public DbSet<Payment> Payments { get; set; }
+
+        public DbSet<Status> Statuses { get; set; }
+
+        public DbSet<Type> Types { get; set; }
+
+        public DbSet<Vendor> Vendors { get; set; }
+
+        public DbSet<Inventory> Inventories { get; set; }
+
+        public DbSet<Account> Accounts { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Data Source=app.db");
+          
+
         }
 
 
