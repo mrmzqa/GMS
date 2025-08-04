@@ -43,11 +43,21 @@ namespace GMSApp.Views
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
-            string aboutText = "Job Management System v1.0\n© 2025 Created By Mohammed Rameez P P\nAll rights reserved.";
+            string aboutText = "Job Management System v1.0\nÂ© 2025 Created By Mohammed Rameez P P\nAll rights reserved.";
             MessageBox.Show(aboutText, "About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
+private void OnManageProducts(object sender, RoutedEventArgs e)
+        {
+            var productView = ((App)Application.Current).AppHost!.Services.GetRequiredService<ProductView>();
+            productView.Show();
+        }
 
+        private void OnManageCategories(object sender, RoutedEventArgs e)
+        {
+            var categoryView = ((App)Application.Current).AppHost!.Services.GetRequiredService<CategoryView>();
+            categoryView.Show();
+        }
     }
 }
 
