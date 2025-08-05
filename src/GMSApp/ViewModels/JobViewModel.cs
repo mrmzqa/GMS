@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static GMSApp.Models.Job;
 
+
 namespace GMSApp.ViewModels
 {
     public class JobViewModel
@@ -16,7 +17,9 @@ namespace GMSApp.ViewModels
 
         public List<PurchaseOrder> PurchaseOrders { get; set; }
 
-        public List<Inventory> Inventory { get; set; }
+        public List<Models.Inventory> Inventory { get; set; }
+
+       
 
 
         public class JobcardViewModel
