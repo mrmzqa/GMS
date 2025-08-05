@@ -58,6 +58,7 @@
                         </Image>
                     </Border>
                     <Button Content="Upload Footer" Command="{Binding UploadFooterFileCommand}" Margin="0,5,0,0"/>
+                    
 
                     <TextBlock Text="{Binding SelectedCoreMain.FooterName}" FontStyle="Italic" FontSize="11" />
                 </StackPanel>
