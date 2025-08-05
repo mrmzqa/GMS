@@ -26,9 +26,10 @@ namespace GMSApp
                 .ConfigureServices((context, services) =>
                 {
                     // DbContext
+                    /*services.AddDbContext<AppDbContext>(options =>
+                        options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GMSAppDb;Trusted_Connection=True;"));*/
                     services.AddDbContext<AppDbContext>(options =>
-                        options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GMSAppDb;Trusted_Connection=True;"));
-
+                                 options.UseSqlite("Data Source=Appdb.db"));
                     // Repositories
                     services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
                     services.AddScoped<IFileRepository, FileRepository>();
@@ -77,7 +78,7 @@ namespace GMSApp
             await _host.StartAsync();
 
             var dbContext = _host.Services.GetRequiredService<AppDbContext>();
-           /* await dbContext.Database.EnsureCreatedAsync();*/
+            await dbContext.Database.EnsureCreatedAsync();
 
             var mainWindow = _host.Services.GetRequiredService<MainWindow>();
             mainWindow.Show();
