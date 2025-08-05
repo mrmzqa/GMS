@@ -4,9 +4,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:viewmodels="clr-namespace:GMSApp.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:CoreMainViewModel}"
              mc:Ignorable="d" Margin="10">
+   
     <Grid>
+
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250" />
+            <ColumnDefinition Width="300" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
@@ -17,8 +19,9 @@
                    />
             <Button Content="Delete" Command="{Binding DeleteCoreMainCommand}" Margin="0,0,0,10"
                     />
-            <ListBox ItemsSource="{Binding CoreMains}" SelectedItem="{Binding SelectedCoreMain}" 
-                     DisplayMemberPath="Name" Height="400"  />
+            <ListBox SelectedItem="{Binding SelectedCoreMain}" 
+                     DisplayMemberPath="Name" Height="400"  >
+            </ListBox>
         </StackPanel>
 
         <!-- Right: Selected CoreMain details and images -->
@@ -60,6 +63,6 @@
                 </StackPanel>
             </StackPanel>
         </StackPanel>
-        
+
     </Grid>
 </UserControl>

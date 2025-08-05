@@ -26,6 +26,8 @@
             <TabItem Header="Vendor">
                 <TextBlock Text="Vendor tab content here" />
             </TabItem>
+            <local:MainContentView/>
         </TabControl>
+        
     </Grid>
 </UserControl>
