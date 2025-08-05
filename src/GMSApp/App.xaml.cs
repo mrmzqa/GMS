@@ -2,6 +2,7 @@ using GMSApp.Data;
 using GMSApp.Repositories;
 using GMSApp.ViewModels;
 using GMSApp.Views;
+using GMSApp.Views.Job;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -39,16 +40,14 @@ namespace GMSApp
                     services.AddScoped<MainWindow>();
                    
 
-                    // ViewModels
-                    services.AddTransient<CategoryViewModel>();
-                    services.AddTransient<ProductViewModel>();
 
-                    // Views
-                    services.AddTransient<CategoryView>();
-                    services.AddTransient<ProductView>();
+                  
+                    services.AddScoped<PurchaseOrderPage>();
                     services.AddScoped<FilesPage>();
                      services.AddScoped<CoreMainViewModel>();
-                     services.AddScoped<CoreMain>();
+                    services.AddScoped<PurchaseOrderViewModel>();
+                    services.AddScoped<CoreMain>();
+
                    
                 })
 

@@ -1,5 +1,6 @@
 using GMSApp.ViewModels;
 using GMSApp.Views;
+using GMSApp.Views.Job;
 using System.Windows;
 
 namespace GMSApp.Views
@@ -8,13 +9,15 @@ namespace GMSApp.Views
     {
         private readonly FilesPage _filesPage;
         private readonly CoreMain _coreMain;
+        private readonly PurchaseOrderPage _purchaseOrderPage;
      
 
-        public MainWindow(FilesPage filesPage, CoreMain coreMain)
+        public MainWindow(FilesPage filesPage, CoreMain coreMain,PurchaseOrderPage purchaseOrderpage)
         {
             InitializeComponent();
             _filesPage = filesPage;
             _coreMain = coreMain;
+            _purchaseOrderPage = purchaseOrderpage;
           
         }
 
@@ -23,11 +26,16 @@ namespace GMSApp.Views
             MainContent.Content = _coreMain;
         }
 
+
+        private void PurchaseButton_Click(object sender, RoutedEventArgs e)
+        {
+            MainContent.Content = _purchaseOrderPage;
+        }
         private void FilesButton_Click(object sender, RoutedEventArgs e)
         {
             MainContent.Content = _filesPage;
         }
-    
+       
         private void FileOpen_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("Open file clicked");

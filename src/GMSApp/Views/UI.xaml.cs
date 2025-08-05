@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -219,3 +219,4 @@ LocalizationService.SetCulture(Properties.Settings.Default.Language ?? "en");
 
 Would you like me to generate the entire project structure as a .zip or a GitHub-ready repo with everything included (PDF, DB, bilingual, validation, dynamic rows)?
 
+*/

@@ -24,5 +24,10 @@ namespace GMSApp.Views.Vendors
         {
             InitializeComponent();
         }
+
+        private void InitializeComponent()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

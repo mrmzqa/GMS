@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GMSApp.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,11 +19,13 @@ namespace GMSApp.Views.Job
     /// <summary>
     /// Interaction logic for PurchaseOrder.xaml
     /// </summary>
-    public partial class PurchaseOrder : UserControl
+    public partial class PurchaseOrderPage : UserControl
     {
-        public PurchaseOrder()
+        public PurchaseOrderPage( PurchaseOrderViewModel vm)
         {
+
             InitializeComponent();
+            DataContext = vm;
         }
     }
 }

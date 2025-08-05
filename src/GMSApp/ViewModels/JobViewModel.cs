@@ -15,7 +15,7 @@ namespace GMSApp.ViewModels
 
         public List<Quotation> Quotations { get; set; }
 
-        public List<PurchaseOrder> PurchaseOrders { get; set; }
+        public List<Models.PurchaseOrder> PurchaseOrders { get; set; }
 
         public List<Models.Inventory> Inventory { get; set; }
 

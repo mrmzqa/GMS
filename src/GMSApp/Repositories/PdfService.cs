@@ -1,7 +1,8 @@
+using GMSApp.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-
+namespace GMSApp.Repositories;
 public class PdfService
 {
     public static byte[] GeneratePurchaseOrderPdf(PurchaseOrder order)

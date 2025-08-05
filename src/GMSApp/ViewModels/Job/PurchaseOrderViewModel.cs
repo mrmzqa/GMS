@@ -1,12 +1,15 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GMSApp.Models;
+using GMSApp.Repositories;
 using System.Collections.ObjectModel;
-
+using System.IO;
+namespace GMSApp.ViewModels;
 public partial class PurchaseOrderViewModel : ObservableObject
 {
-    private readonly GenericRepository<PurchaseOrder> _repository;
+    private readonly IRepository<PurchaseOrder> _repository;
 
-    public PurchaseOrderViewModel(GenericRepository<PurchaseOrder> repo)
+    public PurchaseOrderViewModel(IRepository<PurchaseOrder> repo)
     {
         _repository = repo;
     }
@@ -16,7 +19,7 @@ public partial class PurchaseOrderViewModel : ObservableObject
 
     [ObservableProperty]
     private DateTime date = DateTime.Now;
-
+    
     public ObservableCollection<ItemRow> Items { get; set; } = new();
 
     public decimal Total => Items.Sum(x => x.Total);
@@ -35,12 +38,13 @@ public partial class PurchaseOrderViewModel : ObservableObject
     {
         var po = new PurchaseOrder
         {
-            OrderNumber = OrderNumber,
-            Date = Date,
+           OrderNumber = orderNumber,
+           Date = date,
             Items = Items.ToList()
         };
 
         await _repository.AddAsync(po);
+        
     }
 
     [RelayCommand]
