@@ -5,10 +5,12 @@ namespace GMSApp.Views
 {
     public partial class CoreMain : UserControl
     {
-        public CoreMain(CoreMainViewModel vm)
+        public CoreMain( CoreMainViewModel vm)
         {
             InitializeComponent();
             DataContext = vm;
+          
+            
         }
     }
 }

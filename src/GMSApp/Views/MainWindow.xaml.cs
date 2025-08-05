@@ -8,16 +8,14 @@ namespace GMSApp.Views
     {
         private readonly FilesPage _filesPage;
         private readonly CoreMain _coreMain;
-        private readonly ProductView _productView;
-        private readonly CategoryView _categoryView;
+     
 
-        public MainWindow(FilesPage filesPage, CoreMain coreMain, ProductView productView, CategoryView categoryView)
+        public MainWindow(FilesPage filesPage, CoreMain coreMain)
         {
             InitializeComponent();
             _filesPage = filesPage;
             _coreMain = coreMain;
-            _productView = productView;
-            _categoryView = categoryView;
+          
         }
 
         private void CoreMainButton_Click(object sender, RoutedEventArgs e)
@@ -29,14 +27,7 @@ namespace GMSApp.Views
         {
             MainContent.Content = _filesPage;
         }
-        private void ProductButton_Click(object sender, RoutedEventArgs e)
-        {
-            MainContent.Content = _productView;
-        }
-        private void CategoryButton_Click(object sender, RoutedEventArgs e)
-        {
-            MainContent.Content = _categoryView;
-        }
+    
         private void FileOpen_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("Open file clicked");

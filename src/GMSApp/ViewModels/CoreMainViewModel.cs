@@ -23,6 +23,8 @@ public partial class CoreMainViewModel : ObservableObject
         _ = LoadCoreMainsAsync();
     }
 
+  
+
     [ObservableProperty]
     private CoreMain? selectedCoreMain;
 
@@ -41,12 +43,23 @@ public partial class CoreMainViewModel : ObservableObject
         var items = await _coreMainRepo.GetAllAsync();
         foreach (var item in items)
             CoreMains.Add(item);
+        SelectedCoreMain = CoreMains.Count > 0 ? CoreMains[0] : null;
     }
 
     [RelayCommand]
     public async Task AddCoreMainAsync()
     {
-        var newCoreMain = new CoreMain { Name = "New CoreMain" };
+        // If SelectedCoreMain is null, create a blank CoreMain
+        var newCoreMain = SelectedCoreMain != null
+            ? new CoreMain
+            {
+                Name = SelectedCoreMain.Name,
+                HeaderFile = SelectedCoreMain.HeaderFile,
+                HeaderName = SelectedCoreMain.HeaderName,
+                FooterFile = SelectedCoreMain.FooterFile
+            }
+            : new CoreMain(); // Blank or with default values
+
         await _coreMainRepo.AddAsync(newCoreMain);
         await LoadCoreMainsAsync();
         SelectedCoreMain = newCoreMain;
