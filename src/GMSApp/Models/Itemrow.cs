@@ -94,3 +94,68 @@ public class ItemRow
     public int Quantity { get; set; }
     public decimal Price { get; set; }
 }
+public class GenericRepository<T> where T : class
+{
+    private readonly AppDbContext _context;
+    private readonly DbSet<T> _set;
+
+    public GenericRepository(AppDbContext context)
+    {
+        _context = context;
+        _set = context.Set<T>();
+    }
+
+    public async Task<List<T>> GetAllAsync() => await _set.ToListAsync();
+
+    public async Task AddAsync(T entity)
+    {
+        _set.Add(entity);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateAsync(T entity)
+    {
+        _set.Update(entity);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(T entity)
+    {
+        _set.Remove(entity);
+        await _context.SaveChangesAsync();
+    }
+}using Microsoft.EntityFrameworkCore;
+
+public class AppDbContext : DbContext
+{
+    public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
+    public DbSet<ItemRow> ItemRows => Set<ItemRow>();
+
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+}
+using System.ComponentModel.DataAnnotations;
+
+public class PurchaseOrder
+{
+    public int Id { get; set; }
+
+    [Required]
+    public string OrderNumber { get; set; } = string.Empty;
+
+    public DateTime Date { get; set; } = DateTime.Now;
+
+    public List<ItemRow> Items { get; set; } = new();
+
+    public decimal GrandTotal => Items?.Sum(i => i.Total) ?? 0;
+}
+public class ItemRow
+{
+    public int Id { get; set; } // for EF
+    public string Name { get; set; } = string.Empty;
+    public int Quantity { get; set; }
+    public decimal Price { get; set; }
+
+    public decimal Total => Quantity * Price;
+
+    public int PurchaseOrderId { get; set; }
+}
