@@ -34,12 +34,10 @@
                 <TextBlock Text="JMS" Foreground="White" FontSize="22" Margin="10" HorizontalAlignment="Center"/>
                 <Button Content="Files" Click="FilesButton_Click" Margin="10"/>
                 <Button Content="Core" Click="CoreMainButton_Click" Margin="10"/>
-<Button Content="Manage Products" Width="200" Margin="10" Click="OnManageProducts"/>
-        <Button Content="Manage Categories" Width="200" Margin="10" Click="OnManageCategories"/>       
-</StackPanel>
+                <Button Content="Manage Products" Width="200" Margin="10" Click="ProductButton_Click"/>
+                <Button Content="Manage Categories" Width="200" Margin="10" Click="CategoryButton_Click"/>
+            </StackPanel>
 
-        
-    
             <!-- Main Content Area -->
             <ContentControl x:Name="MainContent" Grid.Column="1"/>
         </Grid>

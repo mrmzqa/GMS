@@ -37,8 +37,7 @@ namespace GMSApp
 
                     // Views
                     services.AddScoped<MainWindow>();
-services.AddScoped<IRepository<Category>, Repository<Category>>();
-                    services.AddScoped<IRepository<Product>, Repository<Product>>();
+                   
 
                     // ViewModels
                     services.AddTransient<CategoryViewModel>();

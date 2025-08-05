@@ -1,4 +1,9 @@
-public class Product
+using GMSApp.Models;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+namespace GMSApp.Models;
+
+    public class Product
     {
         [Key]
         public int Id { get; set; }

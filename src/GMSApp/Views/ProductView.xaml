@@ -1,15 +1,14 @@
-<Window x:Class="GMSApp.Views.ProductView"
+<UserControl x:Class="GMSApp.Views.ProductView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:GMSApp.Views"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GMSApp.ViewModels"
-        Title="Products" Height="600" Width="800"
+         Height="600" Width="800"
         mc:Ignorable="d">
-    <Window.DataContext>
-        <viewModels:ProductViewModel/>
-    </Window.DataContext>
+    
 
     <Grid Margin="10">
         <Grid.RowDefinitions>
@@ -57,4 +56,4 @@
                     IsEnabled="{Binding Path=DeleteProductCommand.CanExecute, Mode=OneWay}"/>
         </StackPanel>
     </Grid>
-</Window>
+</UserControl>
