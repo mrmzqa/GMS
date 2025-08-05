@@ -1,0 +1,75 @@
+﻿<UserControl x:Class="GmsApp.Views.VendorsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             mc:Ignorable="d" d:DesignHeight="600" d:DesignWidth="1100">
+    <Grid Margin="10" >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
+            <Label Content="Search:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <TextBox Width="250" x:Name="SearchBox" 
+                      />
+            <Button Content="Clear" Margin="5,0,0,0" />
+            <Button Content="Add Vehicle" Margin="20,0,0,0" Width="100" Command="{Binding AddVehicleCommand}" />
+        </StackPanel>
+
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Vehicles}" SelectedItem="{Binding SelectedVehicle, Mode=TwoWay}" AutoGenerateColumns="False"
+                  CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" SelectionMode="Single">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Owner" Binding="{Binding OwnerName}" Width="*" />
+                <DataGridTextColumn Header="License Plate" Binding="{Binding LicensePlate}" Width="120" />
+                <DataGridTextColumn Header="Brand" Binding="{Binding Brand}" Width="100" />
+                <DataGridTextColumn Header="Model" Binding="{Binding Model}" Width="100" />
+                <DataGridTextColumn Header="Year" Binding="{Binding Year}" Width="80" />
+                <DataGridTextColumn Header="VIN" Binding="{Binding VIN}" Width="140" />
+                <DataGridTextColumn Header="Created At" Binding="{Binding CreatedAt, StringFormat=d}" Width="120" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Border Grid.Row="2" BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,10,0,0" Height="200" Background="#FFF9F9F9">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Label Content="Owner Name:" Grid.Column="0" VerticalAlignment="Center" Grid.Row="0"/>
+                <TextBox Text="{Binding SelectedVehicle.OwnerName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Margin="5" Grid.Row="0"/>
+
+                <Label Content="License Plate:" Grid.Column="2" VerticalAlignment="Center" Grid.Row="0"/>
+                <TextBox Text="{Binding SelectedVehicle.LicensePlate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="3" Margin="5" Grid.Row="0"/>
+
+                <Label Content="Brand:" Grid.Column="0" VerticalAlignment="Center" Grid.Row="1"/>
+                <TextBox Text="{Binding SelectedVehicle.Brand, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Margin="5" Grid.Row="1"/>
+
+                <Label Content="Model:" Grid.Column="2" VerticalAlignment="Center" Grid.Row="1"/>
+                <TextBox Text="{Binding SelectedVehicle.Model, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="3" Margin="5" Grid.Row="1"/>
+
+                <Label Content="Year:" Grid.Column="0" VerticalAlignment="Center" Grid.Row="2"/>
+                <TextBox Text="{Binding SelectedVehicle.Year, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Margin="5" Grid.Row="2"/>
+
+                <Label Content="VIN:" Grid.Column="2" VerticalAlignment="Center" Grid.Row="2"/>
+                <TextBox Text="{Binding SelectedVehicle.VIN, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="3" Margin="5" Grid.Row="2"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="3" Grid.Row="3" Margin="0,10,0,0">
+                    <Button Content="Update" Width="100" Margin="0,0,5,0" Command="{Binding UpdateVehicleCommand}" IsEnabled="{Binding SelectedVehicle, Converter={StaticResource NullToBoolConverter}}"/>
+                    <Button Content="Delete" Width="100" Command="{Binding DeleteVehicleCommand}" IsEnabled="{Binding SelectedVehicle, Converter={StaticResource NullToBoolConverter}}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
