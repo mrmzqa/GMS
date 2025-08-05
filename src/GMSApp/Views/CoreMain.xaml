@@ -20,7 +20,7 @@
             <Button Content="Delete" Command="{Binding DeleteCoreMainCommand}" Margin="0,0,0,10"
                     />
             <ListBox SelectedItem="{Binding SelectedCoreMain}" 
-                     DisplayMemberPath="Name" Height="400"  >
+                     DisplayMemberPath="Name" Height="400" d:ItemsSource="{d:SampleData ItemCount=5}" ItemsSource="{Binding CoreMains}"  >
             </ListBox>
         </StackPanel>
 
