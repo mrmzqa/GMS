@@ -39,9 +39,14 @@ public partial class MainContentViewModel : ObservableObject
     [RelayCommand]
     public async Task LoadMainsAsync()
     {
-      if
+      if (CoreMains.Count > 0)
+            Mains.Clear();
+        var items = await _mainRepo.GetAllAsync();
+        foreach (var item in items)
+            Mains.Add(item);
+        SelectedMain = Mains.Count > 0 ? Mains[0] : null;
     }
-
+   
 
 
 
