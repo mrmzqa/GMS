@@ -9,6 +9,7 @@ namespace GmsApp.Views
 
         public MainContentView()
         {
+
             InitializeComponent();
         }
     }

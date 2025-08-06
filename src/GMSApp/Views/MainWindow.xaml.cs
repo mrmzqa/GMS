@@ -1,3 +1,4 @@
+using GmsApp.Views;
 using GMSApp.ViewModels;
 using GMSApp.Views;
 using GMSApp.Views.Job;
@@ -10,15 +11,21 @@ namespace GMSApp.Views
         private readonly FilesPage _filesPage;
         private readonly CoreMain _coreMain;
         private readonly PurchaseOrderPage _purchaseOrderPage;
-     
+        private readonly MainContentView _mainContentView;
 
-        public MainWindow(FilesPage filesPage, CoreMain coreMain,PurchaseOrderPage purchaseOrderpage)
+
+        public MainWindow(FilesPage filesPage, CoreMain coreMain,PurchaseOrderPage purchaseOrderpage, MainContentView mainContentView)
         {
             InitializeComponent();
             _filesPage = filesPage;
             _coreMain = coreMain;
             _purchaseOrderPage = purchaseOrderpage;
-          
+            _mainContentView = mainContentView;
+        }
+        
+        private void MainContent_Click(object sender, RoutedEventArgs e)
+        {
+            MainContent.Content = _mainContentView;
         }
 
         private void CoreMainButton_Click(object sender, RoutedEventArgs e)
