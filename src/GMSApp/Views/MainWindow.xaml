@@ -34,8 +34,8 @@
             <StackPanel Background="#FF2D2D30" Grid.Column="0">
                 <TextBlock Text="JMS" Foreground="White" FontSize="22" Margin="10" HorizontalAlignment="Center"/>
                 <Button Content="Files" Click="FilesButton_Click" Margin="10"/>
-                <Button Content="Core" Click="CoreMainButton_Click" Margin="10"/>
-                <Button Content="Cpre" Click="PurchaseButton_Click" Margin="10"/>
+                <Button Content="Core" Click="MainContent_Click" Margin="10"/>
+               
     
             </StackPanel>
 
