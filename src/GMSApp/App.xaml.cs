@@ -40,13 +40,14 @@ namespace GMSApp
 
                     // Views
                     services.AddScoped<MainWindow>();
+
+
                    
-
-
                     services.AddScoped<MainContentView>();
                     services.AddScoped<PurchaseOrderPage>();
                     services.AddScoped<FilesPage>();
                      services.AddScoped<CoreMainViewModel>();
+                    services.AddScoped<MainContentViewModel>();
                     services.AddScoped<PurchaseOrderViewModel>();
                     services.AddScoped<CoreMain>();
 
