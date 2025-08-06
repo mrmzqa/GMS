@@ -39,7 +39,7 @@ public partial class MainContentViewModel : ObservableObject
     [RelayCommand]
     public async Task LoadMainsAsync()
     {
-      
+      if
     }
 
 
