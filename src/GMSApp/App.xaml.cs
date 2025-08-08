@@ -1,3 +1,4 @@
+using GmsApp.Views;
 using GMSApp.Data;
 using GMSApp.Repositories;
 using GMSApp.ViewModels;
@@ -26,10 +27,10 @@ namespace GMSApp
                 .ConfigureServices((context, services) =>
                 {
                     // DbContext
-                    /*services.AddDbContext<AppDbContext>(options =>
-                        options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GMSAppDb;Trusted_Connection=True;"));*/
                     services.AddDbContext<AppDbContext>(options =>
-                                 options.UseSqlite("Data Source=Appdb.db"));
+                        options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GMSAppDb;Trusted_Connection=True;"));
+                    /*services.AddDbContext<AppDbContext>(options =>
+                                 options.UseSqlite("Data Source=Appdb.db"));*/
                     // Repositories
                     services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
                     services.AddScoped<IFileRepository, FileRepository>();
@@ -39,13 +40,14 @@ namespace GMSApp
 
                     // Views
                     services.AddScoped<MainWindow>();
+
+
                    
-
-
-                  
+                    services.AddScoped<MainContentView>();
                     services.AddScoped<PurchaseOrderPage>();
                     services.AddScoped<FilesPage>();
                      services.AddScoped<CoreMainViewModel>();
+                    services.AddScoped<MainContentViewModel>();
                     services.AddScoped<PurchaseOrderViewModel>();
                     services.AddScoped<CoreMain>();
 
@@ -78,7 +80,7 @@ namespace GMSApp
             await _host.StartAsync();
 
             var dbContext = _host.Services.GetRequiredService<AppDbContext>();
-            await dbContext.Database.EnsureCreatedAsync();
+           /* await dbContext.Database.EnsureCreatedAsync();*/
 
             var mainWindow = _host.Services.GetRequiredService<MainWindow>();
             mainWindow.Show();

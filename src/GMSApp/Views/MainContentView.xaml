@@ -1,7 +1,8 @@
 ﻿<UserControl x:Class="GmsApp.Views.MainContentView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:GmsApp.Views">
+             xmlns:local="clr-namespace:GmsApp.Views" Height="Auto" Width="Auto"
+             >
     <Grid>
         <TabControl>
             <TabItem Header="Dashboard">
@@ -9,25 +10,60 @@
                            VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="22"/>
             </TabItem>
             <TabItem Header="Inventory">
-                <TextBlock Text="Inventory tab content here" />
+                <TreeView RenderTransformOrigin="0.504,2.285" Margin="0,44,1,-44">
+                    <TreeViewItem Header="Inventory Item" IsExpanded="True"/>
+                    <TreeViewItem Header="Inventory Category"/>
+                </TreeView>
             </TabItem>
             <TabItem Header="Jobs">
-                <TextBlock Text="Service Jobs tab content here" />
+                <TreeView RenderTransformOrigin="0.504,2.285" Margin="0,44,1,-44">
+                    <TreeViewItem Header="Joborder"/>
+                    <TreeViewItem Header="JobCategory"/>
+                    <TreeViewItem Header="JobType"/>
+                    <TreeViewItem Header="JobStatus"/>
+                    <TreeViewItem Header="PurchaseOrder"/>
+                    <TreeViewItem Header="Quotation"/>
+                    <TreeViewItem Header="Invoice"/>
+                </TreeView>
             </TabItem>
             <TabItem Header="Employee">
-                <TextBlock Text="Employee tab content here" />
+                <TreeView RenderTransformOrigin="0.504,2.285" Margin="0,44,1,-44">
+                    <TreeViewItem Header="Employers"/>
+                    <TreeViewItem Header="Attendance"/>
+                    <TreeViewItem Header="Salary"/>
+                    <TreeViewItem Header="Asset"/>
+                    <TreeViewItem Header="Leave"/>
+                    <TreeViewItem Header="Expense"/>
+                    <TreeViewItem Header="Termination"/>
+                </TreeView>
             </TabItem>
             <TabItem Header="Receipts">
-                <TextBlock Text="Receipts tab content here" />
+                <TreeView RenderTransformOrigin="0.504,2.285" Margin="0,44,1,-44">
+                    <TreeViewItem Header="Payment Receipts"/>
+                    <TreeViewItem Header="Profit and loss"/>
+                    <TreeViewItem Header="Customer Statement"/>
+                    <TreeViewItem Header="Supplier Statement"/>
+                    
+                </TreeView>
             </TabItem>
             <TabItem Header="Accounts">
-                <TextBlock Text="Accounts tab content here" />
+                <TreeView RenderTransformOrigin="0.504,2.285" Margin="0,44,1,-44">
+                    <TreeViewItem Header="General ledger"/>
+                    <TreeViewItem Header="Charted Accounts"/>
+                    <TreeViewItem Header="Accounts Payable"/>
+                    <TreeViewItem Header="Accounts Receivable"/>
+                    <TreeViewItem Header="Accounts Reconcile"/>
+                </TreeView>
             </TabItem>
             <TabItem Header="Vendor">
-                <TextBlock Text="Vendor tab content here" />
+                <TreeView RenderTransformOrigin="0.504,2.285" Margin="0,44,1,-44">
+                    <TreeViewItem Header="Vendors"/>
+                    
+                </TreeView>
             </TabItem>
-            <local:MainContentView/>
+            
         </TabControl>
-        
+      
+
     </Grid>
 </UserControl>
