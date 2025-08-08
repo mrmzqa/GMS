@@ -8,6 +8,14 @@
         
      
         <StackPanel Margin="10" VerticalAlignment="Top">
+            <ComboBox Width="150" Margin="0,0,0,10"
+           SelectedValue="{Binding SelectedLanguage, Mode=TwoWay}">
+                <ComboBoxItem Content="English" Tag="en" />
+                <ComboBoxItem Content="العربية" Tag="ar" />
+            </ComboBox>
+
+            
+            <TextBox Text="{Binding OrderNumber}" Width="200" />
             <TextBlock Text="Order Number" />
             <TextBox Text="{Binding OrderNumber}" Width="200" />
 

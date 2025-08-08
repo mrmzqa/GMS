@@ -6,7 +6,7 @@ using System.Windows;
 
 public static class LocalizationService
 {
-    private static ResourceManager _resourceManager = new("YourNamespace.Resources.Strings", typeof(LocalizationService).Assembly);
+    private static ResourceManager _resourceManager = new("GMSApp.Resources.Strings", typeof(LocalizationService).Assembly);
 
     public static string Get(string key) => _resourceManager.GetString(key, Thread.CurrentThread.CurrentUICulture) ?? key;
 
