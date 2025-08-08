@@ -31,11 +31,15 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
-
+            
             <Button Content="Add Item" Command="{Binding AddItemCommand}" Width="100" />
 
+            <Button Content="export" Command="{Binding ExportPdfCommand }" Width="100" />
+
             <Button Content="Save" Command="{Binding SaveCommand}" Margin="0,20,0,0" Width="100"/>
+            
         </StackPanel>
       
     </Grid>
+    
 </UserControl>

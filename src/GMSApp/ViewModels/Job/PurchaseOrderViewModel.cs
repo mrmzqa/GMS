@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
 using GMSApp.Repositories;
+using GMSApp.Services;
 using System.Collections.ObjectModel;
 using System.IO;
 namespace GMSApp.ViewModels;
@@ -19,7 +20,15 @@ public partial class PurchaseOrderViewModel : ObservableObject
 
     [ObservableProperty]
     private DateTime date = DateTime.Now;
-    
+
+    [ObservableProperty]
+    private string selectedLanguage = "en";
+
+    partial void OnSelectedLanguageChanged(string value)
+    {
+        LocalizationService.SetCulture(value);
+    }
+
     public ObservableCollection<ItemRow> Items { get; set; } = new();
 
     public decimal Total => Items.Sum(x => x.Total);
