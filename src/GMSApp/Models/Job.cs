@@ -43,13 +43,15 @@ namespace GMSApp.Models
             public string paymentid {get; set;}
 
         }
-        public class Jobcard
+        public class JobOrder
         {
             public int Id { get; set; }
 
             public Vendor vendorid { get; set; }
 
             public string CustomerName { get; set; }
+
+            public string Contactnumber { get; set; }
 
             public DateTime JobDate { get; set; }
             public string JobDescription { get; set; }
@@ -65,7 +67,7 @@ namespace GMSApp.Models
             public Payment Payment { get; set; }
 
         }
-        public class JobcardStatus
+        public class JobOStatus
         {
             public int Id { get; set; }
             public string Name { get; set; }
