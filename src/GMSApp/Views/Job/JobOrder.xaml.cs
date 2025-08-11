@@ -15,9 +15,7 @@ using System.Windows.Shapes;
 
 namespace GMSApp.Views.Job
 {
-    /// <summary>
-    /// Interaction logic for JobOrder.xaml
-    /// </summary>
+    
     public partial class JobOrder : UserControl
     {
         public JobOrder()
