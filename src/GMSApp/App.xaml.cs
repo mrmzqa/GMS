@@ -80,7 +80,7 @@ namespace GMSApp
             await _host.StartAsync();
 
             var dbContext = _host.Services.GetRequiredService<AppDbContext>();
-           /* await dbContext.Database.EnsureCreatedAsync();*/
+            await dbContext.Database.EnsureCreatedAsync();
 
             var mainWindow = _host.Services.GetRequiredService<MainWindow>();
             mainWindow.Show();
