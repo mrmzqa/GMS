@@ -25,8 +25,7 @@ public partial class JobOrderViewModel : ObservableObject
     [ObservableProperty]
     private string jobNumber;
 
-    [ObservableProperty]
-    private  selectedJobOrder;
+    
 
     [ObservableProperty]
     private DateTime date = DateTime.Now;
@@ -46,22 +45,7 @@ public partial class JobOrderViewModel : ObservableObject
    
 
 
-    [RelayCommand]
-    private async void ExportPdf()
-    {
-        if (SelectedJobOrder == null) return;
-        var pdfBytes = await _fileRepo.ExportJobOrderToPdfAsync(SelectedJobOrder);
-        
-        var saveFileDialog = new SaveFileDialog
-        {
-            Filter = "PDF files (*.pdf)|*.pdf",
-            FileName = $"{SelectedJobOrder.JobNumber}.pdf"
-        };
-        if (saveFileDialog.ShowDialog() == true)
-        {
-            await File.WriteAllBytesAsync(saveFileDialog.FileName, pdfBytes);
-        }
-    }
+   
 
 }
 
