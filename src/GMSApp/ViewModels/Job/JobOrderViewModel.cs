@@ -25,11 +25,8 @@ public partial class JobOrderViewModel : ObservableObject
     [ObservableProperty]
     private string jobNumber;
 
-    
-
     [ObservableProperty]
     private DateTime date = DateTime.Now;
-
 
     [RelayCommand]
     private async void LoadJobOrders()
