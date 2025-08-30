@@ -1,4 +1,5 @@
 using GMSApp.Models;
+using GMSApp.Models.job;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -18,6 +19,7 @@ namespace GMSApp.Data
         public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
         public DbSet<ItemRow> ItemRows {  get; set; }
 
+        public DbSet<Joborder> Joborders { get; set; }
         public DbSet<Job> Jobs { get; set; }
 
         public DbSet<Jobcard> Jobcards { get; set; }

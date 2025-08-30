@@ -38,12 +38,12 @@ public partial class App : Application
                 services.AddScoped<CoreMainViewModel>();
                 services.AddScoped<MainContentViewModel>();
                 services.AddScoped<PurchaseOrderViewModel>();
-                services.AddScoped<JobcardViewModel>();
+                
                 // Views
                 services.AddScoped<MainWindow>();
                 services.AddScoped<MainContentView>();
                 services.AddScoped<PurchaseOrderPage>();
-                services.AddScoped<JobcardView>();
+               
                 services.AddScoped<FilesPage>();
                 services.AddScoped<CoreMain>();
 

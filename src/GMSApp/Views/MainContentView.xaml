@@ -11,53 +11,53 @@
             </TabItem>
             <TabItem Header="Inventory">
                 <TreeView RenderTransformOrigin="0.504,2.285" Margin="0,44,1,-44">
-                    <TreeViewItem Header="Inventory Item" IsExpanded="True"/>
-                    <TreeViewItem Header="Inventory Category"/>
+                    <TreeViewItem Header="Inventory Item" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Inventory Category" Hyperlink.Click=""/>
                 </TreeView>
             </TabItem>
             <TabItem Header="Jobs">
                 <TreeView RenderTransformOrigin="0.504,2.285" Margin="0,44,1,-44">
-                    <TreeViewItem Header="Joborder"/>
-                    <TreeViewItem Header="JobCategory"/>
-                    <TreeViewItem Header="JobType"/>
-                    <TreeViewItem Header="JobStatus"/>
-                    <TreeViewItem Header="PurchaseOrder"/>
-                    <TreeViewItem Header="Quotation"/>
-                    <TreeViewItem Header="Invoice"/>
+                    <TreeViewItem Header="Joborder" Hyperlink.Click=""/>
+                    <TreeViewItem Header="JobCategory" Hyperlink.Click=""/>
+                    <TreeViewItem Header="JobType" Hyperlink.Click=""/>
+                    <TreeViewItem Header="JobStatus" Hyperlink.Click=""/>
+                    <TreeViewItem Header="PurchaseOrder" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Quotation" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Invoice" Hyperlink.Click=""/>
                 </TreeView>
             </TabItem>
             <TabItem Header="Employee">
                 <TreeView RenderTransformOrigin="0.504,2.285" Margin="0,44,1,-44">
-                    <TreeViewItem Header="Employers"/>
-                    <TreeViewItem Header="Attendance"/>
-                    <TreeViewItem Header="Salary"/>
-                    <TreeViewItem Header="Asset"/>
-                    <TreeViewItem Header="Leave"/>
-                    <TreeViewItem Header="Expense"/>
-                    <TreeViewItem Header="Termination"/>
+                    <TreeViewItem Header="Employers" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Attendance" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Salary" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Asset" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Leave" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Expense" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Termination" Hyperlink.Click=""/>
                 </TreeView>
             </TabItem>
             <TabItem Header="Receipts">
                 <TreeView RenderTransformOrigin="0.504,2.285" Margin="0,44,1,-44">
-                    <TreeViewItem Header="Payment Receipts"/>
-                    <TreeViewItem Header="Profit and loss"/>
-                    <TreeViewItem Header="Customer Statement"/>
-                    <TreeViewItem Header="Supplier Statement"/>
+                    <TreeViewItem Header="Payment Receipts" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Profit and loss" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Customer Statement" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Supplier Statement" Hyperlink.Click=""/>
                     
                 </TreeView>
             </TabItem>
             <TabItem Header="Accounts">
                 <TreeView RenderTransformOrigin="0.504,2.285" Margin="0,44,1,-44">
-                    <TreeViewItem Header="General ledger"/>
-                    <TreeViewItem Header="Charted Accounts"/>
-                    <TreeViewItem Header="Accounts Payable"/>
-                    <TreeViewItem Header="Accounts Receivable"/>
-                    <TreeViewItem Header="Accounts Reconcile"/>
+                    <TreeViewItem Header="General ledger" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Charted Accounts" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Accounts Payable" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Accounts Receivable" Hyperlink.Click=""/>
+                    <TreeViewItem Header="Accounts Reconcile" Hyperlink.Click=""/>
                 </TreeView>
             </TabItem>
             <TabItem Header="Vendor">
                 <TreeView RenderTransformOrigin="0.504,2.285" Margin="0,44,1,-44">
-                    <TreeViewItem Header="Vendors"/>
+                    <TreeViewItem Header="Vendors" Hyperlink.Click=""/>
                     
                 </TreeView>
             </TabItem>

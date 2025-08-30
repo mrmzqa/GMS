@@ -19,7 +19,15 @@ namespace GmsApp.Views
             _purchaseOrderPage = purchaseOrderPage;
         }
 
+        private void TreeViewItem_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
+
+        private void TreeViewItem_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 
 }
