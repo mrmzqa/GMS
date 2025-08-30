@@ -70,8 +70,13 @@ public partial class App : Application
 
         await _host.StartAsync();
 
+
         var dbContext = _host.Services.GetRequiredService<AppDbContext>();
        /* await dbContext.Database.EnsureCreatedAsync();*/
+
+            var dbContext = _host.Services.GetRequiredService<AppDbContext>();
+            await dbContext.Database.EnsureCreatedAsync();
+
 
         var mainWindow = _host.Services.GetRequiredService<MainWindow>();
         mainWindow.Show();
