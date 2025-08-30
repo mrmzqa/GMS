@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GMSApp.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial2 : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -89,6 +89,25 @@ namespace GMSApp.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_invoicelabel", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Jobcards",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CustomerName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    JobDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    JobDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EstimatedCost = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ActualCost = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    CompletionDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Propertyimage = table.Column<byte[]>(type: "varbinary(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Jobcards", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -185,11 +204,17 @@ namespace GMSApp.Migrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    PurchaseOrderId = table.Column<int>(type: "int", nullable: false)
+                    PurchaseOrderId = table.Column<int>(type: "int", nullable: false),
+                    JobcardId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ItemRows", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ItemRows_Jobcards_JobcardId",
+                        column: x => x.JobcardId,
+                        principalTable: "Jobcards",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_ItemRows_PurchaseOrders_PurchaseOrderId",
                         column: x => x.PurchaseOrderId,
@@ -417,6 +442,11 @@ namespace GMSApp.Migrations
                 column: "Mainid");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ItemRows_JobcardId",
+                table: "ItemRows",
+                column: "JobcardId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ItemRows_PurchaseOrderId",
                 table: "ItemRows",
                 column: "PurchaseOrderId");
@@ -513,6 +543,9 @@ namespace GMSApp.Migrations
 
             migrationBuilder.DropTable(
                 name: "VendorData");
+
+            migrationBuilder.DropTable(
+                name: "Jobcards");
 
             migrationBuilder.DropTable(
                 name: "PurchaseOrders");

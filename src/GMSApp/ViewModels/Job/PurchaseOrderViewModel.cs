@@ -56,7 +56,7 @@ public partial class PurchaseOrderViewModel : ObservableObject
         await _repository.AddAsync(po);
         
     }
-    [RelayCommand]
+   /* [RelayCommand]
     private async Task ExportPdf()
     {
         var po = new PurchaseOrder
@@ -69,6 +69,6 @@ public partial class PurchaseOrderViewModel : ObservableObject
         await _GenericPdfGenerator.GeneratePdfAsync(new List<PurchaseOrder> { po }, filePath);
         // Optionally, open the PDF after generation
         // System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath) { UseShellExecute = true });
-    }
+    }*/
 
 }

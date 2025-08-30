@@ -10,92 +10,82 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using System;
 using System.Windows;
+namespace GMSApp;
 
-namespace GMSApp
+public partial class App : Application
 {
-    public partial class App : Application
+    private readonly IHost _host;
+
+    public App()
     {
-        private readonly IHost _host;
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.File("logs\\Appdb.log", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
+        _host = Host.CreateDefaultBuilder()
+            .ConfigureServices((context, services) =>
+            {
+                // DbContext
+                services.AddDbContext<AppDbContext>(options =>
+                    options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GMSAppDb;Trusted_Connection=True;"));
+                /*services.AddDbContext<AppDbContext>(options =>
+                             options.UseSqlite("Data Source=Appdb.db"));*/
+                // Repositories
+                services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+                services.AddScoped<IFileRepository, FileRepository>();
+                services.AddScoped(typeof(IGenericPdfGenerator<>), typeof(GenericPdfGenerator<>));
+                // ViewModels
+                services.AddScoped<FileViewModel>();
+                services.AddScoped<CoreMainViewModel>();
+                services.AddScoped<MainContentViewModel>();
+                services.AddScoped<PurchaseOrderViewModel>();
+                services.AddScoped<JobcardViewModel>();
+                // Views
+                services.AddScoped<MainWindow>();
+                services.AddScoped<MainContentView>();
+                services.AddScoped<PurchaseOrderPage>();
+                services.AddScoped<JobcardView>();
+                services.AddScoped<FilesPage>();
+                services.AddScoped<CoreMain>();
 
-        public App()
-        {
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.File("logs\\Appdb.log", rollingInterval: RollingInterval.Day)
-                .CreateLogger();
+            })
+            .UseSerilog()
+            .Build();
+    }
 
-            _host = Host.CreateDefaultBuilder()
-                .ConfigureServices((context, services) =>
-                {
-                    // DbContext
-                    services.AddDbContext<AppDbContext>(options =>
-                        options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GMSAppDb;Trusted_Connection=True;"));
-                    /*services.AddDbContext<AppDbContext>(options =>
-                                 options.UseSqlite("Data Source=Appdb.db"));*/
-                    // Repositories
-                    services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-                    services.AddScoped<IFileRepository, FileRepository>();
+   /* protected override async void OnStartup(StartupEventArgs e)
+    {
+        Log.Information("Application starting");
 
-                    // ViewModels
-                    services.AddScoped<FileViewModel>();
+        await _host.StartAsync();
 
-                    // Views
-                    services.AddScoped<MainWindow>();
+        var mainWindow = _host.Services.GetRequiredService<MainWindow>();
 
+        mainWindow.Show();
 
-                   
-                    services.AddScoped<MainContentView>();
-                    services.AddScoped<PurchaseOrderPage>();
-                    services.AddScoped<FilesPage>();
-                     services.AddScoped<CoreMainViewModel>();
-                    services.AddScoped<MainContentViewModel>();
-                    services.AddScoped<PurchaseOrderViewModel>();
-                    services.AddScoped<CoreMain>();
+        base.OnStartup(e);
+    }*/
+    protected override async void OnStartup(StartupEventArgs e)
+    {
+        Log.Information("Application starting");
 
-                   
-                })
+        await _host.StartAsync();
 
+        var dbContext = _host.Services.GetRequiredService<AppDbContext>();
+       /* await dbContext.Database.EnsureCreatedAsync();*/
 
+        var mainWindow = _host.Services.GetRequiredService<MainWindow>();
+        mainWindow.Show();
 
+        base.OnStartup(e);
+    }
 
-                .UseSerilog()
-                .Build();
-        }
+    protected override async void OnExit(ExitEventArgs e)
+    {
+        Log.Information("Application exiting");
 
-       /* protected override async void OnStartup(StartupEventArgs e)
-        {
-            Log.Information("Application starting");
+        await _host.StopAsync();
+        Log.CloseAndFlush();
 
-            await _host.StartAsync();
-
-            var mainWindow = _host.Services.GetRequiredService<MainWindow>();
-
-            mainWindow.Show();
-
-            base.OnStartup(e);
-        }*/
-        protected override async void OnStartup(StartupEventArgs e)
-        {
-            Log.Information("Application starting");
-
-            await _host.StartAsync();
-
-            var dbContext = _host.Services.GetRequiredService<AppDbContext>();
-           /* await dbContext.Database.EnsureCreatedAsync();*/
-
-            var mainWindow = _host.Services.GetRequiredService<MainWindow>();
-            mainWindow.Show();
-
-            base.OnStartup(e);
-        }
-
-        protected override async void OnExit(ExitEventArgs e)
-        {
-            Log.Information("Application exiting");
-
-            await _host.StopAsync();
-            Log.CloseAndFlush();
-
-            base.OnExit(e);
-        }
+        base.OnExit(e);
     }
 }

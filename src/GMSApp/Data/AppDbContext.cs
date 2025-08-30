@@ -20,6 +20,7 @@ namespace GMSApp.Data
 
         public DbSet<Job> Jobs { get; set; }
 
+        public DbSet<Jobcard> Jobcards { get; set; }
         public DbSet<Payment> Payments { get; set; }
 
         public DbSet<Status> Statuses { get; set; }

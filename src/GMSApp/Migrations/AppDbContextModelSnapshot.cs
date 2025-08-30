@@ -130,6 +130,9 @@ namespace GMSApp.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("JobcardId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -144,6 +147,8 @@ namespace GMSApp.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("JobcardId");
 
                     b.HasIndex("PurchaseOrderId");
 
@@ -166,6 +171,43 @@ namespace GMSApp.Migrations
                     b.HasIndex("Mainid");
 
                     b.ToTable("Jobs");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.Jobcard", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("ActualCost")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("CompletionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("EstimatedCost")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("JobDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("JobDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("Propertyimage")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Jobcards");
                 });
 
             modelBuilder.Entity("GMSApp.Models.Main", b =>
@@ -556,6 +598,10 @@ namespace GMSApp.Migrations
 
             modelBuilder.Entity("GMSApp.Models.ItemRow", b =>
                 {
+                    b.HasOne("GMSApp.Models.Jobcard", null)
+                        .WithMany("Items")
+                        .HasForeignKey("JobcardId");
+
                     b.HasOne("GMSApp.Models.PurchaseOrder", null)
                         .WithMany("Items")
                         .HasForeignKey("PurchaseOrderId")
@@ -680,6 +726,11 @@ namespace GMSApp.Migrations
             modelBuilder.Entity("GMSApp.Models.CoreMain", b =>
                 {
                     b.Navigation("Main");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.Jobcard", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("GMSApp.Models.Main", b =>
