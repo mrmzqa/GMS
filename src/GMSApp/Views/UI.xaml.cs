@@ -730,3 +730,347 @@ namespace GMSApp.Views.Job
 {
   
 }*/
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using CommunityToolkit.Mvvm.ComponentModel;
+
+namespace GMSApp.Models
+{
+    public class ItemRow : ObservableObject
+    {
+        [Key]
+        public int Id { get; set; } // EF primary key
+
+        private string _name = string.Empty;
+        public string Name
+        {
+            get => _name;
+            set => SetProperty(ref _name, value);
+        }
+
+        private int _quantity;
+        public int Quantity
+        {
+            get => _quantity;
+            set => SetProperty(ref _quantity, value);
+        }
+
+        private decimal _price;
+        public decimal Price
+        {
+            get => _price;
+            set => SetProperty(ref _price, value);
+        }
+
+        [NotMapped]
+        public decimal Total => Quantity * Price;
+
+        // FK to Joborder - name follows convention so EF will wire it up automatically
+        // If you prefer attribute, you can also use: [ForeignKey(nameof(Joborder))]
+        public int? JoborderId { get; set; }
+
+        // Navigation property
+        public Models.job.Joborder? Joborder { get; set; }
+    }
+}
+
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using GMSApp.Models.job;
+using GMSApp.Models;
+using GMSApp.Repositories;
+using Microsoft.Win32;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+
+namespace GMSApp.ViewModels.Job
+{
+    public partial class JoborderViewModel : ObservableObject
+    {
+        private readonly IRepository<Joborder> _JoborderRepo;
+        private readonly IFileRepository _fileRepo;
+
+        public ObservableCollection<Joborder> Joborders { get; } = new();
+
+        public ObservableCollection<ItemRow> Items { get; } = new();
+
+        public decimal Total => Items.Sum(x => x.Total);
+
+        public JoborderViewModel(IRepository<Joborder> JoborderRepo, IFileRepository fileRepo)
+        {
+            _JoborderRepo = JoborderRepo;
+            _fileRepo = fileRepo;
+
+            Items.CollectionChanged += Items_CollectionChanged;
+            _ = LoadJobordersAsync();
+        }
+
+        private void Items_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                foreach (var ni in e.NewItems.OfType<INotifyPropertyChanged>())
+                    ni.PropertyChanged += Item_PropertyChanged;
+            }
+
+            if (e.OldItems != null)
+            {
+                foreach (var oi in e.OldItems.OfType<INotifyPropertyChanged>())
+                    oi.PropertyChanged -= Item_PropertyChanged;
+            }
+
+            OnPropertyChanged(nameof(Total));
+        }
+
+        private void Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ItemRow.Quantity) || e.PropertyName == nameof(ItemRow.Price))
+                OnPropertyChanged(nameof(Total));
+        }
+
+        [ObservableProperty]
+        private Joborder? selectedJoborder;
+
+        partial void OnSelectedJoborderChanged(Joborder? value)
+        {
+            // sync Items from the selected joborder - clone so UI edits don't directly mutate tracked entities until save/update
+            Items.CollectionChanged -= Items_CollectionChanged;
+            Items.Clear();
+
+            if (value?.Items != null)
+            {
+                foreach (var it in value.Items)
+                {
+                    // Clone into UI items to avoid directly manipulating tracked entities
+                    Items.Add(CloneForUi(it));
+                }
+            }
+
+            Items.CollectionChanged += Items_CollectionChanged;
+
+            UpdateJoborderCommand.NotifyCanExecuteChanged();
+            DeleteJoborderCommand.NotifyCanExecuteChanged();
+            FrontFileCommand.NotifyCanExecuteChanged();
+            BackFileCommand.NotifyCanExecuteChanged();
+            LeftFileCommand.NotifyCanExecuteChanged();
+            RightFileCommand.NotifyCanExecuteChanged();
+
+            OnPropertyChanged(nameof(Total));
+        }
+
+        [RelayCommand]
+        public async Task LoadJobordersAsync()
+        {
+            Joborders.Clear();
+            var items = await _JoborderRepo.GetAllAsync();
+            foreach (var item in items)
+                Joborders.Add(item);
+
+            SelectedJoborder = Joborders.Count > 0 ? Joborders[0] : null;
+        }
+
+        // Helper: clone an ItemRow for UI editing (Id = 0 means EF sees it as new)
+        private static ItemRow CloneForDb(ItemRow src)
+        {
+            return new ItemRow
+            {
+                // do NOT copy Id when creating new DB entries
+                Id = 0,
+                Name = src.Name,
+                Quantity = src.Quantity,
+                Price = src.Price,
+                JoborderId = null,
+                Joborder = null
+            };
+        }
+
+        // Clone into a separate object for UI (keeps existing Id for display if desired)
+        private static ItemRow CloneForUi(ItemRow src)
+        {
+            return new ItemRow
+            {
+                Id = src.Id,
+                Name = src.Name,
+                Quantity = src.Quantity,
+                Price = src.Price,
+                JoborderId = src.JoborderId,
+                Joborder = null
+            };
+        }
+
+        [RelayCommand]
+        public async Task AddJoborderAsync()
+        {
+            // Create a brand-new Joborder and clone UI items into new DB items (so EF won't try to reuse tracked entities)
+            var newJoborder = new Joborder
+            {
+                CustomerName = SelectedJoborder?.CustomerName,
+                Phonenumber = SelectedJoborder?.Phonenumber,
+                VehicleNumber = SelectedJoborder?.VehicleNumber,
+                Brand = SelectedJoborder?.Brand,
+                Model = SelectedJoborder?.Model,
+                OdoNumber = SelectedJoborder?.OdoNumber,
+                F = SelectedJoborder?.F,
+                FN = SelectedJoborder?.FN,
+                B = SelectedJoborder?.B,
+                BN = SelectedJoborder?.BN,
+                LS = SelectedJoborder?.LS,
+                LSN = SelectedJoborder?.LSN,
+                RS = SelectedJoborder?.RS,
+                RSN = SelectedJoborder?.RSN,
+                Items = Items.Select(CloneForDb).ToList()
+            };
+
+            await _JoborderRepo.AddAsync(newJoborder);
+            await LoadJobordersAsync();
+
+            // set selected to the newly added joborder
+            SelectedJoborder = Joborders.FirstOrDefault(j => j.Id == newJoborder.Id) ?? newJoborder;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task UpdateJoborderAsync()
+        {
+            if (SelectedJoborder == null) return;
+
+            // Replace the selected joborder's items with clones of current UI Items.
+            // We will:
+            // - For simplicity: delete all existing items and insert new ones.
+            //   (Alternatively implement a merge that updates existing items by Id.)
+            SelectedJoborder.Items.Clear();
+            var dbItems = Items.Select(CloneForDb).ToList();
+            foreach (var it in dbItems)
+                SelectedJoborder.Items.Add(it);
+
+            await _JoborderRepo.UpdateAsync(SelectedJoborder);
+            await LoadJobordersAsync();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task DeleteJoborderAsync()
+        {
+            if (SelectedJoborder == null) return;
+            await _JoborderRepo.DeleteAsync(SelectedJoborder.Id);
+            SelectedJoborder = null;
+            await LoadJobordersAsync();
+        }
+
+        [RelayCommand]
+        private void AddItem()
+        {
+            Items.Add(new ItemRow { Name = string.Empty, Quantity = 1, Price = 0m });
+        }
+
+        [RelayCommand]
+        private void RemoveItem(ItemRow item)
+        {
+            if (item != null) Items.Remove(item);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task SaveCommand()
+        {
+            // Save current UI items into the selected joborder (either Add or Update)
+            if (SelectedJoborder == null) return;
+
+            // create db-ready clones
+            var dbItems = Items.Select(CloneForDb).ToList();
+            SelectedJoborder.Items.Clear();
+            foreach (var it in dbItems)
+                SelectedJoborder.Items.Add(it);
+
+            if (SelectedJoborder.Id == 0)
+            {
+                await _JoborderRepo.AddAsync(SelectedJoborder);
+            }
+            else
+            {
+                await _JoborderRepo.UpdateAsync(SelectedJoborder);
+            }
+
+            await LoadJobordersAsync();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void FrontFile()
+        {
+            if (SelectedJoborder == null) return;
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select Front Image",
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                SelectedJoborder.F = File.ReadAllBytes(dialog.FileName);
+                SelectedJoborder.FN = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(SelectedJoborder));
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void BackFile()
+        {
+            if (SelectedJoborder == null) return;
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select Back Image",
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                SelectedJoborder.B = File.ReadAllBytes(dialog.FileName);
+                SelectedJoborder.BN = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(SelectedJoborder));
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void LeftFile()
+        {
+            if (SelectedJoborder == null) return;
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select Left Image",
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                SelectedJoborder.LS = File.ReadAllBytes(dialog.FileName);
+                SelectedJoborder.LSN = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(SelectedJoborder));
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void RightFile()
+        {
+            if (SelectedJoborder == null) return;
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select Right Image",
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                SelectedJoborder.RS = File.ReadAllBytes(dialog.FileName);
+                SelectedJoborder.RSN = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(SelectedJoborder));
+            }
+        }
+
+        private bool CanModify() => SelectedJoborder != null;
+    }
+}
+
