@@ -3,126 +3,160 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewmodels="clr-namespace:GMSApp.ViewModels.Job"
-             xmlns:converters="clr-namespace:GMSApp.Converters"
-             mc:Ignorable="d" d:DesignHeight="700" d:DesignWidth="900">
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1000">
 
     <UserControl.Resources>
-        <converters:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter"/>
+        <!-- Ensure you have a ByteArrayToImageConverter implemented in GMSApp.Converters namespace.
+             If not, remove converter references or implement a converter that converts byte[] to ImageSource. -->
+        <ResourceDictionary>
+            <conv:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter" xmlns:conv="clr-namespace:GMSApp.Converters"/>
+        </ResourceDictionary>
     </UserControl.Resources>
 
-    <Grid Margin="0">
+    <Grid Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
-            <Label Content="Search:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-            <TextBox Width="250" x:Name="SearchBox" />
-            <Button Content="Clear" Margin="5,0,0,0" />
-            <Button Content="Add" Margin="20,0,0,0" Width="100" Command="{Binding AddJoborderCommand}" />
+        <!-- Top toolbar -->
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,8">
+            <Button Content="Add Job" Width="110" Margin="0,0,8,0" Command="{Binding AddJoborderCommand}" />
+            <Button Content="Save" Width="90" Margin="0,0,8,0" Command="{Binding SaveCommand}" />
+            <Button Content="Update" Width="90" Margin="0,0,8,0" Command="{Binding UpdateJoborderCommand}" />
+            <Button Content="Delete" Width="90" Margin="0,0,8,0" Command="{Binding DeleteJoborderCommand}" />
+            <Button Content="Print" Width="90" Margin="8,0,0,0" Command="{Binding PrintCommand}" />
         </StackPanel>
 
+        <!-- Main area -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*"/>
                 <ColumnDefinition Width="3*"/>
             </Grid.ColumnDefinitions>
 
-            <DataGrid Grid.Column="0"
-                      ItemsSource="{Binding Joborders}"
-                      SelectedItem="{Binding SelectedJoborder, Mode=TwoWay}"
-                      AutoGenerateColumns="True"
-                      CanUserAddRows="False"
-                      CanUserDeleteRows="False"
-                      IsReadOnly="True"
-                      SelectionMode="Single"
-                      Margin="4" />
-
-            <StackPanel Grid.Column="1" Margin="4">
-                <DataGrid ItemsSource="{Binding Items}" AutoGenerateColumns="False" CanUserAddRows="False" Height="200">
+            <!-- Left: Job list -->
+            <Border Grid.Column="0" BorderBrush="LightGray" BorderThickness="1" Padding="6" Margin="0,0,8,0">
+                <DataGrid ItemsSource="{Binding Joborders}"
+                          SelectedItem="{Binding SelectedJoborder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
-                        <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
-                        <DataGridTextColumn Header="Price" Binding="{Binding Price, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="100"/>
-                        <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=N2}" IsReadOnly="True" Width="100"/>
-                        <DataGridTemplateColumn Header="Action" Width="80">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Button Content="Delete"
-                                            Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}" />
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="60"/>
+                        <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="*"/>
+                        <DataGridTextColumn Header="Phone" Binding="{Binding Phonenumber}" Width="120"/>
+                        <DataGridTextColumn Header="Vehicle" Binding="{Binding VehicleNumber}" Width="120"/>
                     </DataGrid.Columns>
                 </DataGrid>
+            </Border>
 
-                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                    <Button Content="Add Item" Width="90" Command="{Binding AddItemCommand}" />
-                    <Button Content="Save Items" Width="90" Margin="8,0,0,0" Command="{Binding SaveCommand}" />
-                    <TextBlock Text="Total:" VerticalAlignment="Center" Margin="16,0,0,0"/>
-                    <TextBlock Text="{Binding Total, StringFormat=N2}" VerticalAlignment="Center" Margin="4,0,0,0" FontWeight="Bold"/>
-                </StackPanel>
+            <!-- Right: Details, items and images -->
+            <StackPanel Grid.Column="1" Orientation="Vertical" Margin="0,0,0,0">
+                <!-- Items section -->
+                <GroupBox Header="Items" Margin="0,0,0,8">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="6">
+                            <Button Content="Add Item" Command="{Binding AddItemCommand}" Width="100"/>
+                            <TextBlock Text=" " Width="8"/>
+                            <Button Content="Save Items" Command="{Binding SaveCommand}" Width="100"/>
+                            <TextBlock Text=" " Width="16"/>
+                            <TextBlock Text="Total:" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding Total, StringFormat=N2}" FontWeight="Bold" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
 
-                <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,10,0,0" Background="#FFF9F9F9">
+                        <DataGrid ItemsSource="{Binding Items}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  Margin="6"
+                                  Height="220">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                                <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="100" />
+                                <DataGridTextColumn Header="Price" Binding="{Binding Price, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="100" />
+                                <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=N2}" IsReadOnly="True" Width="100" />
+                                <DataGridTemplateColumn Header="Action" Width="90">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="Delete"
+                                                    Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Width="70" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </GroupBox>
+
+                <!-- Details form -->
+                <Border BorderBrush="LightGray" BorderThickness="1" Padding="10" Background="#FFF9F9F9" Margin="0,0,0,8">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="130"/>
+                            <ColumnDefinition Width="140"/>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="130"/>
+                            <ColumnDefinition Width="140"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <Label Content="Customer Name:" Grid.Column="0" VerticalAlignment="Center" Grid.Row="0"/>
-                        <TextBox Text="{Binding SelectedJoborder.CustomerName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Margin="5" Grid.Row="0"/>
+                        <Label Content="Customer:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Margin="6,4" Text="{Binding SelectedJoborder.CustomerName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <Label Content="Phonenumber" Grid.Column="2" VerticalAlignment="Center" Grid.Row="0"/>
-                        <TextBox Text="{Binding SelectedJoborder.Phonenumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="3" Margin="5" Grid.Row="0"/>
+                        <Label Content="Phone:" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="0" Grid.Column="3" Margin="6,4" Text="{Binding SelectedJoborder.Phonenumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <Label Content="VehicleNumber:" Grid.Column="0" VerticalAlignment="Center" Grid.Row="1"/>
-                        <TextBox Text="{Binding SelectedJoborder.VehicleNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Margin="5" Grid.Row="1"/>
+                        <Label Content="Vehicle No:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Margin="6,4" Text="{Binding SelectedJoborder.VehicleNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <Label Content="Brand:" Grid.Column="2" VerticalAlignment="Center" Grid.Row="1"/>
-                        <TextBox Text="{Binding SelectedJoborder.Brand, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="3" Margin="5" Grid.Row="1"/>
+                        <Label Content="Brand:" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="1" Grid.Column="3" Margin="6,4" Text="{Binding SelectedJoborder.Brand, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <Label Content="Model:" Grid.Column="0" VerticalAlignment="Center" Grid.Row="2"/>
-                        <TextBox Text="{Binding SelectedJoborder.Model, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Margin="5" Grid.Row="2"/>
+                        <Label Content="Model:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Margin="6,4" Text="{Binding SelectedJoborder.Model, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <Label Content="Odo:" Grid.Column="2" VerticalAlignment="Center" Grid.Row="2"/>
-                        <TextBox Text="{Binding SelectedJoborder.OdoNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="3" Margin="5" Grid.Row="2"/>
-
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="3" Grid.Row="3" Margin="0,10,0,0">
-                            <Button Content="Update" Width="100" Margin="0,0,5,0" Command="{Binding UpdateJoborderCommand}" />
-                            <Button Content="Delete" Width="100" Command="{Binding DeleteJoborderCommand}" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Column="2" Grid.Row="3" Margin="0,10,0,0">
-                            <Button Content="Payment" Width="50" Margin="5,0"/>
-                            <Button Content="Print" Width="50" Margin="5,0"/>
-                        </StackPanel>
+                        <Label Content="Odometer:" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="2" Grid.Column="3" Margin="6,4" Text="{Binding SelectedJoborder.OdoNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                     </Grid>
                 </Border>
 
-                <StackPanel Orientation="Horizontal" Margin="0,10,0,0" HorizontalAlignment="Left">
-                    <Image Width="64" Height="64" Margin="4" Source="{Binding SelectedJoborder.F, Converter={StaticResource ByteArrayToImageConverter}}" />
-                    <Image Width="64" Height="64" Margin="4" Source="{Binding SelectedJoborder.B, Converter={StaticResource ByteArrayToImageConverter}}" />
-                    <Image Width="64" Height="64" Margin="4" Source="{Binding SelectedJoborder.LS, Converter={StaticResource ByteArrayToImageConverter}}" />
-                    <Image Width="64" Height="64" Margin="4" Source="{Binding SelectedJoborder.RS, Converter={StaticResource ByteArrayToImageConverter}}" />
-                </StackPanel>
+                <!-- Images -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,0">
+                    <StackPanel Orientation="Vertical" Margin="0,0,12,0">
+                        <Image Width="120" Height="80"
+                               Source="{Binding SelectedJoborder.F, Converter={StaticResource ByteArrayToImageConverter}}"
+                               Stretch="Uniform" />
+                        <Button Content="Front" Width="120" Margin="0,6,0,0" Command="{Binding FrontFileCommand}"/>
+                    </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Margin="0,8,0,0" HorizontalAlignment="Left">
-                    <Button Content="F" Width="32" Command="{Binding FrontFileCommand}" />
-                    <Button Content="B" Width="32" Margin="4,0,0,0" Command="{Binding BackFileCommand}" />
-                    <Button Content="L" Width="32" Margin="4,0,0,0" Command="{Binding LeftFileCommand}" />
-                    <Button Content="R" Width="32" Margin="4,0,0,0" Command="{Binding RightFileCommand}" />
+                    <StackPanel Orientation="Vertical" Margin="0,0,12,0">
+                        <Image Width="120" Height="80"
+                               Source="{Binding SelectedJoborder.B, Converter={StaticResource ByteArrayToImageConverter}}"
+                               Stretch="Uniform" />
+                        <Button Content="Back" Width="120" Margin="0,6,0,0" Command="{Binding BackFileCommand}"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Vertical" Margin="0,0,12,0">
+                        <Image Width="120" Height="80"
+                               Source="{Binding SelectedJoborder.LS, Converter={StaticResource ByteArrayToImageConverter}}"
+                               Stretch="Uniform" />
+                        <Button Content="Left" Width="120" Margin="0,6,0,0" Command="{Binding LeftFileCommand}"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Vertical" Margin="0,0,12,0">
+                        <Image Width="120" Height="80"
+                               Source="{Binding SelectedJoborder.RS, Converter={StaticResource ByteArrayToImageConverter}}"
+                               Stretch="Uniform" />
+                        <Button Content="Right" Width="120" Margin="0,6,0,0" Command="{Binding RightFileCommand}"/>
+                    </StackPanel>
                 </StackPanel>
             </StackPanel>
         </Grid>
