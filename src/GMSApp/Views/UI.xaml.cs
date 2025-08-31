@@ -686,3 +686,500 @@ var host = Host.CreateDefaultBuilder()
 await host.StartAsync();
 // Resolve main window or show the view inside your shell.
 
+
+using CommunityToolkit.Mvvm.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace GMSApp.Models
+{
+    public class ItemRow : ObservableObject
+    {
+        [Key]
+        public int Id { get; set; } // for EF
+
+        private string _name = string.Empty;
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                if (SetProperty(ref _name, value))
+                    OnPropertyChanged(nameof(Total));
+            }
+        }
+
+        private int _quantity;
+        public int Quantity
+        {
+            get => _quantity;
+            set
+            {
+                if (SetProperty(ref _quantity, value))
+                    OnPropertyChanged(nameof(Total));
+            }
+        }
+
+        private decimal _price;
+        public decimal Price
+        {
+            get => _price;
+            set
+            {
+                if (SetProperty(ref _price, value))
+                    OnPropertyChanged(nameof(Total));
+            }
+        }
+
+        [NotMapped]
+        public decimal Total => Quantity * Price;
+
+        public int PurchaseOrderId { get; set; }
+
+        // Keep the same foreign key properties as before
+        public int Joborderid { get; set; }
+
+        public Models.job.Joborder? Joborder { get; set; }
+    }
+}
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using GMSApp.Models.job;
+using GMSApp.Models;
+using GMSApp.Repositories;
+using Microsoft.Win32;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.IO;
+
+namespace GMSApp.ViewModels.Job
+{
+    public partial class JoborderViewModel : ObservableObject
+    {
+        private readonly IRepository<Joborder> _joborderRepo;
+        private readonly IFileRepository _fileRepo;
+
+        public ObservableCollection<Joborder> Joborders { get; } = new();
+
+        public ObservableCollection<ItemRow> Items { get; } = new();
+
+        public decimal Total => Items.Sum(x => x.Total);
+
+        public JoborderViewModel(IRepository<Joborder> joborderRepo, IFileRepository fileRepo)
+        {
+            _joborderRepo = joborderRepo;
+            _fileRepo = fileRepo;
+
+            Items.CollectionChanged += Items_CollectionChanged;
+
+            _ = LoadJobordersAsync();
+        }
+
+        private void Items_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                foreach (var ni in e.NewItems.OfType<INotifyPropertyChanged>())
+                    ni.PropertyChanged += Item_PropertyChanged;
+            }
+
+            if (e.OldItems != null)
+            {
+                foreach (var oi in e.OldItems.OfType<INotifyPropertyChanged>())
+                    oi.PropertyChanged -= Item_PropertyChanged;
+            }
+
+            OnPropertyChanged(nameof(Total));
+        }
+
+        private void Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ItemRow.Quantity) || e.PropertyName == nameof(ItemRow.Price) || e.PropertyName == nameof(ItemRow.Name))
+                OnPropertyChanged(nameof(Total));
+        }
+
+        [ObservableProperty]
+        private Joborder? selectedJoborder;
+
+        partial void OnSelectedJoborderChanged(Joborder? value)
+        {
+            // When the SelectedJoborder changes, sync Items collection from the model
+            Items.CollectionChanged -= Items_CollectionChanged;
+            Items.Clear();
+            if (value?.Items != null)
+            {
+                foreach (var it in value.Items)
+                    Items.Add(it);
+            }
+            Items.CollectionChanged += Items_CollectionChanged;
+
+            // Subscribe individual item PropertyChanged to recalc totals (ItemRow implements ObservableObject)
+            foreach (var item in Items.OfType<INotifyPropertyChanged>())
+                item.PropertyChanged -= Item_PropertyChanged;
+            foreach (var item in Items.OfType<INotifyPropertyChanged>())
+                item.PropertyChanged += Item_PropertyChanged;
+
+            UpdateJoborderCommand.NotifyCanExecuteChanged();
+            DeleteJoborderCommand.NotifyCanExecuteChanged();
+            FrontFileCommand.NotifyCanExecuteChanged();
+            BackFileCommand.NotifyCanExecuteChanged();
+            LeftFileCommand.NotifyCanExecuteChanged();
+            RightFileCommand.NotifyCanExecuteChanged();
+
+            OnPropertyChanged(nameof(Total));
+        }
+
+        [RelayCommand]
+        public async Task LoadJobordersAsync()
+        {
+            Joborders.Clear();
+            var items = await _joborderRepo.GetAllAsync();
+            foreach (var item in items)
+                Joborders.Add(item);
+
+            SelectedJoborder = Joborders.Count > 0 ? Joborders[0] : null;
+        }
+
+        [RelayCommand]
+        public async Task AddJoborderAsync()
+        {
+            var newJoborder = new Joborder
+            {
+                CustomerName = SelectedJoborder?.CustomerName,
+                Phonenumber = SelectedJoborder?.Phonenumber,
+                VehicleNumber = SelectedJoborder?.VehicleNumber,
+                Brand = SelectedJoborder?.Brand,
+                Model = SelectedJoborder?.Model,
+                OdoNumber = SelectedJoborder?.OdoNumber,
+                Items = Items.ToList()
+            };
+
+            await _joborderRepo.AddAsync(newJoborder);
+            await LoadJobordersAsync();
+            SelectedJoborder = newJoborder;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task UpdateJoborderAsync()
+        {
+            if (SelectedJoborder == null) return;
+
+            // ensure Items in the model are updated
+            SelectedJoborder.Items = Items.ToList();
+
+            await _joborderRepo.UpdateAsync(SelectedJoborder);
+            await LoadJobordersAsync();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task DeleteJoborderAsync()
+        {
+            if (SelectedJoborder == null) return;
+            await _joborderRepo.DeleteAsync(SelectedJoborder.Id);
+            SelectedJoborder = null;
+            await LoadJobordersAsync();
+        }
+
+        [RelayCommand]
+        private void AddItem()
+        {
+            var it = new ItemRow { Name = string.Empty, Quantity = 1, Price = 0m };
+            Items.Add(it);
+        }
+
+        [RelayCommand]
+        private void RemoveItem(ItemRow item)
+        {
+            if (item == null) return;
+            Items.Remove(item);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task SaveCommand()
+        {
+            if (SelectedJoborder == null) return;
+
+            // Persist items into the model and update repository
+            SelectedJoborder.Items = Items.ToList();
+            if (SelectedJoborder.Id == 0)
+            {
+                await _joborderRepo.AddAsync(SelectedJoborder);
+            }
+            else
+            {
+                await _joborderRepo.UpdateAsync(SelectedJoborder);
+            }
+
+            await LoadJobordersAsync();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void FrontFile()
+        {
+            if (SelectedJoborder == null) return;
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select Front Image",
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                SelectedJoborder.F = File.ReadAllBytes(dialog.FileName);
+                SelectedJoborder.FN = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(SelectedJoborder));
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void BackFile()
+        {
+            if (SelectedJoborder == null) return;
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select Back Image",
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                SelectedJoborder.B = File.ReadAllBytes(dialog.FileName);
+                SelectedJoborder.BN = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(SelectedJoborder));
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void LeftFile()
+        {
+            if (SelectedJoborder == null) return;
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select Left Image",
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                SelectedJoborder.LS = File.ReadAllBytes(dialog.FileName);
+                SelectedJoborder.LSN = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(SelectedJoborder));
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void RightFile()
+        {
+            if (SelectedJoborder == null) return;
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select Right Image",
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                SelectedJoborder.RS = File.ReadAllBytes(dialog.FileName);
+                SelectedJoborder.RSN = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(SelectedJoborder));
+            }
+        }
+
+        private bool CanModify() => SelectedJoborder != null;
+    }
+}
+using System;
+using System.Globalization;
+using System.IO;
+using System.Windows.Data;
+using System.Windows.Media.Imaging;
+
+namespace GMSApp.Converters
+{
+    public class ByteArrayToImageConverter : IValueConverter
+    {
+        public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is byte[] bytes && bytes.Length > 0)
+            {
+                try
+                {
+                    using var ms = new MemoryStream(bytes);
+                    var bmp = new BitmapImage();
+                    bmp.BeginInit();
+                    bmp.CacheOption = BitmapCacheOption.OnLoad;
+                    bmp.StreamSource = ms;
+                    bmp.EndInit();
+                    bmp.Freeze();
+                    return bmp;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
+}
+
+
+<UserControl x:Class="GMSApp.Views.Job.JobOrder"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewmodels="clr-namespace:GMSApp.ViewModels.Job"
+             xmlns:converters="clr-namespace:GMSApp.Converters"
+             mc:Ignorable="d" d:DesignHeight="700" d:DesignWidth="900">
+
+    <UserControl.Resources>
+        <converters:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter"/>
+    </UserControl.Resources>
+
+    <Grid Margin="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
+            <Label Content="Search:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <TextBox Width="250" x:Name="SearchBox" />
+            <Button Content="Clear" Margin="5,0,0,0" />
+            <Button Content="Add" Margin="20,0,0,0" Width="100" Command="{Binding AddJoborderCommand}" />
+        </StackPanel>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="3*"/>
+            </Grid.ColumnDefinitions>
+
+            <DataGrid Grid.Column="0"
+                      ItemsSource="{Binding Joborders}"
+                      SelectedItem="{Binding SelectedJoborder, Mode=TwoWay}"
+                      AutoGenerateColumns="True"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      Margin="4" />
+
+            <StackPanel Grid.Column="1" Margin="4">
+                <DataGrid ItemsSource="{Binding Items}" AutoGenerateColumns="False" CanUserAddRows="False" Height="200">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
+                        <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
+                        <DataGridTextColumn Header="Price" Binding="{Binding Price, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="100"/>
+                        <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=N2}" IsReadOnly="True" Width="100"/>
+                        <DataGridTemplateColumn Header="Action" Width="80">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="Delete"
+                                            Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button Content="Add Item" Width="90" Command="{Binding AddItemCommand}" />
+                    <Button Content="Save Items" Width="90" Margin="8,0,0,0" Command="{Binding SaveCommand}" />
+                    <TextBlock Text="Total:" VerticalAlignment="Center" Margin="16,0,0,0"/>
+                    <TextBlock Text="{Binding Total, StringFormat=N2}" VerticalAlignment="Center" Margin="4,0,0,0" FontWeight="Bold"/>
+                </StackPanel>
+
+                <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,10,0,0" Background="#FFF9F9F9">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="130"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="130"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Label Content="Customer Name:" Grid.Column="0" VerticalAlignment="Center" Grid.Row="0"/>
+                        <TextBox Text="{Binding SelectedJoborder.CustomerName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Margin="5" Grid.Row="0"/>
+
+                        <Label Content="Phonenumber" Grid.Column="2" VerticalAlignment="Center" Grid.Row="0"/>
+                        <TextBox Text="{Binding SelectedJoborder.Phonenumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="3" Margin="5" Grid.Row="0"/>
+
+                        <Label Content="VehicleNumber:" Grid.Column="0" VerticalAlignment="Center" Grid.Row="1"/>
+                        <TextBox Text="{Binding SelectedJoborder.VehicleNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Margin="5" Grid.Row="1"/>
+
+                        <Label Content="Brand:" Grid.Column="2" VerticalAlignment="Center" Grid.Row="1"/>
+                        <TextBox Text="{Binding SelectedJoborder.Brand, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="3" Margin="5" Grid.Row="1"/>
+
+                        <Label Content="Model:" Grid.Column="0" VerticalAlignment="Center" Grid.Row="2"/>
+                        <TextBox Text="{Binding SelectedJoborder.Model, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Margin="5" Grid.Row="2"/>
+
+                        <Label Content="Odo:" Grid.Column="2" VerticalAlignment="Center" Grid.Row="2"/>
+                        <TextBox Text="{Binding SelectedJoborder.OdoNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="3" Margin="5" Grid.Row="2"/>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="3" Grid.Row="3" Margin="0,10,0,0">
+                            <Button Content="Update" Width="100" Margin="0,0,5,0" Command="{Binding UpdateJoborderCommand}" />
+                            <Button Content="Delete" Width="100" Command="{Binding DeleteJoborderCommand}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Column="2" Grid.Row="3" Margin="0,10,0,0">
+                            <Button Content="Payment" Width="50" Margin="5,0"/>
+                            <Button Content="Print" Width="50" Margin="5,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0" HorizontalAlignment="Left">
+                    <Image Width="64" Height="64" Margin="4" Source="{Binding SelectedJoborder.F, Converter={StaticResource ByteArrayToImageConverter}}" />
+                    <Image Width="64" Height="64" Margin="4" Source="{Binding SelectedJoborder.B, Converter={StaticResource ByteArrayToImageConverter}}" />
+                    <Image Width="64" Height="64" Margin="4" Source="{Binding SelectedJoborder.LS, Converter={StaticResource ByteArrayToImageConverter}}" />
+                    <Image Width="64" Height="64" Margin="4" Source="{Binding SelectedJoborder.RS, Converter={StaticResource ByteArrayToImageConverter}}" />
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0" HorizontalAlignment="Left">
+                    <Button Content="F" Width="32" Command="{Binding FrontFileCommand}" />
+                    <Button Content="B" Width="32" Margin="4,0,0,0" Command="{Binding BackFileCommand}" />
+                    <Button Content="L" Width="32" Margin="4,0,0,0" Command="{Binding LeftFileCommand}" />
+                    <Button Content="R" Width="32" Margin="4,0,0,0" Command="{Binding RightFileCommand}" />
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>
+
+using GMSApp.ViewModels.Job;
+using System.Windows.Controls;
+
+namespace GMSApp.Views.Job
+{
+    public partial class JobOrder : UserControl
+    {
+        // Parameterless ctor for designer support
+        public JobOrder()
+        {
+            InitializeComponent();
+        }
+
+        // Use this constructor when composing from DI (e.g. in a window or a view locator)
+        public JobOrder(JoborderViewModel viewModel) : this()
+        {
+            DataContext = viewModel;
+        }
+    }
+}
