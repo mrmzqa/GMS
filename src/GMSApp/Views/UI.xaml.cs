@@ -1074,3 +1074,401 @@ namespace GMSApp.ViewModels.Job
     }
 }
 
+// File: GMSApp.ViewModels.Job.JoborderViewModel.cs
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using GMSApp.Models;
+using GMSApp.Models.job;
+using GMSApp.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Win32;
+using System;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+
+namespace GMSApp.ViewModels.Job
+{
+    public partial class JoborderViewModel : ObservableObject
+    {
+        private readonly IRepository<Joborder> _JoborderRepo;
+        private readonly IFileRepository _fileRepo;
+
+        public ObservableCollection<Joborder> Joborders { get; } = new();
+
+        public ObservableCollection<ItemRow> Items { get; } = new();
+
+        public decimal Total => Items.Sum(x => x.Total);
+
+        public JoborderViewModel(IRepository<Joborder> JoborderRepo, IFileRepository fileRepo)
+        {
+            _JoborderRepo = JoborderRepo;
+            _fileRepo = fileRepo;
+
+            // initial load
+            _ = LoadJobordersAsync();
+        }
+
+        [ObservableProperty]
+        private Joborder? selectedJoborder;
+
+        partial void OnSelectedJoborderChanged(Joborder? value)
+        {
+            // When selection changes, populate the Items collection only with items that belong to this job by Guid.
+            Items.Clear();
+
+            if (value != null && value.Items != null)
+            {
+                var g = value.OrderGuid;
+                foreach (var item in value.Items.Where(i => i.JoborderGuid == g))
+                {
+                    // Do not clone items — use the same ItemRow instances (so UI edits will change the same objects)
+                    // Note: if EF has tracked entities you might get tracking conflicts when re-attaching; see Load method that uses AsNoTracking where possible.
+                    Items.Add(item);
+                }
+            }
+
+            UpdateJoborderCommand.NotifyCanExecuteChanged();
+            DeleteJoborderCommand.NotifyCanExecuteChanged();
+            FrontFileCommand.NotifyCanExecuteChanged();
+            BackFileCommand.NotifyCanExecuteChanged();
+            LeftFileCommand.NotifyCanExecuteChanged();
+            RightFileCommand.NotifyCanExecuteChanged();
+
+            OnPropertyChanged(nameof(Total));
+        }
+
+        // Attempt to load Joborders using AsNoTracking if we can access the underlying DbContext from the repository via reflection.
+        // If not possible, fall back to the repository GetAllAsync().
+        [RelayCommand]
+        public async Task LoadJobordersAsync()
+        {
+            Joborders.Clear();
+
+            // Try to get a DbContext from the concrete repository (reflection - safe fallback to repo method)
+            try
+            {
+                var repoType = _JoborderRepo.GetType();
+                var contextField = repoType.GetField("_context", BindingFlags.Instance | BindingFlags.NonPublic);
+                if (contextField != null)
+                {
+                    var ctx = contextField.GetValue(_JoborderRepo) as DbContext;
+                    if (ctx != null)
+                    {
+                        // Use AsNoTracking and include Items to avoid EF tracking conflicts
+                        var list = await ctx.Set<Joborder>()
+                                            .AsNoTracking()
+                                            .Include(j => j.Items)
+                                            .ToListAsync();
+
+                        foreach (var j in list)
+                            Joborders.Add(j);
+
+                        SelectedJoborder = Joborders.Count > 0 ? Joborders[0] : null;
+                        return;
+                    }
+                }
+            }
+            catch
+            {
+                // ignore reflection failures and fallback to repository
+            }
+
+            // Fallback: repository method (may be tracked depending on repository implementation)
+            var items = await _JoborderRepo.GetAllAsync();
+            foreach (var item in items)
+                Joborders.Add(item);
+
+            SelectedJoborder = Joborders.Count > 0 ? Joborders[0] : null;
+        }
+
+        // Single helper that assigns JoborderGuid to all UI Items and attaches them to the given joborder.
+        // This uses the same ItemRow instances from Items (no cloning).
+        private void AddItemsToJoborder(Joborder job)
+        {
+            if (job == null) return;
+
+            if (job.OrderGuid == Guid.Empty)
+                job.OrderGuid = Guid.NewGuid();
+
+            // Assign the job guid to each item and ensure item.JoborderGuid is correct.
+            foreach (var it in Items)
+            {
+                it.JoborderGuid = job.OrderGuid;
+            }
+
+            // Make the job.Items reference the same collection so EF sees child entities.
+            job.Items = Items.ToList();
+        }
+
+        [RelayCommand]
+        public async Task AddJoborderAsync()
+        {
+            // Create new joborder, ensure it has a fresh Guid
+            var newJoborder = new Joborder
+            {
+                OrderGuid = Guid.NewGuid(),
+                CustomerName = SelectedJoborder?.CustomerName,
+                Phonenumber = SelectedJoborder?.Phonenumber,
+                VehicleNumber = SelectedJoborder?.VehicleNumber,
+                Brand = SelectedJoborder?.Brand,
+                Model = SelectedJoborder?.Model,
+                OdoNumber = SelectedJoborder?.OdoNumber,
+                F = SelectedJoborder?.F,
+                FN = SelectedJoborder?.FN,
+                B = SelectedJoborder?.B,
+                BN = SelectedJoborder?.BN,
+                LS = SelectedJoborder?.LS,
+                LSN = SelectedJoborder?.LSN,
+                RS = SelectedJoborder?.RS,
+                RSN = SelectedJoborder?.RSN
+            };
+
+            // Use the single helper to attach Items and set JoborderGuid on each item (no cloning)
+            AddItemsToJoborder(newJoborder);
+
+            await _JoborderRepo.AddAsync(newJoborder);
+            await LoadJobordersAsync();
+
+            // Select newly added by OrderGuid if present
+            SelectedJoborder = Joborders.FirstOrDefault(j => j.OrderGuid == newJoborder.OrderGuid) ?? SelectedJoborder;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task UpdateJoborderAsync()
+        {
+            if (SelectedJoborder == null) return;
+
+            // Ensure items are tied to the selected joborder via JoborderGuid
+            AddItemsToJoborder(SelectedJoborder);
+
+            await _JoborderRepo.UpdateAsync(SelectedJoborder);
+            await LoadJobordersAsync();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task DeleteJoborderAsync()
+        {
+            if (SelectedJoborder == null) return;
+            await _JoborderRepo.DeleteAsync(SelectedJoborder.Id);
+            SelectedJoborder = null;
+            await LoadJobordersAsync();
+        }
+
+        [RelayCommand]
+        private void AddItem()
+        {
+            var it = new ItemRow
+            {
+                Name = string.Empty,
+                Quantity = 1,
+                Price = 0m,
+                JoborderGuid = SelectedJoborder?.OrderGuid ?? Guid.Empty
+            };
+
+            Items.Add(it);
+            OnPropertyChanged(nameof(Total));
+        }
+
+        [RelayCommand]
+        private void RemoveItem(ItemRow item)
+        {
+            if (item != null)
+            {
+                Items.Remove(item);
+                OnPropertyChanged(nameof(Total));
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task SaveCommand()
+        {
+            if (SelectedJoborder == null) return;
+
+            // Attach items to the selected job and set their JoborderGuid (no cloning)
+            AddItemsToJoborder(SelectedJoborder);
+
+            if (SelectedJoborder.Id == 0)
+                await _JoborderRepo.AddAsync(SelectedJoborder);
+            else
+                await _JoborderRepo.UpdateAsync(SelectedJoborder);
+
+            await LoadJobordersAsync();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void FrontFile()
+        {
+            if (SelectedJoborder == null) return;
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select Front Image",
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                SelectedJoborder.F = File.ReadAllBytes(dialog.FileName);
+                SelectedJoborder.FN = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(SelectedJoborder));
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void BackFile()
+        {
+            if (SelectedJoborder == null) return;
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select Back Image",
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                SelectedJoborder.B = File.ReadAllBytes(dialog.FileName);
+                SelectedJoborder.BN = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(SelectedJoborder));
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void LeftFile()
+        {
+            if (SelectedJoborder == null) return;
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select Left Image",
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                SelectedJoborder.LS = File.ReadAllBytes(dialog.FileName);
+                SelectedJoborder.LSN = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(SelectedJoborder));
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public void RightFile()
+        {
+            if (SelectedJoborder == null) return;
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select Right Image",
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                SelectedJoborder.RS = File.ReadAllBytes(dialog.FileName);
+                SelectedJoborder.RSN = Path.GetFileName(dialog.FileName);
+                OnPropertyChanged(nameof(SelectedJoborder));
+            }
+        }
+
+        private bool CanModify() => SelectedJoborder != null;
+    }
+}
+
+// File: GMSApp.Models.ItemRow.cs
+using CommunityToolkit.Mvvm.ComponentModel;
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace GMSApp.Models
+{
+    public class ItemRow : ObservableObject
+    {
+        [Key]
+        public int Id { get; set; }
+
+        private string _name = string.Empty;
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                if (SetProperty(ref _name, value))
+                    OnPropertyChanged(nameof(Total));
+            }
+        }
+
+        private int _quantity;
+        public int Quantity
+        {
+            get => _quantity;
+            set
+            {
+                if (SetProperty(ref _quantity, value))
+                    OnPropertyChanged(nameof(Total));
+            }
+        }
+
+        private decimal _price;
+        public decimal Price
+        {
+            get => _price;
+            set
+            {
+                if (SetProperty(ref _price, value))
+                    OnPropertyChanged(nameof(Total));
+            }
+        }
+
+        [NotMapped]
+        public decimal Total => Quantity * Price;
+
+        // GUID FK pointing to Joborder.OrderGuid
+        public Guid JoborderGuid { get; set; }
+
+        // Optional navigation
+        public GMSApp.Models.job.Joborder? Joborder { get; set; }
+    }
+}
+
+// File: GMSApp.Models.job.Joborder.cs
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+
+namespace GMSApp.Models.job
+{
+    public class Joborder
+    {
+        [Key]
+        public int Id { get; set; }
+
+        // Unique business identifier for this Joborder used by ItemRow.JoborderGuid
+        public Guid OrderGuid { get; set; } = Guid.NewGuid();
+
+        public string? CustomerName { get; set; }
+        public string? Phonenumber { get; set; }
+        public string? VehicleNumber { get; set; }
+        public string? Brand { get; set; }
+        public string? Model { get; set; }
+        public Decimal? OdoNumber { get; set; }
+
+        // Navigation property - this will be populated by EF when loading with Include.
+        public ICollection<GMSApp.Models.ItemRow> Items { get; set; } = new List<GMSApp.Models.ItemRow>();
+
+        public byte[]? F { get; set; }
+        public string? FN { get; set; }
+        public byte[]? B { get; set; }
+        public string? BN { get; set; }
+        public byte[]? LS { get; set; }
+        public string? LSN { get; set; }
+        public byte[]? RS { get; set; }
+        public string? RSN { get; set; }
+
+        public DateTime? Created { get; set; } = DateTime.Now;
+    }
+}
