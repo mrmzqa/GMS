@@ -231,9 +231,9 @@ namespace GMSApp.Migrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    PurchaseOrderId = table.Column<int>(type: "int", nullable: false),
-                    Joborderid = table.Column<int>(type: "int", nullable: false),
-                    JobcardId = table.Column<int>(type: "int", nullable: true)
+                    JoborderId = table.Column<int>(type: "int", nullable: false),
+                    JobcardId = table.Column<int>(type: "int", nullable: true),
+                    PurchaseOrderId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -244,8 +244,8 @@ namespace GMSApp.Migrations
                         principalTable: "Jobcards",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_ItemRows_Joborders_Joborderid",
-                        column: x => x.Joborderid,
+                        name: "FK_ItemRows_Joborders_JoborderId",
+                        column: x => x.JoborderId,
                         principalTable: "Joborders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -253,8 +253,7 @@ namespace GMSApp.Migrations
                         name: "FK_ItemRows_PurchaseOrders_PurchaseOrderId",
                         column: x => x.PurchaseOrderId,
                         principalTable: "PurchaseOrders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -481,9 +480,9 @@ namespace GMSApp.Migrations
                 column: "JobcardId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ItemRows_Joborderid",
+                name: "IX_ItemRows_JoborderId",
                 table: "ItemRows",
-                column: "Joborderid");
+                column: "JoborderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ItemRows_PurchaseOrderId",

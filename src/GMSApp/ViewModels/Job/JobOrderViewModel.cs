@@ -51,6 +51,7 @@ namespace GMSApp.ViewModels.Job
             AddJoborderCommand.NotifyCanExecuteChanged();
             UpdateJoborderCommand.NotifyCanExecuteChanged();
             DeleteJoborderCommand.NotifyCanExecuteChanged();
+            SaveJoborderCommand.NotifyCanExecuteChanged();
             FrontFileCommand.NotifyCanExecuteChanged();
             BackFileCommand.NotifyCanExecuteChanged();
             LeftFileCommand.NotifyCanExecuteChanged();

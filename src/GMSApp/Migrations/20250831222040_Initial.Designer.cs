@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GMSApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250831201219_Initial")]
+    [Migration("20250831222040_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -136,7 +136,7 @@ namespace GMSApp.Migrations
                     b.Property<int?>("JobcardId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Joborderid")
+                    b.Property<int>("JoborderId")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -146,7 +146,7 @@ namespace GMSApp.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("PurchaseOrderId")
+                    b.Property<int?>("PurchaseOrderId")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
@@ -156,7 +156,7 @@ namespace GMSApp.Migrations
 
                     b.HasIndex("JobcardId");
 
-                    b.HasIndex("Joborderid");
+                    b.HasIndex("JoborderId");
 
                     b.HasIndex("PurchaseOrderId");
 
@@ -670,15 +670,13 @@ namespace GMSApp.Migrations
 
                     b.HasOne("GMSApp.Models.job.Joborder", "Joborder")
                         .WithMany("Items")
-                        .HasForeignKey("Joborderid")
+                        .HasForeignKey("JoborderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("GMSApp.Models.PurchaseOrder", null)
                         .WithMany("Items")
-                        .HasForeignKey("PurchaseOrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PurchaseOrderId");
 
                     b.Navigation("Joborder");
                 });
