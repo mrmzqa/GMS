@@ -12,9 +12,6 @@ namespace GMSApp.Models.job
         [Key]
         public int Id { get; set; }
 
-        // Business GUID used as FK by ItemRow.JoborderGuid
-        public Guid OrderGuid { get; set; } = Guid.NewGuid();
-
         public string? CustomerName { get; set; }
         public string? Phonenumber { get; set; }
         public string? VehicleNumber { get; set; }
@@ -22,10 +19,10 @@ namespace GMSApp.Models.job
         public string? Model { get; set; }
         public decimal? OdoNumber { get; set; }
 
-        // Children: EF navigation property. Keep as a collection so EF can map it.
+        // Navigation collection for EF
         public ICollection<GMSApp.Models.ItemRow> Items { get; set; } = new List<GMSApp.Models.ItemRow>();
 
-        // Images and file names
+        // Image bytes and file names
         public byte[]? F { get; set; }
         public string? FN { get; set; }
         public byte[]? B { get; set; }

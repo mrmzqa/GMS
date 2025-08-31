@@ -41,14 +41,13 @@ public class ItemRow : ObservableObject
         }
     }
 
-    // Not mapped property calculated for UI
     [NotMapped]
     public decimal Total => Quantity * Price;
 
-    // GUID FK linking this item to Joborder.OrderGuid
-    public Guid JoborderGuid { get; set; }
+    // FK to Joborder.Id
+    public int JoborderId { get; set; }
 
-    // Optional navigation. Nullable to avoid cycles on serialization
+    // Navigation property
     public GMSApp.Models.job.Joborder? Joborder { get; set; }
 }
 

@@ -22,8 +22,6 @@ namespace GMSApp.ViewModels.Job
         private readonly IGenericPdfGenerator<Joborder> _pdfGenerator;
 
         public ObservableCollection<Joborder> Joborders { get; } = new();
-
-        // Items shown/edited in the UI for the currently selected joborder.
         public ObservableCollection<ItemRow> Items { get; } = new();
 
         public decimal Total => Items.Sum(i => i.Total);
@@ -44,12 +42,13 @@ namespace GMSApp.ViewModels.Job
 
         partial void OnSelectedJoborderChanged(Joborder? value)
         {
-            TryPopulateItemsFromSelected();
+            PopulateItemsFromSelected();
             UpdateCommandStates();
         }
 
         private void UpdateCommandStates()
         {
+            AddJoborderCommand.NotifyCanExecuteChanged();
             UpdateJoborderCommand.NotifyCanExecuteChanged();
             DeleteJoborderCommand.NotifyCanExecuteChanged();
             FrontFileCommand.NotifyCanExecuteChanged();
@@ -59,26 +58,29 @@ namespace GMSApp.ViewModels.Job
             PrintCommand.NotifyCanExecuteChanged();
         }
 
-        private void TryPopulateItemsFromSelected()
+        private void PopulateItemsFromSelected()
         {
             Items.Clear();
 
             if (SelectedJoborder == null) return;
 
-            // If Items navigation is present, prefer it. Otherwise nothing to populate.
+            // If Items loaded by EF, use those. Copy into UI collection to allow safe editing.
             if (SelectedJoborder.Items != null)
             {
-                // Create UI editable copies (shallow) of the model items to avoid EF tracking and to allow independent editing.
-                foreach (var it in SelectedJoborder.Items.Where(i => i.JoborderGuid == SelectedJoborder.OrderGuid))
+                foreach (var mi in SelectedJoborder.Items)
                 {
-                    Items.Add(new ItemRow
+                    // Only include items that belong to this job via JoborderId
+                    if (mi.JoborderId == SelectedJoborder.Id)
                     {
-                        Id = it.Id,
-                        Name = it.Name,
-                        Quantity = it.Quantity,
-                        Price = it.Price,
-                        JoborderGuid = it.JoborderGuid
-                    });
+                        Items.Add(new ItemRow
+                        {
+                            Id = mi.Id,
+                            Name = mi.Name,
+                            Quantity = mi.Quantity,
+                            Price = mi.Price,
+                            JoborderId = mi.JoborderId
+                        });
+                    }
                 }
             }
 
@@ -90,21 +92,17 @@ namespace GMSApp.ViewModels.Job
         {
             Joborders.Clear();
 
-            // Try to use the underlying DbContext with AsNoTracking + Include to avoid EF tracking issues.
+            // Try to get the underlying DbContext from the repository to use AsNoTracking + Include
             try
             {
                 var repoType = _jobRepo.GetType();
-                var contextField = repoType.GetField("_context", BindingFlags.Instance | BindingFlags.NonPublic);
-                if (contextField != null)
+                var ctxField = repoType.GetField("_context", BindingFlags.Instance | BindingFlags.NonPublic);
+                if (ctxField != null)
                 {
-                    var ctx = contextField.GetValue(_jobRepo) as DbContext;
+                    var ctx = ctxField.GetValue(_jobRepo) as DbContext;
                     if (ctx != null)
                     {
-                        var list = await ctx.Set<Joborder>()
-                                            .AsNoTracking()
-                                            .Include(j => j.Items)
-                                            .ToListAsync();
-
+                        var list = await ctx.Set<Joborder>().AsNoTracking().Include(j => j.Items).ToListAsync();
                         foreach (var j in list) Joborders.Add(j);
                         SelectedJoborder = Joborders.FirstOrDefault();
                         return;
@@ -113,23 +111,22 @@ namespace GMSApp.ViewModels.Job
             }
             catch
             {
-                // ignore reflection/access problems and fallback to repository
+                // ignore and fall back to repository
             }
 
-            // Fallback when DbContext not available via repo: rely on repository
+            // Fallback - repository.GetAllAsync()
             var all = await _jobRepo.GetAllAsync();
             foreach (var j in all) Joborders.Add(j);
             SelectedJoborder = Joborders.FirstOrDefault();
         }
 
-        // Helper: build a Joborder entity from UI state (SelectedJoborder + Items)
+        // Build a Joborder entity from UI (SelectedJoborder fields + Items collection).
+        // baseModel: existing persisted model (used to preserve Id when updating)
         private Joborder BuildJoborderFromUi(Joborder? baseModel = null)
         {
             var job = new Joborder
             {
-                // If baseModel provided, carry its Id and OrderGuid to preserve updates; otherwise create new GUID.
                 Id = baseModel?.Id ?? 0,
-                OrderGuid = baseModel?.OrderGuid ?? Guid.NewGuid(),
                 CustomerName = SelectedJoborder?.CustomerName ?? baseModel?.CustomerName,
                 Phonenumber = SelectedJoborder?.Phonenumber ?? baseModel?.Phonenumber,
                 VehicleNumber = SelectedJoborder?.VehicleNumber ?? baseModel?.VehicleNumber,
@@ -147,18 +144,18 @@ namespace GMSApp.ViewModels.Job
                 Created = baseModel?.Created ?? DateTime.Now
             };
 
-            // Build child items from UI Items collection. Use same Id for existing items, new items keep Id=0.
+            // Add items from UI collection. For existing items keep Id; for new ones Id=0.
             foreach (var ui in Items)
             {
                 var child = new ItemRow
                 {
-                    Id = ui.Id,
+                    Id = ui.Id, // 0 for new items
                     Name = ui.Name,
                     Quantity = ui.Quantity,
                     Price = ui.Price,
-                    JoborderGuid = job.OrderGuid
+                    JoborderId = job.Id // may be 0 for new job; EF will set FK when adding via navigation
                 };
-
+                // Attach child to job's Items so EF inserts/updates as part of the graph
                 job.Items.Add(child);
             }
 
@@ -170,16 +167,22 @@ namespace GMSApp.ViewModels.Job
         {
             try
             {
-                // Build job from UI state (if user typed fields) or create empty job if none selected.
-                var modelToSave = BuildJoborderFromUi(null);
+                // Build job from UI. If SelectedJoborder is null, Save empty job with current Items (if any).
+                var newJob = BuildJoborderFromUi(null);
 
-                await _jobRepo.AddAsync(modelToSave);
+                // For new job, ensure children are linked via navigation so EF can set FK automatically.
+                // The child JoborderId property may be 0; EF will assign after insert.
+
+                await _jobRepo.AddAsync(newJob);
 
                 await LoadJobordersAsync();
 
-                // Select the created job by OrderGuid if returned in repository listing
-                SelectedJoborder = Joborders.FirstOrDefault(j => j.OrderGuid == modelToSave.OrderGuid)
-                                    ?? Joborders.FirstOrDefault();
+                // Select the newly created job (if repository preserved children and lists)
+                SelectedJoborder = Joborders.FirstOrDefault(j =>
+                    j.CustomerName == newJob.CustomerName &&
+                    j.Created.HasValue && newJob.Created.HasValue &&
+                    j.Created.Value.ToString() == newJob.Created.Value.ToString()) // crude match; better to requery in real repo
+                    ?? Joborders.LastOrDefault();
             }
             catch (Exception ex)
             {
@@ -194,19 +197,59 @@ namespace GMSApp.ViewModels.Job
 
             try
             {
-                // Build an updated Joborder instance (preserve Id & OrderGuid) and save.
-                var toUpdate = BuildJoborderFromUi(SelectedJoborder);
-                await _jobRepo.UpdateAsync(toUpdate);
+                // Build a job preserving Id (baseModel = SelectedJoborder)
+                var updated = BuildJoborderFromUi(SelectedJoborder);
+
+                // Remove orphaned ItemRows (items that exist in DB but were removed in UI)
+                await DeleteOrphanedItemsAsync(SelectedJoborder.Id, Items.Select(i => i.Id).Where(id => id > 0).ToList());
+
+                // Now update the job graph (will add new items, update existing ones)
+                await _jobRepo.UpdateAsync(updated);
 
                 await LoadJobordersAsync();
 
-                // Re-select the updated job by OrderGuid
-                SelectedJoborder = Joborders.FirstOrDefault(j => j.OrderGuid == toUpdate.OrderGuid)
-                                    ?? Joborders.FirstOrDefault();
+                // Re-select the updated job
+                SelectedJoborder = Joborders.FirstOrDefault(j => j.Id == updated.Id) ?? Joborders.FirstOrDefault();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to update joborder: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // Deletes item rows present in DB but not present in the provided uiItemIds list.
+        // Uses repository's underlying DbContext if available via reflection; otherwise no-op (best-effort).
+        private async Task DeleteOrphanedItemsAsync(int jobOrderId, System.Collections.Generic.List<int> uiItemIds)
+        {
+            if (jobOrderId <= 0) return;
+
+            try
+            {
+                var repoType = _jobRepo.GetType();
+                var ctxField = repoType.GetField("_context", BindingFlags.Instance | BindingFlags.NonPublic);
+                if (ctxField == null) return;
+
+                var ctx = ctxField.GetValue(_jobRepo) as DbContext;
+                if (ctx == null) return;
+
+                var dbSet = ctx.Set<ItemRow>();
+                var existingIds = await dbSet.Where(i => i.JoborderId == jobOrderId).Select(i => i.Id).ToListAsync();
+
+                var toDelete = existingIds.Except(uiItemIds).ToList();
+                if (!toDelete.Any()) return;
+
+                foreach (var id in toDelete)
+                {
+                    var entity = new ItemRow { Id = id };
+                    // Attach stub and remove to avoid extra query
+                    ctx.Entry(entity).State = EntityState.Deleted;
+                }
+
+                await ctx.SaveChangesAsync();
+            }
+            catch
+            {
+                // ignore failures here; fall back to letting Update handle whatever it can.
             }
         }
 
@@ -215,7 +258,7 @@ namespace GMSApp.ViewModels.Job
         {
             if (SelectedJoborder == null) return;
 
-            var confirm = MessageBox.Show("Are you sure you want to delete this job order?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var confirm = MessageBox.Show("Delete this joborder?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (confirm != MessageBoxResult.Yes) return;
 
             try
@@ -238,9 +281,8 @@ namespace GMSApp.ViewModels.Job
                 Name = string.Empty,
                 Quantity = 1,
                 Price = 0m,
-                JoborderGuid = SelectedJoborder?.OrderGuid ?? Guid.Empty
+                JoborderId = SelectedJoborder?.Id ?? 0
             };
-
             Items.Add(it);
             OnPropertyChanged(nameof(Total));
         }
@@ -254,14 +296,16 @@ namespace GMSApp.ViewModels.Job
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
-        public async Task SaveCommand()
+        public async Task SaveJoborderAsync()
         {
             if (SelectedJoborder == null) return;
 
             try
             {
-                // For Save we behave like Update: build model preserving Id/OrderGuid
+                // Act like Update: build job preserving Id and handle orphans
                 var toSave = BuildJoborderFromUi(SelectedJoborder);
+
+                await DeleteOrphanedItemsAsync(SelectedJoborder.Id, Items.Select(i => i.Id).Where(id => id > 0).ToList());
 
                 if (toSave.Id == 0)
                     await _jobRepo.AddAsync(toSave);
@@ -269,9 +313,7 @@ namespace GMSApp.ViewModels.Job
                     await _jobRepo.UpdateAsync(toSave);
 
                 await LoadJobordersAsync();
-
-                SelectedJoborder = Joborders.FirstOrDefault(j => j.OrderGuid == toSave.OrderGuid)
-                                    ?? Joborders.FirstOrDefault();
+                SelectedJoborder = Joborders.FirstOrDefault(j => j.Id == toSave.Id) ?? SelectedJoborder;
             }
             catch (Exception ex)
             {
@@ -279,7 +321,7 @@ namespace GMSApp.ViewModels.Job
             }
         }
 
-        // File pickers (Front/Back/Left/Right)
+        // File pickers
         [RelayCommand(CanExecute = nameof(CanModify))]
         public void FrontFile()
         {
@@ -332,7 +374,7 @@ namespace GMSApp.ViewModels.Job
             }
         }
 
-        // Print / Generate PDF for selected Joborder
+        // Print/Generate PDF for selected joborder
         [RelayCommand(CanExecute = nameof(CanModify))]
         public async Task PrintAsync()
         {
@@ -340,15 +382,13 @@ namespace GMSApp.ViewModels.Job
 
             try
             {
-                // Build a fresh model to pass to PDF generator (ensure the items are current).
+                // Build a fresh model to pass to PDF generator (ensure Items current)
                 var model = BuildJoborderFromUi(SelectedJoborder);
 
-                var temp = Path.Combine(Path.GetTempPath(), $"joborder_{model.OrderGuid:N}.pdf");
-
-                // Ask PDF generator to create PDF for the single joborder.
+                var temp = Path.Combine(Path.GetTempPath(), $"joborder_{model.Id}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
                 await _pdfGenerator.GeneratePdfAsync(new[] { model }, temp);
 
-                // Open the PDF with default app
+                // Open with default system viewer
                 var psi = new ProcessStartInfo(temp) { UseShellExecute = true };
                 Process.Start(psi);
             }
