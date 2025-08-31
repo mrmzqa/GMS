@@ -19,9 +19,9 @@ namespace GMSApp.Views.Job
     /// <summary>
     /// Interaction logic for PurchaseOrder.xaml
     /// </summary>
-    public partial class PurchaseOrderPage : UserControl
+    public partial class PurchaseOrder : UserControl
     {
-        public PurchaseOrderPage( PurchaseOrderViewModel vm)
+        public PurchaseOrder( PurchaseOrderViewModel vm)
         {
 
             InitializeComponent();

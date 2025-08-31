@@ -12,23 +12,25 @@ namespace GMSApp.Models.job
         [Key]
         public int Id { get; set; }
 
-        [Required]
+        
         public string? CustomerName { get; set; }
 
-        [Required]
+       
         public string? Phonenumber { get; set; }
 
-        [Required]
+        
         public string? VehicleNumber { get; set; }
 
-        [Required]
+        
         public string? Brand { get; set; }
 
-        [Required]
+        
         public string? Model { get; set; }
 
-        [Required]
-        public Decimal OdoNumber { get; set; }
+       
+        public Decimal? OdoNumber { get; set; }
+
+        public ICollection<ItemRow> Items { get; set; } = new List<ItemRow>();
 
         public byte[]? F { get; set; }
 
@@ -45,8 +47,8 @@ namespace GMSApp.Models.job
 
         public string? RSN { get; set; }
 
-        public DateTime? Created { get; set; }
-        public DateTime? Updated { get; set; }
+        public DateTime? Created { get; set; } = DateTime.Now;
+         
 
     }
 }

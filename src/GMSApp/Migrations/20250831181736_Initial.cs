@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GMSApp.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -111,6 +111,33 @@ namespace GMSApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Joborders",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CustomerName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Phonenumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    VehicleNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Brand = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Model = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OdoNumber = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    F = table.Column<byte[]>(type: "varbinary(max)", nullable: true),
+                    FN = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    B = table.Column<byte[]>(type: "varbinary(max)", nullable: true),
+                    BN = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LS = table.Column<byte[]>(type: "varbinary(max)", nullable: true),
+                    LSN = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RS = table.Column<byte[]>(type: "varbinary(max)", nullable: true),
+                    RSN = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Created = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Joborders", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "productlabel",
                 columns: table => new
                 {
@@ -205,7 +232,8 @@ namespace GMSApp.Migrations
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     PurchaseOrderId = table.Column<int>(type: "int", nullable: false),
-                    JobcardId = table.Column<int>(type: "int", nullable: true)
+                    JobcardId = table.Column<int>(type: "int", nullable: true),
+                    JoborderId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -214,6 +242,11 @@ namespace GMSApp.Migrations
                         name: "FK_ItemRows_Jobcards_JobcardId",
                         column: x => x.JobcardId,
                         principalTable: "Jobcards",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_ItemRows_Joborders_JoborderId",
+                        column: x => x.JoborderId,
+                        principalTable: "Joborders",
                         principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_ItemRows_PurchaseOrders_PurchaseOrderId",
@@ -447,6 +480,11 @@ namespace GMSApp.Migrations
                 column: "JobcardId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ItemRows_JoborderId",
+                table: "ItemRows",
+                column: "JoborderId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ItemRows_PurchaseOrderId",
                 table: "ItemRows",
                 column: "PurchaseOrderId");
@@ -546,6 +584,9 @@ namespace GMSApp.Migrations
 
             migrationBuilder.DropTable(
                 name: "Jobcards");
+
+            migrationBuilder.DropTable(
+                name: "Joborders");
 
             migrationBuilder.DropTable(
                 name: "PurchaseOrders");

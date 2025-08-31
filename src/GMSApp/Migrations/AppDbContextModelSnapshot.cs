@@ -133,6 +133,9 @@ namespace GMSApp.Migrations
                     b.Property<int?>("JobcardId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("JoborderId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -149,6 +152,8 @@ namespace GMSApp.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("JobcardId");
+
+                    b.HasIndex("JoborderId");
 
                     b.HasIndex("PurchaseOrderId");
 
@@ -574,6 +579,64 @@ namespace GMSApp.Migrations
                     b.ToTable("VendorData");
                 });
 
+            modelBuilder.Entity("GMSApp.Models.job.Joborder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<byte[]>("B")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("BN")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Brand")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CustomerName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("F")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("FN")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("LS")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("LSN")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Model")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("OdoNumber")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Phonenumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RS")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("RSN")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VehicleNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Joborders");
+                });
+
             modelBuilder.Entity("GMSApp.Models.Account", b =>
                 {
                     b.HasOne("GMSApp.Models.Main", "Main")
@@ -601,6 +664,10 @@ namespace GMSApp.Migrations
                     b.HasOne("GMSApp.Models.Jobcard", null)
                         .WithMany("Items")
                         .HasForeignKey("JobcardId");
+
+                    b.HasOne("GMSApp.Models.job.Joborder", null)
+                        .WithMany("Items")
+                        .HasForeignKey("JoborderId");
 
                     b.HasOne("GMSApp.Models.PurchaseOrder", null)
                         .WithMany("Items")
@@ -754,6 +821,11 @@ namespace GMSApp.Migrations
             modelBuilder.Entity("GMSApp.Models.Vendor", b =>
                 {
                     b.Navigation("Vendors");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.job.Joborder", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

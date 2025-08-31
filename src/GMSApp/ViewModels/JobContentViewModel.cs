@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace GMSApp.ViewModels
 {
-    public partial class MainContentViewModel : ObservableObject
+    public partial class JobContentViewModel : ObservableObject
     {
         
 

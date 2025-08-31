@@ -2,6 +2,7 @@ using GmsApp.Views;
 using GMSApp.Data;
 using GMSApp.Repositories;
 using GMSApp.ViewModels;
+using GMSApp.ViewModels.Job;
 using GMSApp.Views;
 using GMSApp.Views.Job;
 using Microsoft.EntityFrameworkCore;
@@ -36,13 +37,15 @@ public partial class App : Application
                 // ViewModels
                 services.AddScoped<FileViewModel>();
                 services.AddScoped<CoreMainViewModel>();
-                services.AddScoped<MainContentViewModel>();
+                services.AddScoped<JobContentViewModel>();
                 services.AddScoped<PurchaseOrderViewModel>();
+                services.AddScoped<JoborderViewModel>();
                 
                 // Views
                 services.AddScoped<MainWindow>();
-                services.AddScoped<MainContentView>();
-                services.AddScoped<PurchaseOrderPage>();
+                services.AddScoped<JobContentView>();
+                services.AddScoped<PurchaseOrder>();
+                services.AddScoped<JobOrder>();
                
                 services.AddScoped<FilesPage>();
                 services.AddScoped<CoreMain>();
@@ -72,9 +75,9 @@ public partial class App : Application
 
 
         var dbContext = _host.Services.GetRequiredService<AppDbContext>();
-       /* await dbContext.Database.EnsureCreatedAsync();*/
+        await dbContext.Database.EnsureCreatedAsync();
 
-           
+
 
 
         var mainWindow = _host.Services.GetRequiredService<MainWindow>();

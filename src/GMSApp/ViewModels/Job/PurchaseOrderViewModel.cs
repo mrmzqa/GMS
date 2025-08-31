@@ -2,7 +2,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
 using GMSApp.Repositories;
-using GMSApp.Services;
 using System.Collections.ObjectModel;
 using System.IO;
 namespace GMSApp.ViewModels;
@@ -22,13 +21,9 @@ public partial class PurchaseOrderViewModel : ObservableObject
     [ObservableProperty]
     private DateTime date = DateTime.Now;
 
-    [ObservableProperty]
-    private string selectedLanguage = "en";
+   
 
-    partial void OnSelectedLanguageChanged(string value)
-    {
-        LocalizationService.SetCulture(value);
-    }
+  
 
     public ObservableCollection<ItemRow> Items { get; set; } = new();
 
@@ -51,24 +46,12 @@ public partial class PurchaseOrderViewModel : ObservableObject
            OrderNumber = orderNumber,
            Date = date,
             Items = Items.ToList()
+
         };
 
         await _repository.AddAsync(po);
         
     }
-   /* [RelayCommand]
-    private async Task ExportPdf()
-    {
-        var po = new PurchaseOrder
-        {
-            OrderNumber = orderNumber,
-            Date = date,
-            Items = Items.ToList()
-        };
-        var filePath = Path.Combine(Directory.GetCurrentDirectory(), $"{orderNumber}.pdf");
-        await _GenericPdfGenerator.GeneratePdfAsync(new List<PurchaseOrder> { po }, filePath);
-        // Optionally, open the PDF after generation
-        // System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath) { UseShellExecute = true });
-    }*/
+ 
 
 }

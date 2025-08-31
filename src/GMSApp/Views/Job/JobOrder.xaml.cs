@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GMSApp.ViewModels.Job;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,9 +19,15 @@ namespace GMSApp.Views.Job
     
     public partial class JobOrder : UserControl
     {
-        public JobOrder()
+        public JobOrder( JoborderViewModel vm)
         {
             InitializeComponent();
+            DataContext = vm;
+        }
+
+        private void DataGrid_Scroll(object sender, System.Windows.Controls.Primitives.ScrollEventArgs e)
+        {
+
         }
     }
 }
