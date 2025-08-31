@@ -304,3 +304,385 @@ namespace GMSApp.Repositories
 
 
 */
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using GMSApp.Models.job;
+using GMSApp.Models;
+using GMSApp.Repositories;
+using Microsoft.Win32;
+using System;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+
+namespace GMSApp.ViewModels
+{
+    public class JoborderViewModel : ObservableObject
+    {
+        private readonly IRepository<Joborder> _jobRepo;
+        private readonly IGenericPdfGenerator<Joborder> _pdfGenerator;
+
+        public JoborderViewModel(IRepository<Joborder> jobRepo, IGenericPdfGenerator<Joborder> pdfGenerator)
+        {
+            _jobRepo = jobRepo;
+            _pdfGenerator = pdfGenerator;
+
+            Joborders = new ObservableCollection<Joborder>();
+            LoadCommand = new AsyncRelayCommand(LoadAsync);
+            NewCommand = new RelayCommand(New);
+            SaveCommand = new AsyncRelayCommand(SaveAsync, () => SelectedJoborder != null);
+            DeleteCommand = new AsyncRelayCommand(DeleteAsync, () => SelectedJoborder != null);
+            GeneratePdfCommand = new AsyncRelayCommand(GeneratePdfAsync, () => SelectedJoborder != null);
+            AddItemCommand = new RelayCommand(AddItem, () => SelectedJoborder != null);
+            RemoveItemCommand = new RelayCommand<ItemRow>(RemoveItem, (r) => SelectedJoborder != null && r != null);
+        }
+
+        public ObservableCollection<Joborder> Joborders { get; }
+
+        private Joborder? _selectedJoborder;
+        public Joborder? SelectedJoborder
+        {
+            get => _selectedJoborder;
+            set
+            {
+                SetProperty(ref _selectedJoborder, value);
+                // Raise CanExecuteChanged on commands that depend on selection
+                ((RelayCommand?)AddItemCommand)?.NotifyCanExecuteChanged();
+                ((RelayCommand<ItemRow>?)RemoveItemCommand)?.NotifyCanExecuteChanged();
+                ((AsyncRelayCommand?)SaveCommand)?.NotifyCanExecuteChanged();
+                ((AsyncRelayCommand?)DeleteCommand)?.NotifyCanExecuteChanged();
+                ((AsyncRelayCommand?)GeneratePdfCommand)?.NotifyCanExecuteChanged();
+            }
+        }
+
+        public IAsyncRelayCommand LoadCommand { get; }
+        public IRelayCommand NewCommand { get; }
+        public IAsyncRelayCommand SaveCommand { get; }
+        public IAsyncRelayCommand DeleteCommand { get; }
+        public IAsyncRelayCommand GeneratePdfCommand { get; }
+        public IRelayCommand AddItemCommand { get; }
+        public IRelayCommand<ItemRow> RemoveItemCommand { get; }
+
+        private async Task LoadAsync()
+        {
+            Joborders.Clear();
+            var list = await _jobRepo.GetAllAsync();
+            foreach (var j in list)
+                Joborders.Add(j);
+
+            if (Joborders.Any())
+                SelectedJoborder = Joborders.First();
+        }
+
+        private void New()
+        {
+            var jo = new Joborder
+            {
+                CustomerName = string.Empty,
+                Phonenumber = string.Empty,
+                VehicleNumber = string.Empty,
+                Brand = string.Empty,
+                Model = string.Empty,
+                OdoNumber = 0,
+                Created = DateTime.Now,
+            };
+            Joborders.Add(jo);
+            SelectedJoborder = jo;
+        }
+
+        private async Task SaveAsync()
+        {
+            if (SelectedJoborder == null) return;
+
+            try
+            {
+                if (SelectedJoborder.Id == 0)
+                {
+                    await _jobRepo.AddAsync(SelectedJoborder);
+                }
+                else
+                {
+                    await _jobRepo.UpdateAsync(SelectedJoborder);
+                }
+
+                // refresh list
+                await LoadAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Save failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task DeleteAsync()
+        {
+            if (SelectedJoborder == null) return;
+
+            if (MessageBox.Show("Are you sure you want to delete this job order?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                return;
+
+            try
+            {
+                await _jobRepo.DeleteAsync(SelectedJoborder.Id);
+                Joborders.Remove(SelectedJoborder);
+                SelectedJoborder = Joborders.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Delete failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void AddItem()
+        {
+            if (SelectedJoborder == null) return;
+
+            var item = new ItemRow
+            {
+                Name = "New item",
+                Quantity = 1,
+                Price = 0m,
+                Joborderid = SelectedJoborder.Id
+            };
+
+            SelectedJoborder.Items.Add(item);
+            // If EF tracking required, persist when Save is invoked
+            // Raise collection changed by resetting SelectedJoborder (quick hack)
+            var tmp = SelectedJoborder;
+            SelectedJoborder = null;
+            SelectedJoborder = tmp;
+        }
+
+        private void RemoveItem(ItemRow item)
+        {
+            if (SelectedJoborder == null || item == null) return;
+
+            SelectedJoborder.Items.Remove(item);
+
+            var tmp = SelectedJoborder;
+            SelectedJoborder = null;
+            SelectedJoborder = tmp;
+        }
+
+        private async Task GeneratePdfAsync()
+        {
+            if (SelectedJoborder == null) return;
+
+            var dlg = new SaveFileDialog
+            {
+                Title = "Save Joborder PDF",
+                Filter = "PDF files (*.pdf)|*.pdf",
+                FileName = $"Joborder_{SelectedJoborder.Id}_{DateTime.Now:yyyyMMddHHmmss}.pdf"
+            };
+
+            if (dlg.ShowDialog() != true) return;
+
+            try
+            {
+                // Generate pdf for single joborder
+                await _pdfGenerator.GeneratePdfAsync(new[] { SelectedJoborder }, dlg.FileName);
+                MessageBox.Show("PDF generated successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                // Optionally, open the file
+                try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(dlg.FileName) { UseShellExecute = true }); } catch { }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to generate PDF: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+}
+
+<UserControl x:Class="GMSApp.Views.JoborderView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             MinWidth="800" MinHeight="450">
+    <Grid Margin="8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="3*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Left: List of joborders -->
+        <StackPanel Grid.Column="0" Margin="4">
+            <TextBlock Text="Job Orders" FontWeight="Bold" FontSize="14" Margin="2"/>
+            <DataGrid ItemsSource="{Binding Joborders}" SelectedItem="{Binding SelectedJoborder, Mode=TwoWay}"
+                      AutoGenerateColumns="False" IsReadOnly="True" Height="300" Margin="2">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="Auto"/>
+                    <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="*"/>
+                    <DataGridTextColumn Header="Vehicle" Binding="{Binding VehicleNumber}" Width="*"/>
+                    <DataGridTextColumn Header="Created" Binding="{Binding Created}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="2">
+                <Button Content="New" Command="{Binding NewCommand}" Margin="4"/>
+                <Button Content="Load" Command="{Binding LoadCommand}" Margin="4"/>
+                <Button Content="Delete" Command="{Binding DeleteCommand}" Margin="4"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Right: Details -->
+        <ScrollViewer Grid.Column="1" Margin="6">
+            <StackPanel>
+                <TextBlock Text="Job Order Details" FontSize="16" FontWeight="Bold" Margin="2"/>
+                <StackPanel Orientation="Horizontal" Margin="2">
+                    <StackPanel Width="300">
+                        <TextBlock Text="Customer Name" />
+                        <TextBox Text="{Binding SelectedJoborder.CustomerName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <TextBlock Text="Phone Number" Margin="6,8,0,0" />
+                        <TextBox Text="{Binding SelectedJoborder.Phonenumber, Mode=TwoWay}" />
+
+                        <TextBlock Text="Vehicle Number" Margin="6,8,0,0" />
+                        <TextBox Text="{Binding SelectedJoborder.VehicleNumber, Mode=TwoWay}" />
+
+                        <TextBlock Text="Brand" Margin="6,8,0,0" />
+                        <TextBox Text="{Binding SelectedJoborder.Brand, Mode=TwoWay}" />
+
+                        <TextBlock Text="Model" Margin="6,8,0,0" />
+                        <TextBox Text="{Binding SelectedJoborder.Model, Mode=TwoWay}" />
+
+                        <TextBlock Text="Odometer" Margin="6,8,0,0" />
+                        <TextBox Text="{Binding SelectedJoborder.OdoNumber, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <StackPanel Margin="16,0,0,0">
+                        <TextBlock Text="Created" />
+                        <TextBox Text="{Binding SelectedJoborder.Created, Mode=TwoWay}" IsReadOnly="True"/>
+
+                        <!-- Buttons for Save / Generate PDF -->
+                        <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                            <Button Content="Save" Command="{Binding SaveCommand}" Margin="2" />
+                            <Button Content="Generate PDF" Command="{Binding GeneratePdfCommand}" Margin="2"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+
+                <Separator Margin="4"/>
+
+                <TextBlock Text="Items" FontWeight="Bold" Margin="2"/>
+                <DataGrid ItemsSource="{Binding SelectedJoborder.Items}" AutoGenerateColumns="False" Height="200" CanUserAddRows="False" Margin="2">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=TwoWay}" Width="*"/>
+                        <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay}" Width="60"/>
+                        <DataGridTextColumn Header="Price" Binding="{Binding Price, Mode=TwoWay, StringFormat=N2}" Width="80"/>
+                        <DataGridTextColumn Header="Total" Binding="{Binding Total, Mode=OneWay, StringFormat=N2}" Width="80" IsReadOnly="True"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="2">
+                    <Button Content="Add Item" Command="{Binding AddItemCommand}" Margin="2"/>
+                    <Button Content="Remove Selected Item" Margin="2" Click="RemoveSelectedItem_Click" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
+
+
+using GMSApp.ViewModels;
+using System.Windows;
+using System.Windows.Controls;
+
+namespace GMSApp.Views
+{
+    public partial class JoborderView : UserControl
+    {
+        public JoborderView()
+        {
+            InitializeComponent();
+
+            // If using DI, inject the VM. Otherwise you can create with a service locator or new.
+            // For quick usage without DI:
+            // DataContext = new JoborderViewModel(new Repository<Joborder>(yourDbContext), new GenericPdfGenerator<Joborder>());
+
+            // Otherwise your App should set DataContext via DI or region injection.
+        }
+
+        private void RemoveSelectedItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is GMSApp.ViewModels.JoborderViewModel vm)
+            {
+                // Find the DataGrid in visual tree (simple approach)
+                var dg = this.FindName("PART_SelectedItemsDataGrid") as DataGrid;
+                // In this XAML we didn't give a name to the DataGrid; instead search children
+                // Simpler: get SelectedJoborder and Selected item from first DataGrid in visual children
+                // We'll get selected from the Items DataGrid by walking the tree:
+                var itemsDataGrid = FindVisualChild<System.Windows.Controls.DataGrid>(this, dgCheck: dg2 => dg2.ItemsSource == vm.SelectedJoborder?.Items);
+                if (itemsDataGrid != null)
+                {
+                    if (itemsDataGrid.SelectedItem is GMSApp.Models.ItemRow item)
+                    {
+                        vm.RemoveItemCommand.Execute(item);
+                    }
+                }
+            }
+        }
+
+        private static T? FindVisualChild<T>(DependencyObject parent, System.Func<T, bool>? dgCheck = null) where T : DependencyObject
+        {
+            if (parent == null) return null;
+            for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
+                if (child is T t)
+                {
+                    if (dgCheck == null || dgCheck(t))
+                        return t;
+                }
+
+                var result = FindVisualChild(child, dgCheck);
+                if (result != null) return result;
+            }
+            return null;
+        }
+    }
+}
+// Example host builder registration (Program.cs or App.xaml.cs)
+using GMSApp.Data;
+using GMSApp.Models.job;
+using GMSApp.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
+var host = Host.CreateDefaultBuilder()
+    .ConfigureServices((context, services) =>
+    {
+        // Configure EF DbContext - example using SQLite. Update connection string as needed.
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlite("Data Source=gmsapp.db"));
+
+        // Repositories
+        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        services.AddScoped<IRepository<Joborder>, Repository<Joborder>>();
+
+        // PDF generator
+        services.AddSingleton(typeof(IGenericPdfGenerator<>), typeof(GenericPdfGenerator<>));
+        services.AddSingleton<IGenericPdfGenerator<Joborder>, GenericPdfGenerator<Joborder>>();
+
+        // ViewModels
+        services.AddTransient<GMSApp.ViewModels.JoborderViewModel>();
+
+        // Views: if you want to inject VM into view constructor:
+        services.AddTransient<GMSApp.Views.JoborderView>(sp =>
+        {
+            var vm = sp.GetRequiredService<GMSApp.ViewModels.JoborderViewModel>();
+            var view = new GMSApp.Views.JoborderView();
+            view.DataContext = vm;
+            return view;
+        });
+    })
+    .Build();
+
+// Start host, etc.
+await host.StartAsync();
+// Resolve main window or show the view inside your shell.
+
