@@ -6,7 +6,7 @@ namespace GMSApp.Models;
 public class ItemRow : ObservableObject
 {
     [Key]
-    public int Id { get; set; } // for EF
+    public int Id { get; set; }
 
     private string _name = string.Empty;
     public string Name
@@ -41,15 +41,15 @@ public class ItemRow : ObservableObject
         }
     }
 
+    // Not mapped property calculated for UI
     [NotMapped]
     public decimal Total => Quantity * Price;
 
-    public int PurchaseOrderId { get; set; }
+    // GUID FK linking this item to Joborder.OrderGuid
+    public Guid JoborderGuid { get; set; }
 
-    // Keep the same foreign key properties as before
-    public int Joborderid { get; set; }
-
-    public Models.job.Joborder? Joborder { get; set; }
+    // Optional navigation. Nullable to avoid cycles on serialization
+    public GMSApp.Models.job.Joborder? Joborder { get; set; }
 }
 
 
