@@ -16,18 +16,19 @@ using System.Windows.Shapes;
 
 namespace GMSApp.Views.Job
 {
-    
+
     public partial class JobOrder : UserControl
     {
-        public JobOrder( JoborderViewModel vm)
+        // Parameterless ctor for designer support
+        public JobOrder()
         {
             InitializeComponent();
-            DataContext = vm;
         }
 
-        private void DataGrid_Scroll(object sender, System.Windows.Controls.Primitives.ScrollEventArgs e)
+        // Use this constructor when composing from DI (e.g. in a window or a view locator)
+        public JobOrder(JoborderViewModel viewModel) : this()
         {
-
+            DataContext = viewModel;
         }
     }
 }

@@ -6,31 +6,33 @@ using System.Windows.Media.Imaging;
 
 namespace GMSApp.Converters
 {
+
     public class ByteArrayToImageConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var bytes = value as byte[];
-            if (bytes == null || bytes.Length == 0)
-                return null;
+            if (value is byte[] bytes && bytes.Length > 0)
+            {
+                try
+                {
+                    using var ms = new MemoryStream(bytes);
+                    var bmp = new BitmapImage();
+                    bmp.BeginInit();
+                    bmp.CacheOption = BitmapCacheOption.OnLoad;
+                    bmp.StreamSource = ms;
+                    bmp.EndInit();
+                    bmp.Freeze();
+                    return bmp;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
 
-            try
-            {
-                using var stream = new MemoryStream(bytes);
-                var bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.StreamSource = stream;
-                bitmap.EndInit();
-                bitmap.Freeze();
-                return bitmap;
-            }
-            catch
-            {
-                return null;
-            }
+            return null;
         }
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
-            throw new NotImplementedException();
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 }

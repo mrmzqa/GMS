@@ -232,8 +232,8 @@ namespace GMSApp.Migrations
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     PurchaseOrderId = table.Column<int>(type: "int", nullable: false),
-                    JobcardId = table.Column<int>(type: "int", nullable: true),
-                    JoborderId = table.Column<int>(type: "int", nullable: true)
+                    Joborderid = table.Column<int>(type: "int", nullable: false),
+                    JobcardId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -244,10 +244,11 @@ namespace GMSApp.Migrations
                         principalTable: "Jobcards",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_ItemRows_Joborders_JoborderId",
-                        column: x => x.JoborderId,
+                        name: "FK_ItemRows_Joborders_Joborderid",
+                        column: x => x.Joborderid,
                         principalTable: "Joborders",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_ItemRows_PurchaseOrders_PurchaseOrderId",
                         column: x => x.PurchaseOrderId,
@@ -480,9 +481,9 @@ namespace GMSApp.Migrations
                 column: "JobcardId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ItemRows_JoborderId",
+                name: "IX_ItemRows_Joborderid",
                 table: "ItemRows",
-                column: "JoborderId");
+                column: "Joborderid");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ItemRows_PurchaseOrderId",
