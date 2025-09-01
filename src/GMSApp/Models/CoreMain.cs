@@ -23,7 +23,7 @@ namespace GMSApp.Models
         public byte[]? FooterFile { get; set; }
         public string? FooterName { get; set; }
 
-        public virtual ICollection<Main> Main { get; set; } = new List<Main>();
+
     }
 
 }
