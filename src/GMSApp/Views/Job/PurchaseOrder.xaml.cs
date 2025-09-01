@@ -1,10 +1,13 @@
 ﻿using GMSApp.ViewModels;
+using GMSApp.ViewModels;
+using GMSApp.ViewModels.Job;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
@@ -14,18 +17,19 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace GMSApp.Views.Job
+namespace GMSApp.Views
 {
-    /// <summary>
-    /// Interaction logic for PurchaseOrder.xaml
-    /// </summary>
     public partial class PurchaseOrder : UserControl
     {
-        public PurchaseOrder( )
+        public PurchaseOrder()
         {
-
             InitializeComponent();
-          
+        }
+
+        // Optional constructor for DI
+        public PurchaseOrder(PurchaseorderViewModel vm) : this()
+        {
+            DataContext = vm;
         }
     }
 }
