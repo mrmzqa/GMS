@@ -17,7 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace GMSApp.Views
+namespace GMSApp.Views.Job
 {
     public partial class PurchaseOrder : UserControl
     {
@@ -27,9 +27,9 @@ namespace GMSApp.Views
         }
 
         // Optional constructor for DI
-        public PurchaseOrder(PurchaseorderViewModel vm) : this()
+        public PurchaseOrder(PurchaseorderViewModel viewModel) : this()
         {
-            DataContext = vm;
+            DataContext = viewModel;
         }
     }
 }

@@ -39,11 +39,11 @@ namespace GMSApp.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Vendor ↔ PurchaseOrders
-            modelBuilder.Entity<Vendor>()
-                .HasMany(v => v.Purchaseorders)
-                .WithOne(p => p.Vendor)
-                .HasForeignKey(p => p.VendorId)
-                .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<Purchaseorder>()
+      .HasOne(po => po.Vendor)
+      .WithMany() // or .WithMany(v => v.PurchaseOrders) if you define navigation
+      .HasForeignKey(po => po.VendorId)
+      .OnDelete(DeleteBehavior.SetNull);
 
             // Invoice ↔ Lines
             modelBuilder.Entity<Invoice>()

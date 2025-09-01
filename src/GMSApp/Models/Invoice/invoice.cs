@@ -19,7 +19,7 @@ namespace GMSApp.Models.invoice
 
         public DateTime InvoiceDate { get; set; } = DateTime.UtcNow;
 
-        public int VendorId { get; set; }
+        public int? VendorId { get; set; }
         public Vendor? Vendor { get; set; }
 
         public int? PurchaseOrderId { get; set; }
