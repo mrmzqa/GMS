@@ -1,415 +1,353 @@
-﻿
+// File: ViewModels/PurchaseOrderViewModel.cs
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
-using GMSApp.Models.purchase;
 using GMSApp.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
-namespace GMSApp.ViewModels.Job;
 
-public partial class PurchaseorderViewModel : ObservableObject
+namespace GMSApp.ViewModels
 {
-    private readonly IRepository<Purchaseorder> _repo;
-    private readonly IFileRepository _fileRepo;
-    private readonly IGenericPdfGenerator<Purchaseorder> _pdfGenerator;
-
-    public ObservableCollection<Purchaseorder> Purchaseorders { get; } = new();
-    public ObservableCollection<PurchaseorderLineViewModel> LineItems { get; } = new();
-
-    public PurchaseorderViewModel(IRepository<Purchaseorder> repo,
-                                  IFileRepository fileRepo,
-                                  IGenericPdfGenerator<Purchaseorder> pdfGenerator)
+    public partial class PurchaseOrderViewModel : ObservableObject
     {
-        _repo = repo ?? throw new ArgumentNullException(nameof(repo));
-        _fileRepo = fileRepo ?? throw new ArgumentNullException(nameof(fileRepo));
-        _pdfGenerator = pdfGenerator ?? throw new ArgumentNullException(nameof(pdfGenerator));
-        _ = LoadAsync();
-    }
+        private readonly IRepository<PurchaseOrder> _repo;
+        private readonly IFileRepository _fileRepo;
+        private readonly IGenericPdfGenerator<PurchaseOrder> _pdfGenerator;
 
-    [ObservableProperty]
-    private Purchaseorder? selectedPurchaseorder;
+        public ObservableCollection<PurchaseOrder> PurchaseOrders { get; } = new();
+        // We won't use a separate line VM; DataGrid binds directly to SelectedPurchaseOrder.Lines
 
-    partial void OnSelectedPurchaseorderChanged(Purchaseorder? value)
-    {
-        PopulateLineItemsFromSelected();
-        NotifyCommands();
-    }
-
-    private void NotifyCommands()
-    {
-        AddCommand.NotifyCanExecuteChanged();
-        UpdateCommand.NotifyCanExecuteChanged();
-        DeleteCommand.NotifyCanExecuteChanged();
-        SaveCommand.NotifyCanExecuteChanged();
-        PrintCommand.NotifyCanExecuteChanged();
-        UploadFileCommand.NotifyCanExecuteChanged();
-    }
-
-    private void PopulateLineItemsFromSelected()
-    {
-        LineItems.Clear();
-
-        if (SelectedPurchaseorder == null) return;
-
-        // Create editable viewmodels for each line to support immediate notifications and total updates.
-        if (SelectedPurchaseorder.Lines != null)
+        public PurchaseOrderViewModel(IRepository<PurchaseOrder> repo,
+                                      IFileRepository fileRepo,
+                                      IGenericPdfGenerator<PurchaseOrder> pdfGenerator)
         {
-            foreach (var line in SelectedPurchaseorder.Lines)
+            _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+            _fileRepo = fileRepo ?? throw new ArgumentNullException(nameof(fileRepo));
+            _pdfGenerator = pdfGenerator ?? throw new ArgumentNullException(nameof(pdfGenerator));
+
+            _ = LoadAsync();
+        }
+
+        [ObservableProperty]
+        private PurchaseOrder? selectedPurchaseOrder;
+
+        partial void OnSelectedPurchaseOrderChanged(PurchaseOrder? value)
+        {
+            // unsubscribe previous
+            UnsubscribeFromLineEvents(_previousLines);
+            _previousLines = value?.Lines;
+            SubscribeToLineEvents(value?.Lines);
+            RecalculateTotals();
+            NotifyCommands();
+        }
+
+        private ObservableCollection<PurchaseOrderLine>? _previousLines;
+
+        private void SubscribeToLineEvents(ObservableCollection<PurchaseOrderLine>? lines)
+        {
+            if (lines == null) return;
+            lines.CollectionChanged += Lines_CollectionChanged;
+            foreach (var l in lines)
             {
-                var vm = new PurchaseorderLineViewModel(line);
-                vm.PropertyChanged += Line_PropertyChanged;
-                LineItems.Add(vm);
+                if (l is INotifyPropertyChanged inpc) inpc.PropertyChanged += Line_PropertyChanged;
             }
         }
 
-        RecalculateTotalsFromLineItems();
-    }
-
-    private void Line_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(PurchaseorderLineViewModel.Quantity) ||
-            e.PropertyName == nameof(PurchaseorderLineViewModel.UnitPrice) ||
-            e.PropertyName == nameof(PurchaseorderLineViewModel.Description))
+        private void UnsubscribeFromLineEvents(ObservableCollection<PurchaseOrderLine>? lines)
         {
-            RecalculateTotalsFromLineItems();
-        }
-    }
-
-    private void RecalculateTotalsFromLineItems()
-    {
-        if (SelectedPurchaseorder == null) return;
-
-        // Update LineTotal for each line vm and compute SubTotal/Total
-        decimal subtotal = 0m;
-        foreach (var l in LineItems)
-        {
-            l.CalculateLineTotal();
-            subtotal += l.LineTotal;
-        }
-
-        SelectedPurchaseorder.SubTotal = Math.Round(subtotal, 2);
-        SelectedPurchaseorder.Total = Math.Round(SelectedPurchaseorder.SubTotal - SelectedPurchaseorder.Discount + SelectedPurchaseorder.Tax, 2);
-
-        OnPropertyChanged(nameof(SelectedPurchaseorder));
-    }
-
-    [RelayCommand]
-    public async Task LoadAsync()
-    {
-        Purchaseorders.Clear();
-        try
-        {
-            var list = await _repo.GetAllAsync();
-            foreach (var p in list) Purchaseorders.Add(p);
-
-            SelectedPurchaseorder = Purchaseorders.FirstOrDefault();
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Failed to load purchase orders: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    [RelayCommand]
-    public async Task AddAsync()
-    {
-        try
-        {
-            // Create an empty Purchaseorder and persist it, then reload.
-            var po = new Purchaseorder
+            if (lines == null) return;
+            lines.CollectionChanged -= Lines_CollectionChanged;
+            foreach (var l in lines)
             {
-                PONumber = $"PO-{DateTime.UtcNow:yyyyMMddHHmmss}",
-                Date = DateTime.UtcNow
-            };
+                if (l is INotifyPropertyChanged inpc) inpc.PropertyChanged -= Line_PropertyChanged;
+            }
+        }
 
-            // Add any lines currently in the UI (optional) - attach current LineItems if present
-            foreach (var li in LineItems)
+        private void Lines_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            // Attach/detach property changed handlers
+            if (e.NewItems != null)
             {
-                po.Lines.Add(li.ToModel());
+                foreach (var ni in e.NewItems.OfType<INotifyPropertyChanged>())
+                    ni.PropertyChanged += Line_PropertyChanged;
             }
 
-            po.RecalculateTotals();
-
-            await _repo.AddAsync(po);
-            await LoadAsync();
-
-            SelectedPurchaseorder = Purchaseorders.FirstOrDefault(p => p.PONumber == po.PONumber) ?? SelectedPurchaseorder;
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Failed to add purchase order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    // Save (alias for update/add based on Id)
-    [RelayCommand(CanExecute = nameof(CanModify))]
-    public async Task SaveAsync()
-    {
-        if (SelectedPurchaseorder == null) return;
-
-        try
-        {
-            // Map LineItems back to model objects and attach to SelectedPurchaseorder
-            SelectedPurchaseorder.Lines = LineItems.Select(li => li.ToModel()).ToList();
-
-            SelectedPurchaseorder.RecalculateTotals();
-
-            if (SelectedPurchaseorder.Id == 0)
-                await _repo.AddAsync(SelectedPurchaseorder);
-            else
-                await _repo.UpdateAsync(SelectedPurchaseorder);
-
-            await LoadAsync();
-            // re-select by Order number or Id
-            SelectedPurchaseorder = Purchaseorders.FirstOrDefault(p => p.PONumber == SelectedPurchaseorder.PONumber) ?? SelectedPurchaseorder;
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Failed to save purchase order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    [RelayCommand(CanExecute = nameof(CanModify))]
-    public async Task UpdateAsync()
-    {
-        await SaveAsync();
-    }
-
-    [RelayCommand(CanExecute = nameof(CanModify))]
-    public async Task DeleteAsync()
-    {
-        if (SelectedPurchaseorder == null) return;
-
-        var res = MessageBox.Show("Delete selected purchase order?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question);
-        if (res != MessageBoxResult.Yes) return;
-
-        try
-        {
-            await _repo.DeleteAsync(SelectedPurchaseorder.Id);
-            await LoadAsync();
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Failed to delete purchase order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    [RelayCommand]
-    private void AddLine()
-    {
-        var lineVm = new PurchaseorderLineViewModel()
-        {
-            Description = string.Empty,
-            Quantity = 1,
-            UnitPrice = 0m
-        };
-        lineVm.PropertyChanged += Line_PropertyChanged;
-        LineItems.Add(lineVm);
-        RecalculateTotalsFromLineItems();
-    }
-
-    [RelayCommand]
-    private void RemoveLine(PurchaseorderLineViewModel? line)
-    {
-        if (line == null) return;
-        line.PropertyChanged -= Line_PropertyChanged;
-        LineItems.Remove(line);
-        RecalculateTotalsFromLineItems();
-    }
-
-    [RelayCommand(CanExecute = nameof(CanModify))]
-    private async Task UploadFileAsync()
-    {
-        if (SelectedPurchaseorder == null) return;
-
-        var dlg = new OpenFileDialog { Title = "Select file to upload", Filter = "All files|*.*" };
-        if (dlg.ShowDialog() != true) return;
-
-        try
-        {
-            await _fileRepo.UploadFileAsync(dlg.FileName);
-            MessageBox.Show("File uploaded successfully.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"File upload failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    [RelayCommand(CanExecute = nameof(CanModify))]
-    private async Task PrintAsync()
-    {
-        if (SelectedPurchaseorder == null) return;
-
-        try
-        {
-            // Build a fresh model to pass to PDF generator (avoid EF-tracking issues)
-            var model = new Purchaseorder
+            if (e.OldItems != null)
             {
-                Id = SelectedPurchaseorder.Id,
-                PONumber = SelectedPurchaseorder.PONumber,
-                Date = SelectedPurchaseorder.Date,
-                VendorId = SelectedPurchaseorder.VendorId,
-                Vendor = SelectedPurchaseorder.Vendor,
-                Notes = SelectedPurchaseorder.Notes,
-                Discount = SelectedPurchaseorder.Discount,
-                Tax = SelectedPurchaseorder.Tax,
-                SubTotal = SelectedPurchaseorder.SubTotal,
-                Total = SelectedPurchaseorder.Total,
-                Currency = SelectedPurchaseorder.Currency,
-                Status = SelectedPurchaseorder.Status,
-                PaymentMethod = SelectedPurchaseorder.PaymentMethod,
-                BankName = SelectedPurchaseorder.BankName,
-                IBAN = SelectedPurchaseorder.IBAN,
-                ExpectedDeliveryDate = SelectedPurchaseorder.ExpectedDeliveryDate,
-                DeliveryLocation = SelectedPurchaseorder.DeliveryLocation,
-                CreatedAt = SelectedPurchaseorder.CreatedAt,
-                CreatedBy = SelectedPurchaseorder.CreatedBy,
-                UpdatedAt = SelectedPurchaseorder.UpdatedAt,
-                UpdatedBy = SelectedPurchaseorder.UpdatedBy
-            };
+                foreach (var oi in e.OldItems.OfType<INotifyPropertyChanged>())
+                    oi.PropertyChanged -= Line_PropertyChanged;
+            }
 
-            model.Lines = LineItems.Select(li => li.ToModel()).ToList();
-            model.RecalculateTotals();
+            RecalculateTotals();
+        }
 
-            // Ask for save location
-            var dlg = new SaveFileDialog { Filter = "PDF files (*.pdf)|*.pdf", FileName = $"{model.PONumber}.pdf" };
-            if (dlg.ShowDialog() != true) return;
-            var path = dlg.FileName;
+        private void Line_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            // If UnitPrice or Quantity changed -> recompute totals
+            if (e.PropertyName == nameof(PurchaseOrderLine.UnitPrice) ||
+                e.PropertyName == nameof(PurchaseOrderLine.Quantity) ||
+                e.PropertyName == nameof(PurchaseOrderLine.Description))
+            {
+                RecalculateTotals();
+            }
+        }
 
-            await _pdfGenerator.GeneratePdfAsync(new[] { model }, path);
+        private void RecalculateTotals()
+        {
+            if (SelectedPurchaseOrder == null) return;
 
-            // Try to open
+            decimal subtotal = 0m;
+            foreach (var line in SelectedPurchaseOrder.Lines)
+            {
+                // ensure LineTotal property updated by raising property change (model computes on the fly)
+                line.LineTotal = Math.Round(line.UnitPrice * line.Quantity, 2);
+                subtotal += line.LineTotal;
+            }
+
+            SelectedPurchaseOrder.SubTotal = Math.Round(subtotal, 2);
+            SelectedPurchaseOrder.Total = Math.Round(SelectedPurchaseOrder.SubTotal - SelectedPurchaseOrder.Discount + SelectedPurchaseOrder.Tax, 2);
+
+            OnPropertyChanged(nameof(SelectedPurchaseOrder));
+        }
+
+        private void NotifyCommands()
+        {
+            LoadCommand.NotifyCanExecuteChanged();
+            AddCommand.NotifyCanExecuteChanged();
+            SaveCommand.NotifyCanExecuteChanged();
+            DeleteCommand.NotifyCanExecuteChanged();
+            AddLineCommand.NotifyCanExecuteChanged();
+            RemoveLineCommand.NotifyCanExecuteChanged();
+            PrintCommand.NotifyCanExecuteChanged();
+            UploadFileCommand.NotifyCanExecuteChanged();
+        }
+
+        [RelayCommand]
+        public async Task LoadAsync()
+        {
             try
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+                PurchaseOrders.Clear();
+                var list = await _repo.GetAllAsync();
+                foreach (var p in list)
+                {
+                    // ensure Lines not null
+                    if (p.Lines == null) p.Lines = new ObservableCollection<PurchaseOrderLine>();
+                    PurchaseOrders.Add(p);
+                }
+
+                SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault();
             }
-            catch
+            catch (Exception ex)
             {
-                // ignore if system can't open
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Failed to generate PDF: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    private bool CanModify() => SelectedPurchaseorder != null;
-
-    #region Line viewmodel (inner class)
-    // Small VM wrapper for PurchaseorderLine that supports INotifyPropertyChanged and computed LineTotal
-    public class PurchaseorderLineViewModel : ObservableObject
-    {
-        public PurchaseorderLineViewModel() { }
-
-        public PurchaseorderLineViewModel(Purchaseorderline model)
-        {
-            if (model == null) return;
-            Id = model.Id;
-            Description = model.Description;
-            PartNumber = model.PartNumber;
-            UnitPrice = model.UnitPrice;
-            Quantity = model.Quantity;
-            Unit = model.Unit;
-            Notes = model.Notes;
-            QuantityDelivered = model.QuantityDelivered;
-        }
-
-        public int Id { get; set; }
-
-        private string _description = string.Empty;
-        public string Description
-        {
-            get => _description;
-            set => SetProperty(ref _description, value);
-        }
-
-        private string? _partNumber;
-        public string? PartNumber
-        {
-            get => _partNumber;
-            set => SetProperty(ref _partNumber, value);
-        }
-
-        private decimal _unitPrice;
-        public decimal UnitPrice
-        {
-            get => _unitPrice;
-            set
-            {
-                if (SetProperty(ref _unitPrice, value))
-                    OnPropertyChanged(nameof(LineTotal));
+                MessageBox.Show($"Failed to load purchase orders: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private decimal _quantity;
-        public decimal Quantity
+        [RelayCommand]
+        public async Task AddAsync()
         {
-            get => _quantity;
-            set
+            try
             {
-                if (SetProperty(ref _quantity, value))
-                    OnPropertyChanged(nameof(LineTotal));
+                var po = new PurchaseOrder
+                {
+                    PONumber = $"PO-{DateTime.UtcNow:yyyyMMddHHmmss}",
+                    Date = DateTime.UtcNow
+                };
+                // initialize default line collection
+                po.Lines = new ObservableCollection<PurchaseOrderLine>();
+                await _repo.AddAsync(po);
+                await LoadAsync();
+                SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(p => p.PONumber == po.PONumber) ?? SelectedPurchaseOrder;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to add purchase order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private string? _unit = "pc";
-        public string? Unit
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task SaveAsync()
         {
-            get => _unit;
-            set => SetProperty(ref _unit, value);
-        }
+            if (SelectedPurchaseOrder == null) return;
 
-        private string? _notes;
-        public string? Notes
-        {
-            get => _notes;
-            set => SetProperty(ref _notes, value);
-        }
-
-        private decimal _quantityDelivered;
-        public decimal QuantityDelivered
-        {
-            get => _quantityDelivered;
-            set => SetProperty(ref _quantityDelivered, value);
-        }
-
-        // Computed
-        public decimal LineTotal => Math.Round(UnitPrice * Quantity, 2);
-
-        // Call to force recalculation and notify
-        public void CalculateLineTotal()
-        {
-            OnPropertyChanged(nameof(LineTotal));
-        }
-
-        public Purchaseorderline ToModel()
-        {
-            return new Purchaseorderline
+            try
             {
-                Id = this.Id,
-                Description = this.Description ?? string.Empty,
-                PartNumber = this.PartNumber,
-                UnitPrice = this.UnitPrice,
-                Quantity = this.Quantity,
-                LineTotal = Math.Round(this.UnitPrice * this.Quantity, 2),
-                Unit = this.Unit,
-                Notes = this.Notes,
-                QuantityDelivered = this.QuantityDelivered
+                // Recalculate before saving
+                RecalculateTotals();
+
+                if (SelectedPurchaseOrder.Id == 0)
+                    await _repo.AddAsync(SelectedPurchaseOrder);
+                else
+                    await _repo.UpdateAsync(SelectedPurchaseOrder);
+
+                await LoadAsync();
+                SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(p => p.PONumber == SelectedPurchaseOrder.PONumber) ?? SelectedPurchaseOrder;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to save purchase order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task DeleteAsync()
+        {
+            if (SelectedPurchaseOrder == null) return;
+
+            var res = MessageBox.Show("Delete selected purchase order?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (res != MessageBoxResult.Yes) return;
+
+            try
+            {
+                await _repo.DeleteAsync(SelectedPurchaseOrder.Id);
+                SelectedPurchaseOrder = null;
+                await LoadAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to delete purchase order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        private void AddLine()
+        {
+            if (SelectedPurchaseOrder == null) return;
+
+            var line = new PurchaseOrderLine
+            {
+                Description = string.Empty,
+                Quantity = 1,
+                UnitPrice = 0m
             };
+
+            SelectedPurchaseOrder.Lines.Add(line);
+            RecalculateTotals();
         }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        private void RemoveLine(PurchaseOrderLine? line)
+        {
+            if (SelectedPurchaseOrder == null || line == null) return;
+
+            SelectedPurchaseOrder.Lines.Remove(line);
+            RecalculateTotals();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        private async Task UploadFileAsync()
+        {
+            if (SelectedPurchaseOrder == null) return;
+
+            var dlg = new OpenFileDialog { Title = "Select file to upload", Filter = "All files|*.*" };
+            if (dlg.ShowDialog() != true) return;
+
+            try
+            {
+                await _fileRepo.UploadFileAsync(dlg.FileName);
+                MessageBox.Show("File uploaded successfully.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"File upload failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        private async Task PrintAsync()
+        {
+            if (SelectedPurchaseOrder == null) return;
+
+            try
+            {
+                // Build a detached copy to avoid EF tracking issues
+                var model = new PurchaseOrder
+                {
+                    Id = SelectedPurchaseOrder.Id,
+                    PONumber = SelectedPurchaseOrder.PONumber,
+                    Date = SelectedPurchaseOrder.Date,
+                    Vendor = SelectedPurchaseOrder.Vendor,
+                    VendorId = SelectedPurchaseOrder.VendorId,
+                    Notes = SelectedPurchaseOrder.Notes,
+                    Discount = SelectedPurchaseOrder.Discount,
+                    Tax = SelectedPurchaseOrder.Tax,
+                    SubTotal = SelectedPurchaseOrder.SubTotal,
+                    Total = SelectedPurchaseOrder.Total,
+                    Currency = SelectedPurchaseOrder.Currency,
+                    Status = SelectedPurchaseOrder.Status,
+                    PaymentMethod = SelectedPurchaseOrder.PaymentMethod,
+                    BankName = SelectedPurchaseOrder.BankName,
+                    IBAN = SelectedPurchaseOrder.IBAN,
+                    ExpectedDeliveryDate = SelectedPurchaseOrder.ExpectedDeliveryDate,
+                    DeliveryLocation = SelectedPurchaseOrder.DeliveryLocation,
+                    CreatedAt = SelectedPurchaseOrder.CreatedAt,
+                    CreatedBy = SelectedPurchaseOrder.CreatedBy,
+                    UpdatedAt = SelectedPurchaseOrder.UpdatedAt,
+                    UpdatedBy = SelectedPurchaseOrder.UpdatedBy
+                };
+
+                foreach (var l in SelectedPurchaseOrder.Lines)
+                {
+                    model.Lines.Add(new PurchaseOrderLine
+                    {
+                        Description = l.Description,
+                        PartNumber = l.PartNumber,
+                        Quantity = l.Quantity,
+                        UnitPrice = l.UnitPrice,
+                        Unit = l.Unit,
+                        Notes = l.Notes,
+                        QuantityDelivered = l.QuantityDelivered
+                    });
+                }
+
+                model.RecalculateTotals(); // extension method from your model set (if present)
+
+                var dlg = new SaveFileDialog { Filter = "PDF files (*.pdf)|*.pdf", FileName = $"{model.PONumber}.pdf" };
+                if (dlg.ShowDialog() != true) return;
+
+                var path = dlg.FileName;
+                await _pdfGenerator.GeneratePdfAsync(new[] { model }, path);
+
+                // Try to open file
+                try
+                {
+                    Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to generate PDF: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CanModify() => SelectedPurchaseOrder != null;
     }
 
-    #endregion
+    // Extension helper to recalc totals if needed (keeps parity with previous extension)
+    public static class PurchaseOrderExtensions
+    {
+        public static void RecalculateTotals(this PurchaseOrder po)
+        {
+            if (po == null) return;
+            decimal subtotal = 0m;
+            foreach (var line in po.Lines)
+            {
+                line.LineTotal = Math.Round(line.UnitPrice * line.Quantity, 2);
+                subtotal += line.LineTotal;
+            }
+            po.SubTotal = Math.Round(subtotal, 2);
+            po.Total = Math.Round(po.SubTotal - po.Discount + po.Tax, 2);
+        }
+    }
 }
-
