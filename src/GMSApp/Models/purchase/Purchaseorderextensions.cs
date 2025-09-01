@@ -1,4 +1,4 @@
-﻿using GMSApp.Views.Job;
+﻿/*using GMSApp.Views.Job;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,3 +25,4 @@ namespace GMSApp.Models.purchase
         }
     }
 }
+*/

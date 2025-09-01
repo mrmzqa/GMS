@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GMSApp.Models
+namespace GMSApp.Models.purchase
 {
     // Line model implements INotifyPropertyChanged via ObservableObject so DataGrid edits update totals automatically.
     public class PurchaseOrderLine : ObservableObject

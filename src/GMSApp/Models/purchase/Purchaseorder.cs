@@ -1,10 +1,12 @@
 // File: Models/PurchaseOrder.cs
 using CommunityToolkit.Mvvm.ComponentModel;
+using GMSApp.Models.Enums;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GMSApp.Models
+namespace GMSApp.Models.purchase
 {
     public class PurchaseOrder : ObservableObject
     {

@@ -29,7 +29,7 @@ public class Vendor
     public int? AddressId { get; set; }
     public Address? Address { get; set; }
 
-    public ICollection<Purchaseorder>? Purchaseorders { get; set; }
+    public ICollection<purchase.PurchaseOrder>? Purchaseorders { get; set; }
     public ICollection<Models.invoice.Invoice>? Invoices { get; set; }
     public ICollection<PaymentReceipt>? PaymentReceipts { get; set; }
 }

@@ -23,7 +23,7 @@ namespace GMSApp.Models.invoice
         public Vendor? Vendor { get; set; }
 
         public int? PurchaseOrderId { get; set; }
-        public Purchaseorder? PurchaseOrder { get; set; }
+        public PurchaseOrder? PurchaseOrder { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal SubTotal { get; set; }

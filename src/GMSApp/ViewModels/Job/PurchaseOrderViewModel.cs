@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
+using GMSApp.Models.purchase;
 using GMSApp.Repositories;
 using Microsoft.Win32;
 using System;

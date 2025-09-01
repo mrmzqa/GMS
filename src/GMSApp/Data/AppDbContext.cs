@@ -21,25 +21,20 @@ namespace GMSApp.Data
         public DbSet<Status> Statuses { get; set; }
         public DbSet<Vendor> Vendors { get; set; }
         public DbSet<Address> Addresses { get; set; }
-        public DbSet<Purchaseorder> PurchaseOrders { get; set; }
-        public DbSet<Purchaseorderline> PurchaseOrderLines { get; set; }
+        public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
+        public DbSet<PurchaseOrderLine> PurchaseOrderLines { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<Invoiceline> InvoiceLines { get; set; }
         public DbSet<PaymentReceipt> PaymentReceipts { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        /*protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             // PurchaseOrder ↔ Lines
-            modelBuilder.Entity<Purchaseorder>()
-                .HasMany(p => p.Lines)
-                .WithOne(l => l.PurchaseOrder)
-                .HasForeignKey(l => l.PurchaseOrderId)
-                .OnDelete(DeleteBehavior.Cascade);
-
+            
             // Vendor ↔ PurchaseOrders
-            modelBuilder.Entity<Purchaseorder>()
+            modelBuilder.Entity<PurchaseOrder>()
       .HasOne(po => po.Vendor)
       .WithMany() // or .WithMany(v => v.PurchaseOrders) if you define navigation
       .HasForeignKey(po => po.VendorId)
@@ -72,7 +67,7 @@ namespace GMSApp.Data
                 .WithOne(r => r.Invoice)
                 .HasForeignKey(r => r.InvoiceId)
                 .OnDelete(DeleteBehavior.Cascade);
-        }
+        }*/
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
 
