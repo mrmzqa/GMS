@@ -42,7 +42,7 @@ public partial class App : Application
                 services.AddTransient<FileViewModel>();
                 services.AddTransient<CoreMainViewModel>();
                 services.AddTransient<JobContentViewModel>();
-                services.AddTransient<PurchaseOrderViewModel>();
+                
                 services.AddTransient<JoborderViewModel>();
 
                 // Views - transient

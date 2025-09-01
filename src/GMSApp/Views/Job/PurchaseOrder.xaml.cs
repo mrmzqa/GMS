@@ -21,11 +21,11 @@ namespace GMSApp.Views.Job
     /// </summary>
     public partial class PurchaseOrder : UserControl
     {
-        public PurchaseOrder( PurchaseOrderViewModel vm)
+        public PurchaseOrder( )
         {
 
             InitializeComponent();
-            DataContext = vm;
+          
         }
     }
 }

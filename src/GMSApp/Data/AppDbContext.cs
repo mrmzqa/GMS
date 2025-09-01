@@ -12,23 +12,12 @@ namespace GMSApp.Data
             : base(options)
         {
         }
-
         public DbSet<FileItem> Files { get; set; }
         public DbSet<CoreMain> CoreMains { get; set; }
-  
-     
-        
         public DbSet<ItemRow> ItemRows {  get; set; }
-
         public DbSet<Joborder> Joborders { get; set; }
-       
-
         public DbSet<Status> Statuses { get; set; }
-
-    
-
         public DbSet<Vendor> Vendors { get; set; }
-      
         public DbSet<Address> Addresses { get; set; }
         public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
         public DbSet<PurchaseOrderLine> PurchaseOrderLines { get; set; }
