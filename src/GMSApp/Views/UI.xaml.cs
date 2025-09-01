@@ -1,40 +1,74 @@
-// If you still want the generic registration for other types keep it, but ensure Joborder uses the concrete generator:
-services.AddTransient<IGenericPdfGenerator<GMSApp.Models.job.Joborder>, GMSApp.Repositories.Pdf.JoborderPdfGenerator>();
-// (optional) keep other open-generic registrations if you have other generators
-services.AddTransient(typeof(IGenericPdfGenerator<>), typeof(GenericPdfGenerator<>));
+// ViewModels/Job/JoborderViewModel.cs (only relevant parts shown)
+using GMSApp.Models.Pdf;
+using GMSApp.Repositories.Pdf;
+using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
 
+// add field
+private readonly IJoborderPdfGenerator _jobPdfGenerator;
 
+// constructor signature update to receive generator (add param)
+public JoborderViewModel(IRepository<Joborder> jobRepo,
+                         IFileRepository fileRepo,
+                         IGenericPdfGenerator<Joborder> pdfGenerator, // keep if used elsewhere
+                         IJoborderPdfGenerator jobPdfGenerator)
+{
+    _jobRepo = jobRepo ?? throw new ArgumentNullException(nameof(jobRepo));
+    _fileRepo = fileRepo ?? throw new ArgumentNullException(nameof(fileRepo));
+    _pdfGenerator = pdfGenerator ?? throw new ArgumentNullException(nameof(pdfGenerator));
+    _jobPdfGenerator = jobPdfGenerator ?? throw new ArgumentNullException(nameof(jobPdfGenerator));
+
+    _ = LoadJobordersAsync();
+}
+
+// PrintAsync -> use jobPdfGenerator
 [RelayCommand(CanExecute = nameof(CanModify))]
 public async Task PrintAsync()
 {
-    if (SelectedJoborder == null)
-        return;
+    if (SelectedJoborder == null) return;
 
     try
     {
-        // Build a fresh Joborder model containing the current Items (UI edits)
-        var model = BuildJoborderFromUi(SelectedJoborder); // your existing helper that returns Joborder with Items
+        // Build a model copy from UI (ensures Items reflect UI)
+        var model = BuildJoborderFromUi(SelectedJoborder);
 
-        // Build file path
-        var temp = Path.Combine(Path.GetTempPath(), $"joborder_{model.Id}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+        // Create a simple template (in real app you might load this from DB or settings)
+        var template = new PdfTemplate
+        {
+            HeaderTitle = new LabelText { En = "JOB CARD", Ar = "بطاقة العمل" },
+            FooterLeft = new LabelText { En = "Company Name", Ar = "اسم الشركة" },
+            FooterRight = new LabelText { En = "Phone: 123-456", Ar = "هاتف: 123-456" },
+            // Optionally set fonts that exist on target machine
+            EnglishFontFamily = "Arial",
+            ArabicFontFamily = "Tahoma"
+        };
 
-        // Use the injected PDF generator (ensure DI registers JoborderPdfGenerator for Joborder)
-        await _pdfGenerator.GeneratePdfAsync(new[] { model }, temp);
+        var outPath = Path.Combine(Path.GetTempPath(), $"JobCard_{model.Id}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
 
-        // Open the generated PDF using the default system app
-        var psi = new ProcessStartInfo(temp) { UseShellExecute = true };
+        // Use the job-specific generator that accepts a template (header/footer + labels)
+        await _jobPdfGenerator.GeneratePdfAsync(new[] { model }, outPath, template);
+
+        // Open generated PDF
+        var psi = new ProcessStartInfo(outPath) { UseShellExecute = true };
         Process.Start(psi);
     }
     catch (Exception ex)
     {
-        MessageBox.Show($"Failed to generate/print PDF: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        MessageBox.Show($"Failed to generate PDF: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
     }
 }
+// In your ConfigureServices block:
+services.AddTransient<Repositories.Pdf.IJoborderPdfGenerator, Repositories.Pdf.JoborderPdfGenerator>();
 
+// Keep or add the concrete mapping for generic generator if required elsewhere
+services.AddTransient(typeof(IGenericPdfGenerator<>), typeof(GenericPdfGenerator<>));
 
+// Repositories/Pdf/JoborderPdfGenerator.cs
 using GMSApp.Models.job;
-using PdfSharpCore.Pdf;
+using GMSApp.Models.Pdf;
 using PdfSharpCore.Drawing;
+using PdfSharpCore.Pdf;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -43,269 +77,314 @@ using System.Threading.Tasks;
 
 namespace GMSApp.Repositories.Pdf
 {
-    // Assumed interface:
-    // public interface IGenericPdfGenerator<T> { Task GeneratePdfAsync(IEnumerable<T> models, string filePath); }
-    public class JoborderPdfGenerator : IGenericPdfGenerator<Joborder>
+    public class JoborderPdfGenerator : IJoborderPdfGenerator
     {
-        public async Task GeneratePdfAsync(IEnumerable<Joborder> models, string filePath)
+        public async Task GeneratePdfAsync(IEnumerable<Joborder> jobs, string filePath, PdfTemplate template)
         {
-            if (models == null) throw new ArgumentNullException(nameof(models));
+            if (jobs == null) throw new ArgumentNullException(nameof(jobs));
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentNullException(nameof(filePath));
+            if (template == null) throw new ArgumentNullException(nameof(template));
 
             await Task.Run(() =>
             {
                 using var document = new PdfDocument();
 
-                foreach (var job in models)
+                foreach (var job in jobs)
                 {
-                    // Start a new page for each job
+                    // Create first page
                     var page = document.AddPage();
                     page.Size = PdfSharpCore.PageSize.A4;
-                    page.Orientation = PdfSharpCore.PageOrientation.Portrait;
+                    XGraphics gfx = XGraphics.FromPdfPage(page);
 
-                    using var gfx = XGraphics.FromPdfPage(page);
-
-                    // Layout settings
-                    double marginLeft = 40;
-                    double marginTop = 40;
-                    double marginRight = 40;
-                    double marginBottom = 40;
-                    double pageWidth = page.Width;
-                    double pageHeight = page.Height;
-                    double usableWidth = pageWidth - marginLeft - marginRight;
-                    double y = marginTop;
-
-                    // Fonts
-                    var headerFont = new XFont("Arial", 16, XFontStyle.Bold);
-                    var subHeaderFont = new XFont("Arial", 11, XFontStyle.Bold);
-                    var normalFont = new XFont("Arial", 10, XFontStyle.Regular);
-                    var smallFont = new XFont("Arial", 9, XFontStyle.Regular);
-
-                    // Header: Company / Title centered
-                    var title = "JOB CARD";
-                    gfx.DrawString(title, headerFont, XBrushes.Black,
-                        new XRect(marginLeft, y, usableWidth, 24), XStringFormats.TopCenter);
-                    y += 28;
-
-                    // Draw a thin separator
-                    gfx.DrawLine(XPens.Black, marginLeft, y, marginLeft + usableWidth, y);
-                    y += 8;
-
-                    // Optional image on top-right if available (front image)
-                    double imgWidth = 120;
-                    double imgHeight = 80;
-                    if (job.F != null && job.F.Length > 0)
+                    try
                     {
-                        try
+                        // Margins and layout
+                        double ml = 40, mt = 40, mr = 40, mb = 40;
+                        double pageW = page.Width;
+                        double pageH = page.Height;
+                        double usableW = pageW - ml - mr;
+                        double y = mt;
+
+                        // Fonts - use template-specified fonts where possible
+                        var enFontName = string.IsNullOrWhiteSpace(template.EnglishFontFamily) ? "Arial" : template.EnglishFontFamily;
+                        var arFontName = string.IsNullOrWhiteSpace(template.ArabicFontFamily) ? enFontName : template.ArabicFontFamily;
+
+                        var titleFont = new XFont(enFontName, 16, XFontStyle.Bold);
+                        var labelFontEn = new XFont(enFontName, 10, XFontStyle.Bold);
+                        var valueFontEn = new XFont(enFontName, 10, XFontStyle.Regular);
+                        var smallFontEn = new XFont(enFontName, 9, XFontStyle.Regular);
+
+                        // Arabic fonts (use same size but different family)
+                        var labelFontAr = new XFont(arFontName, 10, XFontStyle.Bold);
+                        var valueFontAr = new XFont(arFontName, 10, XFontStyle.Regular);
+
+                        // Header (template.HeaderTitle)
+                        var headerText = $"{template.HeaderTitle.En}  —  {template.HeaderTitle.Ar}";
+                        gfx.DrawString(headerText, titleFont, XBrushes.Black, new XRect(ml, y, usableW, 24), XStringFormats.TopCenter);
+                        y += 28;
+
+                        // Logo (if provided) - draw at right top
+                        double logoW = 100, logoH = 60;
+                        if (template.Logo != null && template.Logo.Length > 0)
                         {
-                            using var ms = new MemoryStream(job.F);
-                            using var img = XImage.FromStream(() => ms);
-                            double imgX = marginLeft + usableWidth - imgWidth;
-                            gfx.DrawImage(img, imgX, marginTop + 4, imgWidth, imgHeight);
+                            try
+                            {
+                                using var ms = new MemoryStream(template.Logo);
+                                using var logoImg = XImage.FromStream(() => ms);
+                                double lx = ml + usableW - logoW;
+                                double ly = mt;
+                                gfx.DrawImage(logoImg, lx, ly, logoW, logoH);
+                            }
+                            catch
+                            {
+                                // ignore logo errors
+                            }
                         }
-                        catch
+
+                        // Draw details as "LabelEn — LabelAr : Value"
+                        void DrawDetail(LabelText label, string? value)
                         {
-                            // ignore image load errors; continue without image
+                            // Print English label then Arabic label in parentheses
+                            var labelCombined = label.ToString(); // uses "En — Ar"
+                            gfx.DrawString(labelCombined + ":", labelFontEn, XBrushes.Black, new XPoint(ml, y));
+                            // Value - try English value then Arabic value if present (for example job.CustomerName may be in both)
+                            gfx.DrawString(value ?? string.Empty, valueFontEn, XBrushes.Black, new XPoint(ml + 160, y));
+                            y += 18;
                         }
-                    }
 
-                    // Job Details block - left side
-                    double detailsX = marginLeft;
-                    double detailsWidth = usableWidth - imgWidth - 12; // leave space for image
-                    double lineHeight = 16;
+                        DrawDetail(template.CustomerLabel, job.CustomerName);
+                        DrawDetail(template.PhoneLabel, job.Phonenumber);
+                        DrawDetail(template.VehicleLabel, job.VehicleNumber);
+                        DrawDetail(template.BrandLabel, job.Brand);
+                        DrawDetail(template.ModelLabel, job.Model);
+                        DrawDetail(template.OdoLabel, job.OdoNumber?.ToString());
 
-                    void DrawLabelValue(string label, string? value)
-                    {
-                        gfx.DrawString(label + ":", subHeaderFont, XBrushes.Black, new XPoint(detailsX, y));
-                        gfx.DrawString(value ?? string.Empty, normalFont, XBrushes.Black, new XPoint(detailsX + 100, y));
-                        y += lineHeight;
-                    }
+                        y += 8;
 
-                    DrawLabelValue("Customer", job.CustomerName);
-                    DrawLabelValue("Phone", job.Phonenumber);
-                    DrawLabelValue("Vehicle No", job.VehicleNumber);
-                    DrawLabelValue("Brand", job.Brand);
-                    DrawLabelValue("Model", job.Model);
-                    DrawLabelValue("Odometer", job.OdoNumber?.ToString() ?? string.Empty);
-
-                    y += 6;
-
-                    // Another separator before items
-                    gfx.DrawLine(XPens.Gray, marginLeft, y, marginLeft + usableWidth, y);
-                    y += 8;
-
-                    // Items table header
-                    double tableX = marginLeft;
-                    double colNameW = usableWidth * 0.55;   // Name column
-                    double colQtyW = usableWidth * 0.12;    // Qty
-                    double colPriceW = usableWidth * 0.16;  // Price
-                    double colTotalW = usableWidth * 0.17;  // Total
-                    double rowHeight = 20;
-
-                    // Header background
-                    var headerRect = new XRect(tableX, y, usableWidth, rowHeight);
-                    gfx.DrawRectangle(XBrushes.LightGray, headerRect);
-
-                    // Draw column headers
-                    double cx = tableX;
-                    gfx.DrawString("Item", subHeaderFont, XBrushes.Black, new XRect(cx + 4, y + 4, colNameW, rowHeight), XStringFormats.TopLeft);
-                    cx += colNameW;
-                    gfx.DrawString("Qty", subHeaderFont, XBrushes.Black, new XRect(cx + 4, y + 4, colQtyW, rowHeight), XStringFormats.TopLeft);
-                    cx += colQtyW;
-                    gfx.DrawString("Price", subHeaderFont, XBrushes.Black, new XRect(cx + 4, y + 4, colPriceW, rowHeight), XStringFormats.TopLeft);
-                    cx += colPriceW;
-                    gfx.DrawString("Total", subHeaderFont, XBrushes.Black, new XRect(cx + 4, y + 4, colTotalW, rowHeight), XStringFormats.TopLeft);
-
-                    y += rowHeight;
-
-                    // Items rows: paginate if necessary
-                    var items = job.Items?.ToList() ?? new List<GMSApp.Models.ItemRow>();
-                    decimal grandTotal = 0m;
-                    foreach (var it in items)
-                    {
-                        // Check for page overflow: leave marginBottom + footer space (~40)
-                        if (y + rowHeight + marginBottom + 40 > pageHeight)
+                        // Optional front image display (small) to the right of details if exists
+                        double imgW = 120, imgH = 90;
+                        if (job.F != null && job.F.Length > 0)
                         {
-                            // Draw footer for this page, then create a new page and headers
-                            DrawFooter(gfx, pageWidth, pageHeight, marginLeft, marginRight, smallFont, 1, document.PageCount);
-                            // Add new page
-                            var newPage = document.AddPage();
-                            newPage.Size = PdfSharpCore.PageSize.A4;
-                            using var newGfx = XGraphics.FromPdfPage(newPage);
-                            // Replace gfx with new page graphics
+                            try
+                            {
+                                using var ms = new MemoryStream(job.F);
+                                using var ximg = XImage.FromStream(() => ms);
+                                double ix = ml + usableW - imgW;
+                                double iy = mt + 28; // below header
+                                gfx.DrawImage(ximg, ix, iy, imgW, imgH);
+
+                                // ensure y is below the image if it overlaps
+                                if (y < iy + imgH) y = iy + imgH + 8;
+                            }
+                            catch
+                            {
+                                // ignore image errors
+                            }
+                        }
+
+                        // Draw items table with borders and pagination
+                        // Column widths
+                        double colNameW = usableW * 0.55;
+                        double colQtyW = usableW * 0.12;
+                        double colPriceW = usableW * 0.16;
+                        double colTotalW = usableW * 0.17;
+                        double rowH = 22;
+
+                        // Draw table header
+                        void DrawTableHeader()
+                        {
+                            double x = ml;
+                            // header background
+                            var headerRect = new XRect(x, y, usableW, rowH);
+                            gfx.DrawRectangle(XBrushes.LightGray, headerRect);
+
+                            gfx.DrawRectangle(XPens.Black, x, y, colNameW, rowH);
+                            gfx.DrawString(template.ItemLabel.ToString(), labelFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colNameW, rowH), XStringFormats.TopLeft);
+                            x += colNameW;
+
+                            gfx.DrawRectangle(XPens.Black, x, y, colQtyW, rowH);
+                            gfx.DrawString(template.QtyLabel.ToString(), labelFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colQtyW, rowH), XStringFormats.TopLeft);
+                            x += colQtyW;
+
+                            gfx.DrawRectangle(XPens.Black, x, y, colPriceW, rowH);
+                            gfx.DrawString(template.PriceLabel.ToString(), labelFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colPriceW, rowH), XStringFormats.TopLeft);
+                            x += colPriceW;
+
+                            gfx.DrawRectangle(XPens.Black, x, y, colTotalW, rowH);
+                            gfx.DrawString(template.TotalLabel.ToString(), labelFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colTotalW, rowH), XStringFormats.TopLeft);
+
+                            y += rowH;
+                        }
+
+                        DrawTableHeader();
+
+                        var items = job.Items?.ToList() ?? new List<GMSApp.Models.ItemRow>();
+                        decimal grandTotal = 0m;
+                        int currentPageNumber = document.PageCount;
+
+                        foreach (var it in items)
+                        {
+                            // If next row would overflow page bottom, create new page and redraw header
+                            if (y + rowH + mb > pageH)
+                            {
+                                gfx.Dispose();
+                                page = document.AddPage();
+                                page.Size = PdfSharpCore.PageSize.A4;
+                                gfx = XGraphics.FromPdfPage(page);
+                                currentPageNumber = document.PageCount;
+                                y = mt;
+
+                                // optional small continuation header
+                                var contTitle = $"{template.HeaderTitle.En} — {template.HeaderTitle.Ar} (cont.)";
+                                gfx.DrawString(contTitle, titleFont, XBrushes.Black, new XRect(ml, y, usableW, 20), XStringFormats.TopCenter);
+                                y += 26;
+
+                                DrawTableHeader();
+                            }
+
+                            double x = ml;
+                            // Name cell
+                            var nameRect = new XRect(x, y, colNameW, rowH);
+                            gfx.DrawRectangle(XPens.Black, nameRect);
+                            gfx.DrawString(it.Name ?? string.Empty, valueFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colNameW - 8, rowH), XStringFormats.TopLeft);
+                            x += colNameW;
+
+                            // Qty
+                            var qtyRect = new XRect(x, y, colQtyW, rowH);
+                            gfx.DrawRectangle(XPens.Black, qtyRect);
+                            gfx.DrawString(it.Quantity.ToString(), valueFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colQtyW - 8, rowH), XStringFormats.TopLeft);
+                            x += colQtyW;
+
+                            // Price
+                            var priceRect = new XRect(x, y, colPriceW, rowH);
+                            gfx.DrawRectangle(XPens.Black, priceRect);
+                            gfx.DrawString(it.Price.ToString("N2"), valueFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colPriceW - 8, rowH), XStringFormats.TopLeft);
+                            x += colPriceW;
+
+                            // Total
+                            var totalVal = it.Quantity * it.Price;
+                            var totalRect = new XRect(x, y, colTotalW, rowH);
+                            gfx.DrawRectangle(XPens.Black, totalRect);
+                            gfx.DrawString(totalVal.ToString("N2"), valueFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colTotalW - 8, rowH), XStringFormats.TopLeft);
+
+                            grandTotal += totalVal;
+                            y += rowH;
+                        }
+
+                        // After items, draw grand total (ensure room)
+                        if (y + 30 + mb > pageH)
+                        {
                             gfx.Dispose();
-                            // Note: reuse the same gfx variable by creating a new one referencing new page
-                            // But since gfx is declared in outer scope, we need to update it. Simplest is to
-                            // reassign via reflection-like behaviour; here we'll just set to newGfx by shadowing variable:
-                            // Instead, break out and continue with fresh page variables. Simpler approach: draw footer and then
-                            // manually continue on the new page by setting gfx = newGfx, page = newPage, y = marginTop + header height.
-                            // But because gfx is within using, we'll rewrite this logic a bit simpler below.
+                            page = document.AddPage();
+                            page.Size = PdfSharpCore.PageSize.A4;
+                            gfx = XGraphics.FromPdfPage(page);
+                            y = mt;
                         }
 
-                        // Since the above complex pagination inside loop is tricky with using and disposals,
-                        // we will implement a simpler, robust pagination approach below: collect all lines into a queue
-                        // and render them while tracking y; when page full, create new page and continue.
+                        y += 10;
+                        var gtLabel = template.GrandTotalLabel.ToString();
+                        gfx.DrawString(gtLabel + ":", labelFontEn, XBrushes.Black, new XPoint(ml + usableW - 240, y));
+                        gfx.DrawString(grandTotal.ToString("N2"), valueFontEn, XBrushes.Black, new XPoint(ml + usableW - 80, y));
+
+                        // Footer content from template (draw at bottom-left/right if provided)
+                        if (!string.IsNullOrWhiteSpace(template.FooterLeft?.En) || !string.IsNullOrWhiteSpace(template.FooterLeft?.Ar))
+                        {
+                            var footerLeftText = template.FooterLeft.ToString();
+                            gfx.DrawString(footerLeftText, smallFontEn, XBrushes.Gray, new XRect(ml, pageH - mb + 8, usableW / 2, 20), XStringFormats.TopLeft);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(template.FooterRight?.En) || !string.IsNullOrWhiteSpace(template.FooterRight?.Ar))
+                        {
+                            var footerRightText = template.FooterRight.ToString();
+                            gfx.DrawString(footerRightText, smallFontEn, XBrushes.Gray, new XRect(ml, pageH - mb + 8, usableW, 20), XStringFormats.TopRight);
+                        }
                     }
-
-                    // Simpler rendering: render rows with safe pagination using a helper function
-                    RenderItemsTableWithPagination(document, ref page, ref gfx, ref y, marginLeft, marginTop, marginRight, marginBottom,
-                        usableWidth, items, colNameW, colQtyW, colPriceW, colTotalW, rowHeight, normalFont, smallFont, subHeaderFont, ref grandTotal);
-
-                    // After items rendered, draw grand total
-                    y += 8;
-                    gfx.DrawLine(XPens.Gray, marginLeft, y, marginLeft + usableWidth, y);
-                    y += 6;
-                    gfx.DrawString("Grand Total:", subHeaderFont, XBrushes.Black, new XPoint(marginLeft + usableWidth - 200, y));
-                    gfx.DrawString(grandTotal.ToString("N2"), subHeaderFont, XBrushes.Black, new XPoint(marginLeft + usableWidth - 80, y));
-
-                    // Footer with page number
-                    DrawFooter(gfx, pageWidth, pageHeight, marginLeft, marginRight, smallFont, 1, document.PageCount);
+                    finally
+                    {
+                        gfx?.Dispose();
+                    }
                 }
 
-                // Save document
-                // Ensure directory exists
+                // Save to disk
                 var dir = Path.GetDirectoryName(filePath);
                 if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                     Directory.CreateDirectory(dir);
 
-                using var stream = File.Create(filePath);
-                document.Save(stream);
+                using var fs = File.Create(filePath);
+                document.Save(fs);
             });
         }
+    }
+}
 
-        // Helper: render items with pagination (creates new pages as needed)
-        private void RenderItemsTableWithPagination(PdfDocument document,
-                                                    ref PdfPage page,
-                                                    ref XGraphics gfx,
-                                                    ref double y,
-                                                    double marginLeft,
-                                                    double marginTop,
-                                                    double marginRight,
-                                                    double marginBottom,
-                                                    double usableWidth,
-                                                    List<GMSApp.Models.ItemRow> items,
-                                                    double colNameW, double colQtyW, double colPriceW, double colTotalW,
-                                                    double rowHeight,
-                                                    XFont rowFont,
-                                                    XFont smallFont,
-                                                    XFont headerFont,
-                                                    ref decimal grandTotal)
+// Repositories/Pdf/IJoborderPdfGenerator.cs
+using GMSApp.Models.job;
+using GMSApp.Models.Pdf;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace GMSApp.Repositories.Pdf
+{
+    public interface IJoborderPdfGenerator
+    {
+        Task GeneratePdfAsync(IEnumerable<Joborder> jobs, string filePath, PdfTemplate template);
+    }
+}
+
+// Models/Pdf/PdfTemplate.cs
+using System;
+namespace GMSApp.Models.Pdf
+{
+    // A simple template that holds header/footer and common labels in both languages
+    public class PdfTemplate
+    {
+        // Optional: small header text (English / Arabic)
+        public LabelText HeaderTitle { get; set; } = new LabelText { En = "JOB CARD", Ar = "بطاقة العمل" };
+
+        // Optional logo bytes (e.g., PNG/JPG) to be drawn near the header
+        public byte[]? Logo { get; set; }
+
+        // Footer texts
+        public LabelText FooterLeft { get; set; } = new LabelText { En = "", Ar = "" };
+        public LabelText FooterRight { get; set; } = new LabelText { En = "", Ar = "" };
+
+        // Labels for data fields (customer, phone, ... and table headers)
+        public LabelText CustomerLabel { get; set; } = new LabelText { En = "Customer", Ar = "العميل" };
+        public LabelText PhoneLabel { get; set; } = new LabelText { En = "Phone", Ar = "الهاتف" };
+        public LabelText VehicleLabel { get; set; } = new LabelText { En = "Vehicle No", Ar = "رقم المركبة" };
+        public LabelText BrandLabel { get; set; } = new LabelText { En = "Brand", Ar = "الماركة" };
+        public LabelText ModelLabel { get; set; } = new LabelText { En = "Model", Ar = "الموديل" };
+        public LabelText OdoLabel { get; set; } = new LabelText { En = "Odometer", Ar = "عداد المسافة" };
+
+        public LabelText ItemLabel { get; set; } = new LabelText { En = "Item", Ar = "البند" };
+        public LabelText QtyLabel { get; set; } = new LabelText { En = "Qty", Ar = "الكمية" };
+        public LabelText PriceLabel { get; set; } = new LabelText { En = "Price", Ar = "السعر" };
+        public LabelText TotalLabel { get; set; } = new LabelText { En = "Total", Ar = "الإجمالي" };
+
+        public LabelText GrandTotalLabel { get; set; } = new LabelText { En = "Grand Total", Ar = "الإجمالي الكلي" };
+
+        // Optionally store font family names to use
+        public string? EnglishFontFamily { get; set; } = "Arial";
+        public string? ArabicFontFamily { get; set; } = "Tahoma"; // choose an Arabic-capable font on target machine
+    }
+}
+
+// Models/Pdf/LabelText.cs
+namespace GMSApp.Models.Pdf
+{
+    public class LabelText
+    {
+        // English label
+        public string En { get; set; } = string.Empty;
+
+        // Arabic label
+        public string Ar { get; set; } = string.Empty;
+
+        public override string ToString()
         {
-            double pageWidth = page.Width;
-            double pageHeight = page.Height;
-            int pageNumber = document.PageCount;
-
-            // Draw table header on current page (assuming header drawn above already)
-            // If y is near top (i.e., after job details), we assume header already present. Otherwise draw header row.
-            // For reliability, draw header row before the rows block.
-            var headerRect = new XRect(marginLeft, y, usableWidth, rowHeight);
-            gfx.DrawRectangle(XBrushes.LightGray, headerRect);
-            double cx = marginLeft;
-            gfx.DrawString("Item", headerFont, XBrushes.Black, new XRect(cx + 4, y + 4, colNameW, rowHeight), XStringFormats.TopLeft);
-            cx += colNameW;
-            gfx.DrawString("Qty", headerFont, XBrushes.Black, new XRect(cx + 4, y + 4, colQtyW, rowHeight), XStringFormats.TopLeft);
-            cx += colQtyW;
-            gfx.DrawString("Price", headerFont, XBrushes.Black, new XRect(cx + 4, y + 4, colPriceW, rowHeight), XStringFormats.TopLeft);
-            cx += colPriceW;
-            gfx.DrawString("Total", headerFont, XBrushes.Black, new XRect(cx + 4, y + 4, colTotalW, rowHeight), XStringFormats.TopLeft);
-            y += rowHeight;
-
-            foreach (var it in items)
-            {
-                // Check for overflow
-                if (y + rowHeight + marginBottom + 40 > pageHeight)
-                {
-                    // Draw footer for current page number
-                    DrawFooter(gfx, pageWidth, pageHeight, marginLeft, marginRight, smallFont, pageNumber, document.PageCount);
-                    // Start new page
-                    page = document.AddPage();
-                    page.Size = PdfSharpCore.PageSize.A4;
-                    gfx.Dispose();
-                    gfx = XGraphics.FromPdfPage(page);
-                    pageNumber++;
-                    // Reset y to top margin and draw header/title separator region
-                    y = marginTop;
-                    // Draw small title on new page to indicate continuation
-                    gfx.DrawString("Continued - Items", new XFont("Arial", 12, XFontStyle.Bold), XBrushes.Black, new XRect(marginLeft, y, usableWidth, 20), XStringFormats.TopLeft);
-                    y += 22;
-                    // Draw table header on new page
-                    headerRect = new XRect(marginLeft, y, usableWidth, rowHeight);
-                    gfx.DrawRectangle(XBrushes.LightGray, headerRect);
-                    cx = marginLeft;
-                    gfx.DrawString("Item", headerFont, XBrushes.Black, new XRect(cx + 4, y + 4, colNameW, rowHeight), XStringFormats.TopLeft);
-                    cx += colNameW;
-                    gfx.DrawString("Qty", headerFont, XBrushes.Black, new XRect(cx + 4, y + 4, colQtyW, rowHeight), XStringFormats.TopLeft);
-                    cx += colQtyW;
-                    gfx.DrawString("Price", headerFont, XBrushes.Black, new XRect(cx + 4, y + 4, colPriceW, rowHeight), XStringFormats.TopLeft);
-                    cx += colPriceW;
-                    gfx.DrawString("Total", headerFont, XBrushes.Black, new XRect(cx + 4, y + 4, colTotalW, rowHeight), XStringFormats.TopLeft);
-                    y += rowHeight;
-                }
-
-                // Draw the row
-                cx = marginLeft;
-                gfx.DrawString(it.Name ?? string.Empty, rowFont, XBrushes.Black, new XRect(cx + 4, y + 4, colNameW, rowHeight), XStringFormats.TopLeft);
-                cx += colNameW;
-                gfx.DrawString(it.Quantity.ToString(), rowFont, XBrushes.Black, new XRect(cx + 4, y + 4, colQtyW, rowHeight), XStringFormats.TopLeft);
-                cx += colQtyW;
-                gfx.DrawString(it.Price.ToString("N2"), rowFont, XBrushes.Black, new XRect(cx + 4, y + 4, colPriceW, rowHeight), XStringFormats.TopLeft);
-                cx += colPriceW;
-                var total = (it.Quantity * it.Price);
-                gfx.DrawString(total.ToString("N2"), rowFont, XBrushes.Black, new XRect(cx + 4, y + 4, colTotalW, rowHeight), XStringFormats.TopLeft);
-
-                grandTotal += total;
-                y += rowHeight;
-            }
-
-            // draw footer for final page (pageNumber is current)
-            DrawFooter(gfx, pageWidth, pageHeight, marginLeft, marginRight, smallFont, pageNumber, document.PageCount);
-        }
-
-        private void DrawFooter(XGraphics gfx, double pageWidth, double pageHeight, double marginLeft, double marginRight, XFont smallFont, int pageNumber, int pageCount)
-        {
-            var footerY = pageHeight - 30;
-            var footerText = $"Generated: {DateTime.Now:yyyy-MM-dd HH:mm}    Page {pageNumber} of {pageCount}";
-            gfx.DrawString(footerText, smallFont, XBrushes.Gray, new XRect(marginLeft, footerY, pageWidth - marginLeft - marginRight, 16), XStringFormats.Center);
+            // Format: "English — Arabic"
+            // You can change formatting to "Arabic (English)" or separate lines.
+            return string.IsNullOrWhiteSpace(Ar) ? En : $"{En} — {Ar}";
         }
     }
 }
