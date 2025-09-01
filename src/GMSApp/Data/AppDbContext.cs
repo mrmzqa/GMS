@@ -17,15 +17,15 @@ namespace GMSApp.Data
         public DbSet<ItemRow> ItemRows {  get; set; }
         public DbSet<Joborder> Joborders { get; set; }
         public DbSet<Status> Statuses { get; set; }
-        public DbSet<Vendor> Vendors { get; set; }
+   /*     public DbSet<Vendor> Vendors { get; set; }
         public DbSet<Address> Addresses { get; set; }
         public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
         public DbSet<PurchaseOrderLine> PurchaseOrderLines { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<InvoiceLine> InvoiceLines { get; set; }
-        public DbSet<PaymentReceipt> PaymentReceipts { get; set; }
+        public DbSet<PaymentReceipt> PaymentReceipts { get; set; }*/
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+    /*    protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
@@ -70,7 +70,7 @@ namespace GMSApp.Data
                 .WithOne(r => r.Invoice)
                 .HasForeignKey(r => r.InvoiceId)
                 .OnDelete(DeleteBehavior.Cascade);
-        }
+        }*/
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
 

@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace GMSApp.Models
 {
     // ---------------- ENUMS ----------------
+ 
     public enum PurchaseOrderStatus
     {
         Draft = 0,
@@ -42,7 +43,6 @@ namespace GMSApp.Models
         Cancelled = 4,
         Overdue = 5
     }
-
     // ---------------- ADDRESS ----------------
     public class Address
     {
@@ -106,7 +106,7 @@ namespace GMSApp.Models
         public DateTime Date { get; set; } = DateTime.UtcNow;
 
         public int VendorId { get; set; }
-        public Vendor? Vendor { get; set; }
+        public Vendor Vendor { get; set; }
 
         [MaxLength(500)]
         public string? Notes { get; set; }
@@ -182,80 +182,9 @@ namespace GMSApp.Models
         public decimal QuantityPending => Quantity - QuantityDelivered;
     }
 
-    // ---------------- INVOICE ----------------
-    public class Invoice
-    {
-        public int Id { get; set; }
 
-        [Required, MaxLength(50)]
-        public string InvoiceNumber { get; set; } = string.Empty; // e.g., INV-2025-001
+ 
 
-        public DateTime InvoiceDate { get; set; } = DateTime.UtcNow;
-
-        public int VendorId { get; set; }
-        public Vendor? Vendor { get; set; }
-
-        public int? PurchaseOrderId { get; set; }
-        public PurchaseOrder? PurchaseOrder { get; set; }
-
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal SubTotal { get; set; }
-
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal Discount { get; set; }
-
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal Tax { get; set; }
-
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal Total { get; set; }
-
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal AmountPaid { get; set; }
-
-        [NotMapped]
-        public decimal Balance => Total - AmountPaid;
-
-        public InvoiceStatus Status { get; set; } = InvoiceStatus.Draft;
-
-        public ICollection<InvoiceLine> Lines { get; set; } = new List<InvoiceLine>();
-        public ICollection<PaymentReceipt> PaymentReceipts { get; set; } = new List<PaymentReceipt>();
-
-        // Audit
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        [MaxLength(100)] public string? CreatedBy { get; set; }
-        public DateTime? UpdatedAt { get; set; }
-        [MaxLength(100)] public string? UpdatedBy { get; set; }
-    }
-
-    public class InvoiceLine
-    {
-        public int Id { get; set; }
-
-        public int InvoiceId { get; set; }
-        public Invoice? Invoice { get; set; }
-
-        [Required, MaxLength(250)]
-        public string Description { get; set; } = string.Empty;
-
-        [MaxLength(100)]
-        public string? PartNumber { get; set; }
-
-        [Required]
-        public decimal UnitPrice { get; set; }
-
-        [Required]
-        public decimal Quantity { get; set; }
-
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal LineTotal { get; set; }
-
-        [MaxLength(50)]
-        public string? Unit { get; set; } = "pc";
-
-        [MaxLength(250)]
-        public string? Notes { get; set; }
-    }
 
     // ---------------- PAYMENT RECEIPT ----------------
     public class PaymentReceipt
@@ -311,30 +240,7 @@ namespace GMSApp.Models
         }
     }
 
-    public static class InvoiceExtensions
-    {
-        public static void RecalculateTotals(this Invoice invoice)
-        {
-            if (invoice == null) return;
-
-            decimal subtotal = 0m;
-            foreach (var line in invoice.Lines)
-            {
-                line.LineTotal = Math.Round(line.UnitPrice * line.Quantity, 2);
-                subtotal += line.LineTotal;
-            }
-
-            invoice.SubTotal = Math.Round(subtotal, 2);
-            invoice.Total = Math.Round(invoice.SubTotal - invoice.Discount + invoice.Tax, 2);
-
-            if (invoice.AmountPaid == 0)
-                invoice.Status = InvoiceStatus.Pending;
-            else if (invoice.AmountPaid < invoice.Total)
-                invoice.Status = InvoiceStatus.PartiallyPaid;
-            else if (invoice.AmountPaid >= invoice.Total)
-                invoice.Status = InvoiceStatus.Paid;
-        }
-    }
 
 
-}
+
+}*/

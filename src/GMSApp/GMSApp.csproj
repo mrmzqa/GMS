@@ -32,7 +32,6 @@
 
   <ItemGroup>
     <Folder Include="Assets\" />
-    <Folder Include="Models\Enums\" />
     <Folder Include="Resources\" />
     <Folder Include="Services\" />
   </ItemGroup>
