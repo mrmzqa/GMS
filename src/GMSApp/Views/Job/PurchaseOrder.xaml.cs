@@ -1,20 +1,22 @@
 // File: Views/PurchaseOrderView.xaml.cs
 using GMSApp.ViewModels;
+using GMSApp.ViewModels.Job;
 using System.Windows.Controls;
 
-namespace GMSApp.Views
+namespace GMSApp.Views.Job
 {
-    public partial class PurchaseOrderView : UserControl
+    public partial class PurchaseOrder : UserControl
     {
-        public PurchaseOrderView()
+        public PurchaseOrder()
         {
             InitializeComponent();
         }
 
         // If using DI, you can inject the VM via constructor and set DataContext
-        public PurchaseOrderView(PurchaseOrderViewModel vm) : this()
+        public PurchaseOrder(PurchaseOrderViewModel viewModel)
         {
-            DataContext = vm;
+            InitializeComponent();
+            this.DataContext = viewModel;
         }
     }
 }
