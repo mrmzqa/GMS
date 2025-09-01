@@ -1,5 +1,7 @@
 ﻿using GMSApp.Models;
+using GMSApp.Models.invoice;
 using GMSApp.Models.job;
+using GMSApp.Models.purchase;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection.Emit;
 
@@ -17,20 +19,20 @@ namespace GMSApp.Data
         public DbSet<ItemRow> ItemRows {  get; set; }
         public DbSet<Joborder> Joborders { get; set; }
         public DbSet<Status> Statuses { get; set; }
-   /*     public DbSet<Vendor> Vendors { get; set; }
+        public DbSet<Vendor> Vendors { get; set; }
         public DbSet<Address> Addresses { get; set; }
-        public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
-        public DbSet<PurchaseOrderLine> PurchaseOrderLines { get; set; }
+        public DbSet<Purchaseorder> PurchaseOrders { get; set; }
+        public DbSet<Purchaseorderline> PurchaseOrderLines { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
-        public DbSet<InvoiceLine> InvoiceLines { get; set; }
-        public DbSet<PaymentReceipt> PaymentReceipts { get; set; }*/
+        public DbSet<Invoiceline> InvoiceLines { get; set; }
+        public DbSet<PaymentReceipt> PaymentReceipts { get; set; }
 
-    /*    protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             // PurchaseOrder ↔ Lines
-            modelBuilder.Entity<PurchaseOrder>()
+            modelBuilder.Entity<Purchaseorder>()
                 .HasMany(p => p.Lines)
                 .WithOne(l => l.PurchaseOrder)
                 .HasForeignKey(l => l.PurchaseOrderId)
@@ -38,7 +40,7 @@ namespace GMSApp.Data
 
             // Vendor ↔ PurchaseOrders
             modelBuilder.Entity<Vendor>()
-                .HasMany(v => v.PurchaseOrders)
+                .HasMany(v => v.Purchaseorders)
                 .WithOne(p => p.Vendor)
                 .HasForeignKey(p => p.VendorId)
                 .OnDelete(DeleteBehavior.SetNull);
@@ -70,7 +72,7 @@ namespace GMSApp.Data
                 .WithOne(r => r.Invoice)
                 .HasForeignKey(r => r.InvoiceId)
                 .OnDelete(DeleteBehavior.Cascade);
-        }*/
+        }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
 

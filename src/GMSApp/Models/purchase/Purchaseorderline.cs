@@ -14,7 +14,7 @@ namespace GMSApp.Models.purchase
         public int Id { get; set; }
 
         public int PurchaseOrderId { get; set; }
-        public PurchaseOrder? PurchaseOrder { get; set; }
+        public Purchaseorder? PurchaseOrder { get; set; }
 
         [Required, MaxLength(250)]
         public string Description { get; set; } = string.Empty;
