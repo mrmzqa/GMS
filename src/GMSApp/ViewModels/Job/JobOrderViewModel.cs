@@ -379,17 +379,21 @@ namespace GMSApp.ViewModels.Job
         [RelayCommand(CanExecute = nameof(CanModify))]
         public async Task PrintAsync()
         {
-            if (SelectedJoborder == null) return;
+            if (SelectedJoborder == null)
+                return;
 
             try
             {
-                // Build a fresh model to pass to PDF generator (ensure Items current)
-                var model = BuildJoborderFromUi(SelectedJoborder);
+                // Build a fresh Joborder model containing the current Items (UI edits)
+                var model = BuildJoborderFromUi(SelectedJoborder); // your existing helper that returns Joborder with Items
 
+                // Build file path
                 var temp = Path.Combine(Path.GetTempPath(), $"joborder_{model.Id}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+
+                // Use the injected PDF generator (ensure DI registers JoborderPdfGenerator for Joborder)
                 await _pdfGenerator.GeneratePdfAsync(new[] { model }, temp);
 
-                // Open with default system viewer
+                // Open the generated PDF using the default system app
                 var psi = new ProcessStartInfo(temp) { UseShellExecute = true };
                 Process.Start(psi);
             }

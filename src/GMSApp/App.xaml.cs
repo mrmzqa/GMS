@@ -36,7 +36,8 @@ public partial class App : Application
 
                 // Register PDF generator as transient (stateless)
                 services.AddTransient(typeof(IGenericPdfGenerator<>), typeof(GenericPdfGenerator<>));
-
+                // If you still want the generic registration for other types keep it, but ensure Joborder uses the concrete generator:
+                services.AddTransient<IGenericPdfGenerator<GMSApp.Models.job.Joborder>, GMSApp.Repositories.Pdf.JoborderPdfGenerator>();
                 // ViewModels - transient so UI gets fresh instances (avoids stale state)
                 services.AddTransient<FileViewModel>();
                 services.AddTransient<CoreMainViewModel>();
