@@ -1,5 +1,6 @@
 ﻿
 using GMSApp.ViewModels;
+using GMSApp.Views;
 using GMSApp.Views.Job;
 using System.Windows;
 using System.Windows.Controls;
