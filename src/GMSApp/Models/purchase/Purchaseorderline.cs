@@ -1,44 +1,94 @@
-﻿using GMSApp.Views.Job;
-using System;
-using System.Collections.Generic;
+// File: Models/PurchaseOrderLine.cs
+using CommunityToolkit.Mvvm.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace GMSApp.Models.purchase
+namespace GMSApp.Models
 {
-    public class Purchaseorderline
+    // Line model implements INotifyPropertyChanged via ObservableObject so DataGrid edits update totals automatically.
+    public class PurchaseOrderLine : ObservableObject
     {
         public int Id { get; set; }
 
         public int PurchaseOrderId { get; set; }
-        public Purchaseorder? PurchaseOrder { get; set; }
 
         [Required, MaxLength(250)]
-        public string Description { get; set; } = string.Empty;
+        private string _description = string.Empty;
+        public string Description
+        {
+            get => _description;
+            set
+            {
+                if (SetProperty(ref _description, value))
+                {
+                    OnPropertyChanged(nameof(LineTotal));
+                }
+            }
+        }
 
         [MaxLength(100)]
-        public string? PartNumber { get; set; }
+        private string? _partNumber;
+        public string? PartNumber
+        {
+            get => _partNumber;
+            set => SetProperty(ref _partNumber, value);
+        }
 
+        private decimal _unitPrice;
         [Required]
-        public decimal UnitPrice { get; set; }
+        public decimal UnitPrice
+        {
+            get => _unitPrice;
+            set
+            {
+                if (SetProperty(ref _unitPrice, value))
+                    OnPropertyChanged(nameof(LineTotal));
+            }
+        }
 
+        private decimal _quantity;
         [Required]
-        public decimal Quantity { get; set; }
+        public decimal Quantity
+        {
+            get => _quantity;
+            set
+            {
+                if (SetProperty(ref _quantity, value))
+                    OnPropertyChanged(nameof(LineTotal));
+            }
+        }
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal LineTotal { get; set; }
+        private decimal _lineTotal;
+        public decimal LineTotal
+        {
+            get => Math.Round(UnitPrice * Quantity, 2);
+            // keep setter if EF needs to materialize; but primary calculation is derived
+            set => SetProperty(ref _lineTotal, value);
+        }
 
         [MaxLength(50)]
-        public string? Unit { get; set; } = "pc";
+        private string? _unit = "pc";
+        public string? Unit
+        {
+            get => _unit;
+            set => SetProperty(ref _unit, value);
+        }
 
         [MaxLength(250)]
-        public string? Notes { get; set; }
+        private string? _notes;
+        public string? Notes
+        {
+            get => _notes;
+            set => SetProperty(ref _notes, value);
+        }
 
-        // Delivery tracking
-        public decimal QuantityDelivered { get; set; }
+        private decimal _quantityDelivered;
+        public decimal QuantityDelivered
+        {
+            get => _quantityDelivered;
+            set => SetProperty(ref _quantityDelivered, value);
+        }
 
         [NotMapped]
         public decimal QuantityPending => Quantity - QuantityDelivered;
