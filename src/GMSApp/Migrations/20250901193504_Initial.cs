@@ -157,7 +157,7 @@ namespace GMSApp.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PONumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    VendorId = table.Column<int>(type: "int", nullable: false),
+                    VendorId = table.Column<int>(type: "int", nullable: true),
                     Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     SubTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Discount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
@@ -182,8 +182,7 @@ namespace GMSApp.Migrations
                         name: "FK_PurchaseOrders_Vendors_VendorId",
                         column: x => x.VendorId,
                         principalTable: "Vendors",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(

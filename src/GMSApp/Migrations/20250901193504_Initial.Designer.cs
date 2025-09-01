@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GMSApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250901190836_Initial")]
+    [Migration("20250901193504_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -503,7 +503,7 @@ namespace GMSApp.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("VendorId")
+                    b.Property<int?>("VendorId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -623,9 +623,7 @@ namespace GMSApp.Migrations
                 {
                     b.HasOne("GMSApp.Models.Vendor", "Vendor")
                         .WithMany("Purchaseorders")
-                        .HasForeignKey("VendorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("VendorId");
 
                     b.Navigation("Vendor");
                 });

@@ -17,7 +17,7 @@ namespace GMSApp.Models.purchase
 
         public DateTime Date { get; set; } = DateTime.UtcNow;
 
-        public int VendorId { get; set; }
+        public int? VendorId { get; set; }
         public Vendor? Vendor { get; set; }
 
         [MaxLength(500)]

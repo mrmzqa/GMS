@@ -500,7 +500,7 @@ namespace GMSApp.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("VendorId")
+                    b.Property<int?>("VendorId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -620,9 +620,7 @@ namespace GMSApp.Migrations
                 {
                     b.HasOne("GMSApp.Models.Vendor", "Vendor")
                         .WithMany("Purchaseorders")
-                        .HasForeignKey("VendorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("VendorId");
 
                     b.Navigation("Vendor");
                 });

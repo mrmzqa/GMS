@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
+using GMSApp.Models.Enums;
 using GMSApp.Models.purchase;
 using GMSApp.Repositories;
 using Microsoft.Win32;
@@ -156,20 +157,62 @@ namespace GMSApp.ViewModels.Job
         {
             try
             {
-                var po = new PurchaseOrder
+                // Build a plain POCO to save (avoid saving UI ObservableCollection / tracked objects directly)
+                var poToSave = new PurchaseOrder
                 {
+                    // Do not set Id (leave default 0) so EF will insert
                     PONumber = $"PO-{DateTime.UtcNow:yyyyMMddHHmmss}",
-                    Date = DateTime.UtcNow
+                    Date = SelectedPurchaseOrder?.Date ?? DateTime.UtcNow,
+                    VendorId = (SelectedPurchaseOrder?.VendorId > 0) ? SelectedPurchaseOrder.VendorId : 0, // or null if you change model
+                    Notes = SelectedPurchaseOrder?.Notes,
+                    Discount = SelectedPurchaseOrder?.Discount ?? 0m,
+                    Tax = SelectedPurchaseOrder?.Tax ?? 0m,
+                    Currency = SelectedPurchaseOrder?.Currency ?? Currency.QAR,
+                    Status = SelectedPurchaseOrder?.Status ?? PurchaseOrderStatus.Draft,
+                    PaymentMethod = SelectedPurchaseOrder?.PaymentMethod ?? PaymentMethod.BankTransfer,
+                    BankName = SelectedPurchaseOrder?.BankName,
+                    IBAN = SelectedPurchaseOrder?.IBAN,
+                    ExpectedDeliveryDate = SelectedPurchaseOrder?.ExpectedDeliveryDate,
+                    DeliveryLocation = SelectedPurchaseOrder?.DeliveryLocation,
+                    CreatedAt = DateTime.UtcNow
                 };
-                // initialize default line collection
-                po.Lines = new ObservableCollection<PurchaseOrderLine>();
-                await _repo.AddAsync(po);
+
+                // Map lines into a plain List<PurchaseOrderLine>
+                if (SelectedPurchaseOrder?.Lines != null)
+                {
+                    foreach (var uiLine in SelectedPurchaseOrder.Lines)
+                    {
+                        // Create new POCO line. Do NOT copy Id if it's non-zero (unless you intentionally want updates)
+                        var line = new PurchaseOrderLine
+                        {
+                            Description = uiLine.Description ?? string.Empty,
+                            PartNumber = uiLine.PartNumber,
+                            UnitPrice = uiLine.UnitPrice,
+                            Quantity = uiLine.Quantity,
+                            Unit = uiLine.Unit,
+                            Notes = uiLine.Notes,
+                            QuantityDelivered = uiLine.QuantityDelivered
+                        };
+
+                        // EF will set PurchaseOrderId when saving if you attach to PO.Add
+                        poToSave.Lines.Add(line);
+                    }
+                }
+
+                // Recalculate totals before saving
+                poToSave.RecalculateTotals();
+
+                // Save via repository
+                await _repo.AddAsync(poToSave);
+
+                // Reload list and select created PO
                 await LoadAsync();
-                SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(p => p.PONumber == po.PONumber) ?? SelectedPurchaseOrder;
+                SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(p => p.PONumber == poToSave.PONumber);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to add purchase order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Show full exception (important for troubleshooting)
+                MessageBox.Show($"Failed to add purchase order:\n{ex}\n\nInnerException:\n{ex.InnerException}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -180,20 +223,58 @@ namespace GMSApp.ViewModels.Job
 
             try
             {
-                // Recalculate before saving
-                RecalculateTotals();
+                // Build a detached plain entity for update
+                var poToSave = new PurchaseOrder
+                {
+                    Id = SelectedPurchaseOrder.Id,
+                    PONumber = SelectedPurchaseOrder.PONumber,
+                    Date = SelectedPurchaseOrder.Date,
+                    VendorId = SelectedPurchaseOrder.VendorId,
+                    Notes = SelectedPurchaseOrder.Notes,
+                    Discount = SelectedPurchaseOrder.Discount,
+                    Tax = SelectedPurchaseOrder.Tax,
+                    Currency = SelectedPurchaseOrder.Currency,
+                    Status = SelectedPurchaseOrder.Status,
+                    PaymentMethod = SelectedPurchaseOrder.PaymentMethod,
+                    BankName = SelectedPurchaseOrder.BankName,
+                    IBAN = SelectedPurchaseOrder.IBAN,
+                    ExpectedDeliveryDate = SelectedPurchaseOrder.ExpectedDeliveryDate,
+                    DeliveryLocation = SelectedPurchaseOrder.DeliveryLocation,
+                    CreatedAt = SelectedPurchaseOrder.CreatedAt,
+                    CreatedBy = SelectedPurchaseOrder.CreatedBy,
+                    UpdatedAt = DateTime.UtcNow,
+                    UpdatedBy = "CurrentUser" // replace with actual user
+                };
 
-                if (SelectedPurchaseOrder.Id == 0)
-                    await _repo.AddAsync(SelectedPurchaseOrder);
-                else
-                    await _repo.UpdateAsync(SelectedPurchaseOrder);
+                // Map lines; include existing Ids if you want EF to update them
+                foreach (var uiLine in SelectedPurchaseOrder.Lines)
+                {
+                    var line = new PurchaseOrderLine
+                    {
+                        Id = uiLine.Id, // if Id==0 EF will insert; if >0 EF will update
+                        Description = uiLine.Description ?? string.Empty,
+                        PartNumber = uiLine.PartNumber,
+                        UnitPrice = uiLine.UnitPrice,
+                        Quantity = uiLine.Quantity,
+                        Unit = uiLine.Unit,
+                        Notes = uiLine.Notes,
+                        QuantityDelivered = uiLine.QuantityDelivered
+                    };
+                    poToSave.Lines.Add(line);
+                }
 
+                poToSave.RecalculateTotals();
+
+                // Call update
+                await _repo.UpdateAsync(poToSave);
+
+                // Reload and re-select
                 await LoadAsync();
-                SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(p => p.PONumber == SelectedPurchaseOrder.PONumber) ?? SelectedPurchaseOrder;
+                SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(p => p.Id == poToSave.Id);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to save purchase order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Failed to save purchase order:\n{ex}\n\nInnerException:\n{ex.InnerException}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
