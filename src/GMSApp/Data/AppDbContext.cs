@@ -1,6 +1,7 @@
-using GMSApp.Models;
+﻿using GMSApp.Models;
 using GMSApp.Models.job;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 
 namespace GMSApp.Data
@@ -14,30 +15,77 @@ namespace GMSApp.Data
 
         public DbSet<FileItem> Files { get; set; }
         public DbSet<CoreMain> CoreMains { get; set; }
-        public DbSet<Main> Mains { get; set; }
+  
      
-        public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
+        
         public DbSet<ItemRow> ItemRows {  get; set; }
 
         public DbSet<Joborder> Joborders { get; set; }
-        public DbSet<Job> Jobs { get; set; }
-
-        public DbSet<Jobcard> Jobcards { get; set; }
-        public DbSet<Payment> Payments { get; set; }
+       
 
         public DbSet<Status> Statuses { get; set; }
 
     
 
         public DbSet<Vendor> Vendors { get; set; }
+      
+        public DbSet<Address> Addresses { get; set; }
+        public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
+        public DbSet<PurchaseOrderLine> PurchaseOrderLines { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
+        public DbSet<InvoiceLine> InvoiceLines { get; set; }
+        public DbSet<PaymentReceipt> PaymentReceipts { get; set; }
 
-        public DbSet<Inventory> Inventories { get; set; }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
 
-        public DbSet<Account> Accounts { get; set; }
+            // PurchaseOrder ↔ Lines
+            modelBuilder.Entity<PurchaseOrder>()
+                .HasMany(p => p.Lines)
+                .WithOne(l => l.PurchaseOrder)
+                .HasForeignKey(l => l.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Vendor ↔ PurchaseOrders
+            modelBuilder.Entity<Vendor>()
+                .HasMany(v => v.PurchaseOrders)
+                .WithOne(p => p.Vendor)
+                .HasForeignKey(p => p.VendorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Invoice ↔ Lines
+            modelBuilder.Entity<Invoice>()
+                .HasMany(i => i.Lines)
+                .WithOne(l => l.Invoice)
+                .HasForeignKey(l => l.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Vendor ↔ Invoices
+            modelBuilder.Entity<Vendor>()
+                .HasMany(v => v.Invoices)
+                .WithOne(i => i.Vendor)
+                .HasForeignKey(i => i.VendorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Vendor ↔ PaymentReceipts
+            modelBuilder.Entity<Vendor>()
+                .HasMany(v => v.PaymentReceipts)
+                .WithOne(r => r.Vendor)
+                .HasForeignKey(r => r.VendorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Invoice ↔ PaymentReceipts
+            modelBuilder.Entity<Invoice>()
+                .HasMany(i => i.PaymentReceipts)
+                .WithOne(r => r.Invoice)
+                .HasForeignKey(r => r.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-         
 
+           
         }
 
 
