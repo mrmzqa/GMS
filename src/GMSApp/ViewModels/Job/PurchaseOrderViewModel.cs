@@ -1,4 +1,3 @@
-// File: ViewModels/PurchaseOrderViewModel.cs
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
@@ -151,26 +150,34 @@ namespace GMSApp.ViewModels.Job
             }
         }
 
+        // Modified: Create a local "raw" purchase order but do NOT persist it immediately.
+        // The object stays in the PurchaseOrders collection so the UI can bind to it and user can edit.
+        // Only when SaveAsync is invoked will the repository be used to persist the PO.
         [RelayCommand]
-        public async Task AddAsync()
+        public Task AddAsync()
         {
             try
             {
                 var po = new PurchaseOrder
                 {
+                    // keep Id = 0 to indicate not yet persisted
                     PONumber = $"PO-{DateTime.UtcNow:yyyyMMddHHmmss}",
-                    Date = DateTime.UtcNow
+                    Date = DateTime.UtcNow,
+                    Lines = new ObservableCollection<PurchaseOrderLine>()
                 };
-                // initialize default line collection
-                po.Lines = new ObservableCollection<PurchaseOrderLine>();
-                await _repo.AddAsync(po);
-                await LoadAsync();
-                SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(p => p.PONumber == po.PONumber) ?? SelectedPurchaseOrder;
+
+                // Add to the observable collection so the UI can edit immediately.
+                PurchaseOrders.Add(po);
+                SelectedPurchaseOrder = po;
+
+                // No repository call here. SaveAsync will handle Add vs Update based on Id.
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to add purchase order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Failed to create new purchase order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+
+            return Task.CompletedTask;
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
@@ -184,11 +191,19 @@ namespace GMSApp.ViewModels.Job
                 RecalculateTotals();
 
                 if (SelectedPurchaseOrder.Id == 0)
+                {
+                    // New PO - persist
                     await _repo.AddAsync(SelectedPurchaseOrder);
+                }
                 else
+                {
                     await _repo.UpdateAsync(SelectedPurchaseOrder);
+                }
 
+                // Reload list from repo to get canonical state (IDs, any defaults set by backend, etc.)
                 await LoadAsync();
+
+                // Restore selection to the saved PO (match by PONumber)
                 SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(p => p.PONumber == SelectedPurchaseOrder.PONumber) ?? SelectedPurchaseOrder;
             }
             catch (Exception ex)
@@ -207,9 +222,18 @@ namespace GMSApp.ViewModels.Job
 
             try
             {
-                await _repo.DeleteAsync(SelectedPurchaseOrder.Id);
-                SelectedPurchaseOrder = null;
-                await LoadAsync();
+                if (SelectedPurchaseOrder.Id == 0)
+                {
+                    // It's a local (unsaved) PO - just remove it from the collection
+                    PurchaseOrders.Remove(SelectedPurchaseOrder);
+                    SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault();
+                }
+                else
+                {
+                    await _repo.DeleteAsync(SelectedPurchaseOrder.Id);
+                    SelectedPurchaseOrder = null;
+                    await LoadAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -291,7 +315,8 @@ namespace GMSApp.ViewModels.Job
                     CreatedAt = SelectedPurchaseOrder.CreatedAt,
                     CreatedBy = SelectedPurchaseOrder.CreatedBy,
                     UpdatedAt = SelectedPurchaseOrder.UpdatedAt,
-                    UpdatedBy = SelectedPurchaseOrder.UpdatedBy
+                    UpdatedBy = SelectedPurchaseOrder.UpdatedBy,
+                    Lines = new ObservableCollection<PurchaseOrderLine>()
                 };
 
                 foreach (var l in SelectedPurchaseOrder.Lines)
