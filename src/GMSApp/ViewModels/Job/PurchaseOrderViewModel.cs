@@ -181,36 +181,83 @@ namespace GMSApp.ViewModels.Job
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
-        public async Task SaveAsync()
+public async Task SaveAsync()
+{
+    if (SelectedPurchaseOrder == null) return;
+
+    try
+    {
+        // Recalculate before saving
+        RecalculateTotals();
+
+        // Create a detached copy to avoid EF/tracking issues that can happen when passing
+        // UI-bound objects (ObservableCollection / proxies) directly to the repository.
+        var detached = new PurchaseOrder
         {
-            if (SelectedPurchaseOrder == null) return;
+            Id = SelectedPurchaseOrder.Id,
+            PONumber = SelectedPurchaseOrder.PONumber,
+            Date = SelectedPurchaseOrder.Date,
+            Vendor = SelectedPurchaseOrder.Vendor,
+            VendorId = SelectedPurchaseOrder.VendorId,
+            Notes = SelectedPurchaseOrder.Notes,
+            Discount = SelectedPurchaseOrder.Discount,
+            Tax = SelectedPurchaseOrder.Tax,
+            SubTotal = SelectedPurchaseOrder.SubTotal,
+            Total = SelectedPurchaseOrder.Total,
+            Currency = SelectedPurchaseOrder.Currency,
+            Status = SelectedPurchaseOrder.Status,
+            PaymentMethod = SelectedPurchaseOrder.PaymentMethod,
+            BankName = SelectedPurchaseOrder.BankName,
+            IBAN = SelectedPurchaseOrder.IBAN,
+            ExpectedDeliveryDate = SelectedPurchaseOrder.ExpectedDeliveryDate,
+            DeliveryLocation = SelectedPurchaseOrder.DeliveryLocation,
+            CreatedAt = SelectedPurchaseOrder.CreatedAt,
+            CreatedBy = SelectedPurchaseOrder.CreatedBy,
+            UpdatedAt = SelectedPurchaseOrder.UpdatedAt,
+            UpdatedBy = SelectedPurchaseOrder.UpdatedBy,
+            // Use a plain ObservableCollection or List for the repository - it's a clean copy
+            Lines = new ObservableCollection<PurchaseOrderLine>()
+        };
 
-            try
+        foreach (var l in SelectedPurchaseOrder.Lines)
+        {
+            detached.Lines.Add(new PurchaseOrderLine
             {
-                // Recalculate before saving
-                RecalculateTotals();
-
-                if (SelectedPurchaseOrder.Id == 0)
-                {
-                    // New PO - persist
-                    await _repo.AddAsync(SelectedPurchaseOrder);
-                }
-                else
-                {
-                    await _repo.UpdateAsync(SelectedPurchaseOrder);
-                }
-
-                // Reload list from repo to get canonical state (IDs, any defaults set by backend, etc.)
-                await LoadAsync();
-
-                // Restore selection to the saved PO (match by PONumber)
-                SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(p => p.PONumber == SelectedPurchaseOrder.PONumber) ?? SelectedPurchaseOrder;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to save purchase order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+                Description = l.Description,
+                PartNumber = l.PartNumber,
+                Quantity = l.Quantity,
+                UnitPrice = l.UnitPrice,
+                Unit = l.Unit,
+                Notes = l.Notes,
+                QuantityDelivered = l.QuantityDelivered,
+                LineTotal = l.LineTotal
+            });
         }
+
+        if (detached.Id == 0)
+        {
+            // New PO -> add
+            await _repo.AddAsync(detached);
+        }
+        else
+        {
+            // Existing -> update (detached copy ensures no EF tracking collision)
+            await _repo.UpdateAsync(detached);
+        }
+
+        // Reload canonical data from repository (this will provide any DB-set defaults/IDs)
+        await LoadAsync();
+
+        // Restore selection using unique identifier (PONumber)
+        SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(p => p.PONumber == detached.PONumber) ?? SelectedPurchaseOrder;
+    }
+    catch (Exception ex)
+    {
+        // Show more detailed message so we can diagnose underlying issues.
+        var inner = ex.InnerException != null ? $"\nInner: {ex.InnerException.Message}" : string.Empty;
+        MessageBox.Show($"Failed to save purchase order: {ex.Message}{inner}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+    }
+}
 
         [RelayCommand(CanExecute = nameof(CanModify))]
         public async Task DeleteAsync()
