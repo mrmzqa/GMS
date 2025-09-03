@@ -243,9 +243,9 @@ namespace GMSApp.Repositories.Pdf
 
                         DrawDetail(TemplateData.PoNumberEn, TemplateData.PoNumberAr, po.PONumber);
                         DrawDetail(TemplateData.DateEn, TemplateData.DateAr, po.Date.ToString("yyyy-MM-dd"));
-                        DrawDetail(TemplateData.VendorEn, TemplateData.VendorAr, po.Vendor);
+                        DrawDetail(TemplateData.VendorEn, TemplateData.VendorAr, po.Vendor.Name);
                         DrawDetail(TemplateData.VendorIdEn, TemplateData.VendorIdAr, po.VendorId?.ToString());
-                        DrawDetail(TemplateData.PaymentEn, TemplateData.PaymentAr, po.PaymentMethod);
+                        DrawDetail(TemplateData.PaymentEn, TemplateData.PaymentAr, po.BankName);
                         DrawDetail(TemplateData.BankEn, TemplateData.BankAr, po.BankName);
                         DrawDetail(TemplateData.IBANEn, TemplateData.IBANAr, po.IBAN);
                         DrawDetail(TemplateData.ExpectedDeliveryEn, TemplateData.ExpectedDeliveryAr, po.ExpectedDeliveryDate?.ToString("yyyy-MM-dd"));
