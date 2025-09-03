@@ -14,6 +14,7 @@ namespace GMSApp.Data
             : base(options)
         {
         }
+        public DbSet<User> Users { get; set; }
         public DbSet<FileItem> Files { get; set; }
         public DbSet<CoreMain> CoreMains { get; set; }
         public DbSet<ItemRow> ItemRows {  get; set; }

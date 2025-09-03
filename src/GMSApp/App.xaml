@@ -5,7 +5,11 @@
              
              >
    <Application.Resources>
+   
       <conv:NullToBoolConverter x:Key="NullToBoolConverter"/>
       <conv:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter"/>
-        </Application.Resources>
+        <conv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <conv:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+       
+    </Application.Resources>
 </Application>

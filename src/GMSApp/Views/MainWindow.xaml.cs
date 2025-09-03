@@ -3,11 +3,15 @@ using GMSApp.ViewModels;
 using GMSApp.Views;
 using GMSApp.Views.Job;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace GMSApp.Views
 {
-    public partial class MainWindow : Window
-    {
+    
+
+        public partial class MainWindow : Window
+        {
+            private readonly MainViewModel _viewModel;
         private readonly FilesPage _filesPage;
         private readonly CoreMain _coreMain;
         private readonly PurchaseOrder _purchaseOrder;
@@ -15,12 +19,9 @@ namespace GMSApp.Views
         private readonly HContentView _hContentView;
         private readonly AcContentView _acContentView;
         private readonly VendorView _vendorView;
-   
-
-
-
-        public MainWindow(FilesPage filesPage, CoreMain coreMain,PurchaseOrder purchaseOrderpage, JobContentView jobContentView, VendorView vendorView, HContentView hContentView , AcContentView acContentView )
+        public MainWindow(FilesPage filesPage, CoreMain coreMain, PurchaseOrder purchaseOrderpage, JobContentView jobContentView, VendorView vendorView, HContentView hContentView, AcContentView acContentView)
         {
+            
             InitializeComponent();
             _filesPage = filesPage;
             _coreMain = coreMain;
@@ -29,10 +30,43 @@ namespace GMSApp.Views
             _vendorView = vendorView;
             _hContentView = hContentView;
             _acContentView = acContentView;
-           
+            _viewModel = new MainViewModel();
+                this.DataContext = _viewModel;
+            }
 
+            // Sync PasswordBox to ViewModel
+            private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+            {
+                if (sender is PasswordBox pb)
+                    _viewModel.Password = pb.Password;
+            }
 
+            // File > Logout
+            private void FileLogout_Click(object sender, RoutedEventArgs e)
+            {
+                _viewModel.LogoutCommand.Execute(null);
+            }
+
+            // File > Exit
+            private void FileExit_Click(object sender, RoutedEventArgs e)
+            {
+                Application.Current.Shutdown();
+            }
+
+        private void HelpGuide_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("User guide coming soon...");
         }
+
+        private void About_Click(object sender, RoutedEventArgs e)
+        {
+            string aboutText = "Garage Management System v1.0\n© 2025 Created By Mohammed Rameez P P\nAll rights reserved.";
+            MessageBox.Show(aboutText, "About", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        
+
+           
         private void AContent_Click(object sender, RoutedEventArgs e)
         {
             MainContent.Content = _acContentView;
@@ -51,7 +85,7 @@ namespace GMSApp.Views
         {
             MainContent.Content = _coreMain;
         }
-       
+
 
         private void PurchaseButton_Click(object sender, RoutedEventArgs e)
         {
@@ -65,29 +99,11 @@ namespace GMSApp.Views
         {
             MainContent.Content = _vendorView;
         }
-       
-        private void FileOpen_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("Open file clicked");
-        }
-
-        private void FileExit_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        private void HelpGuide_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("User guide coming soon...");
-        }
-
-        private void About_Click(object sender, RoutedEventArgs e)
-        {
-            string aboutText = "Job Management System v1.0\n© 2025 Created By Mohammed Rameez P P\nAll rights reserved.";
-            MessageBox.Show(aboutText, "About", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-
     }
-}
+    }
+
+
+
+
+
 
