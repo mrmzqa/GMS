@@ -79,10 +79,21 @@
                             <TextBlock Text="Date:" Width="90" VerticalAlignment="Center"/>
                             <DatePicker SelectedDate="{Binding SelectedPurchaseOrder.Date, Mode=TwoWay}" />
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <TextBlock Text="Vendor:" Width="90" VerticalAlignment="Center"/>
-                            <TextBox Text="{Binding SelectedPurchaseOrder.Vendor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                        </StackPanel>
+                        <!-- Vendor selection block (replace existing Vendor TextBox) -->
+<StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+    <TextBlock Text="Vendor:" Width="90" VerticalAlignment="Center"/>
+    <ComboBox x:Name="VendorComboBox"
+              Width="220"
+              ItemsSource="{Binding Vendors}"
+              SelectedItem="{Binding SelectedVendor, Mode=TwoWay}"
+              DisplayMemberPath="Name"               <!-- adjust if your vendor has different display property -->
+              IsEditable="True"
+              IsTextSearchEnabled="True"
+              StaysOpenOnEdit="False"
+              DropDownOpened="VendorComboBox_DropDownOpened"/>
+    <!-- optional: show vendor id -->
+    <TextBlock Text="{Binding SelectedVendor.Id}" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="Gray"/>
+</StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <TextBlock Text="Currency:" Width="90" VerticalAlignment="Center"/>
                             <TextBox Text="{Binding SelectedPurchaseOrder.Currency, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="120"/>
