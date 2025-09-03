@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 namespace GMSApp.Models;
 public class Vendor
 {
+    [Key]
     public int Id { get; set; }
 
     [Required, MaxLength(200)]
@@ -18,9 +19,11 @@ public class Vendor
     public string? ContactPerson { get; set; }
 
     [MaxLength(50)]
+    [DataType(DataType.PhoneNumber)]
     public string? Phone { get; set; }
 
     [MaxLength(100)]
+    [DataType(DataType.EmailAddress)]
     public string? Email { get; set; }
 
     [MaxLength(100)]

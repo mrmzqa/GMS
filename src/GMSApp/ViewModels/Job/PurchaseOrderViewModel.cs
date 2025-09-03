@@ -209,7 +209,7 @@ namespace GMSApp.ViewModels.Job
             }
             else
             {
-                SelectedPurchaseOrder.Vendor.Name = value.Name; // adjust property if vendor has different name property
+                SelectedPurchaseOrder.Vendor = value; // adjust property if vendor has different name property
                 SelectedPurchaseOrder.VendorId = value.Id;
             }
 

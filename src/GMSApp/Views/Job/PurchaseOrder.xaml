@@ -44,7 +44,7 @@
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="PO #" Binding="{Binding PONumber}" Width="*"/>
                         <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat=\{0:yyyy-MM-dd\}}" Width="120"/>
-                        <DataGridTextColumn Header="Vendor" Binding="{Binding Vendor}" Width="*"/>
+                        <DataGridTextColumn Header="Vendor" Binding="{Binding Vendor.Name}" Width="*"/>
                         <DataGridTextColumn Header="SubTotal" Binding="{Binding SubTotal, StringFormat=N2}" Width="110"/>
                         <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=N2}" Width="110"/>
                     </DataGrid.Columns>

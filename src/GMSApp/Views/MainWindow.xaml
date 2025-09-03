@@ -35,7 +35,8 @@
                 <TextBlock Text="JMS" Foreground="White" FontSize="22" Margin="10" HorizontalAlignment="Center"/>
                 <Button Content="Files" Click="FilesButton_Click" Margin="10"/>
                 <Button Content="Job" Click="MainContent_Click" Margin="10"/>
-                <Button Content="v" Click="Vendor_click" Margin="10"/>
+                <Button Content="HRMS" Click="HR_Click" Margin="10"/>
+                <Button Content="Accounts" Click="Vendor_click" Margin="10"/>
               
             </StackPanel>
 

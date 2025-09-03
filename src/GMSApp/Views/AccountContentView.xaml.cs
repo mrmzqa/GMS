@@ -13,21 +13,18 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace GMSApp.Views.Vendors
+namespace GMSApp.Views
 {
     /// <summary>
-    /// Interaction logic for VendorsPage.xaml
+    /// Interaction logic for AccountContentView.xaml
     /// </summary>
-    public partial class VendorsPage : UserControl
+    public partial class AccountContentView : UserControl
     {
-        public VendorsPage()
+        public AccountContentView()
         {
             InitializeComponent();
         }
 
-        private void InitializeComponent()
-        {
-            throw new NotImplementedException();
-        }
+     
     }
 }
