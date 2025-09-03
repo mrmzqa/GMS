@@ -10,6 +10,7 @@ namespace GMSApp.Models.invoice
 {
     public class Invoiceline
     {
+        [Key]
         public int Id { get; set; }
 
         public int InvoiceId { get; set; }

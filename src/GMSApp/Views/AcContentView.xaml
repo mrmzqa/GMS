@@ -19,27 +19,27 @@
                     <Button Margin="5" Content="Receipts"/>
                 </TreeView>
             </TabItem>
-            <TabItem Header="Leave">
-                <ContentControl x:Name="LevContent"
+            <TabItem Header="General Ledger">
+                <ContentControl x:Name="GLContent"
 Height="Auto" Width="Auto" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
             </TabItem>
-            <TabItem Header="Asset">
-                <ContentControl x:Name="AssetContent"
+            <TabItem Header="Account Payable">
+                <ContentControl x:Name="APContent"
 Height="Auto" Width="Auto" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
             </TabItem>
-            <TabItem Header="Employee">
-                <ContentControl x:Name="EmpContent"
+            <TabItem Header="Account Receivable">
+                <ContentControl x:Name="ARContent"
             Height="Auto" Width="Auto" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
             </TabItem>
-            <TabItem Header="Attendance">
+            <TabItem Header="Account Reconcile">
                 <ContentControl x:Name="AttContent"
                        Height="Auto" Width="Auto" FontSize="9"/>
             </TabItem>
-            <TabItem Header="Salary">
+            <TabItem Header="Reports">
                 <ContentControl x:Name="SalContent"
                             Height="Auto" Width="Auto" FontSize="9"/>
             </TabItem>
-            <TabItem Header="Work">
+            <TabItem Header="Receipts">
                 <ContentControl x:Name="WorkContent"
                 Height="Auto" Width="Auto" FontSize="9"/>
             </TabItem>
