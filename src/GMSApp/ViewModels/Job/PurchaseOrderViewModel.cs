@@ -1,9 +1,11 @@
+// PurchaseOrderViewModel.cs (updated PrintAsync uses detached copy and PurchaseOrderPdfGenerator)
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
 using GMSApp.Models.purchase;
 using GMSApp.Repositories;
 using Microsoft.Win32;
+using PdfSharpCore.Pdf;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -21,7 +23,6 @@ namespace GMSApp.ViewModels.Job
         private readonly IGenericPdfGenerator<PurchaseOrder> _pdfGenerator;
 
         public ObservableCollection<PurchaseOrder> PurchaseOrders { get; } = new();
-        // We won't use a separate line VM; DataGrid binds directly to SelectedPurchaseOrder.Lines
 
         public PurchaseOrderViewModel(IRepository<PurchaseOrder> repo,
                                       IFileRepository fileRepo,
@@ -39,7 +40,6 @@ namespace GMSApp.ViewModels.Job
 
         partial void OnSelectedPurchaseOrderChanged(PurchaseOrder? value)
         {
-            // unsubscribe previous
             UnsubscribeFromLineEvents(_previousLines);
             _previousLines = value?.Lines;
             SubscribeToLineEvents(value?.Lines);
@@ -71,7 +71,6 @@ namespace GMSApp.ViewModels.Job
 
         private void Lines_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            // Attach/detach property changed handlers
             if (e.NewItems != null)
             {
                 foreach (var ni in e.NewItems.OfType<INotifyPropertyChanged>())
@@ -89,7 +88,6 @@ namespace GMSApp.ViewModels.Job
 
         private void Line_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            // If UnitPrice or Quantity changed -> recompute totals
             if (e.PropertyName == nameof(PurchaseOrderLine.UnitPrice) ||
                 e.PropertyName == nameof(PurchaseOrderLine.Quantity) ||
                 e.PropertyName == nameof(PurchaseOrderLine.Description))
@@ -105,7 +103,6 @@ namespace GMSApp.ViewModels.Job
             decimal subtotal = 0m;
             foreach (var line in SelectedPurchaseOrder.Lines)
             {
-                // ensure LineTotal property updated by raising property change (model computes on the fly)
                 line.LineTotal = Math.Round(line.UnitPrice * line.Quantity, 2);
                 subtotal += line.LineTotal;
             }
@@ -137,7 +134,6 @@ namespace GMSApp.ViewModels.Job
                 var list = await _repo.GetAllAsync();
                 foreach (var p in list)
                 {
-                    // ensure Lines not null
                     if (p.Lines == null) p.Lines = new ObservableCollection<PurchaseOrderLine>();
                     PurchaseOrders.Add(p);
                 }
@@ -150,9 +146,6 @@ namespace GMSApp.ViewModels.Job
             }
         }
 
-        // Modified: Create a local "raw" purchase order but do NOT persist it immediately.
-        // The object stays in the PurchaseOrders collection so the UI can bind to it and user can edit.
-        // Only when SaveAsync is invoked will the repository be used to persist the PO.
         [RelayCommand]
         public Task AddAsync()
         {
@@ -160,17 +153,13 @@ namespace GMSApp.ViewModels.Job
             {
                 var po = new PurchaseOrder
                 {
-                    // keep Id = 0 to indicate not yet persisted
                     PONumber = $"PO-{DateTime.UtcNow:yyyyMMddHHmmss}",
                     Date = DateTime.UtcNow,
                     Lines = new ObservableCollection<PurchaseOrderLine>()
                 };
 
-                // Add to the observable collection so the UI can edit immediately.
                 PurchaseOrders.Add(po);
                 SelectedPurchaseOrder = po;
-
-                // No repository call here. SaveAsync will handle Add vs Update based on Id.
             }
             catch (Exception ex)
             {
@@ -181,83 +170,70 @@ namespace GMSApp.ViewModels.Job
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
-public async Task SaveAsync()
-{
-    if (SelectedPurchaseOrder == null) return;
-
-    try
-    {
-        // Recalculate before saving
-        RecalculateTotals();
-
-        // Create a detached copy to avoid EF/tracking issues that can happen when passing
-        // UI-bound objects (ObservableCollection / proxies) directly to the repository.
-        var detached = new PurchaseOrder
+        public async Task SaveAsync()
         {
-            Id = SelectedPurchaseOrder.Id,
-            PONumber = SelectedPurchaseOrder.PONumber,
-            Date = SelectedPurchaseOrder.Date,
-            Vendor = SelectedPurchaseOrder.Vendor,
-            VendorId = SelectedPurchaseOrder.VendorId,
-            Notes = SelectedPurchaseOrder.Notes,
-            Discount = SelectedPurchaseOrder.Discount,
-            Tax = SelectedPurchaseOrder.Tax,
-            SubTotal = SelectedPurchaseOrder.SubTotal,
-            Total = SelectedPurchaseOrder.Total,
-            Currency = SelectedPurchaseOrder.Currency,
-            Status = SelectedPurchaseOrder.Status,
-            PaymentMethod = SelectedPurchaseOrder.PaymentMethod,
-            BankName = SelectedPurchaseOrder.BankName,
-            IBAN = SelectedPurchaseOrder.IBAN,
-            ExpectedDeliveryDate = SelectedPurchaseOrder.ExpectedDeliveryDate,
-            DeliveryLocation = SelectedPurchaseOrder.DeliveryLocation,
-            CreatedAt = SelectedPurchaseOrder.CreatedAt,
-            CreatedBy = SelectedPurchaseOrder.CreatedBy,
-            UpdatedAt = SelectedPurchaseOrder.UpdatedAt,
-            UpdatedBy = SelectedPurchaseOrder.UpdatedBy,
-            // Use a plain ObservableCollection or List for the repository - it's a clean copy
-            Lines = new ObservableCollection<PurchaseOrderLine>()
-        };
+            if (SelectedPurchaseOrder == null) return;
 
-        foreach (var l in SelectedPurchaseOrder.Lines)
-        {
-            detached.Lines.Add(new PurchaseOrderLine
+            try
             {
-                Description = l.Description,
-                PartNumber = l.PartNumber,
-                Quantity = l.Quantity,
-                UnitPrice = l.UnitPrice,
-                Unit = l.Unit,
-                Notes = l.Notes,
-                QuantityDelivered = l.QuantityDelivered,
-                LineTotal = l.LineTotal
-            });
-        }
+                RecalculateTotals();
 
-        if (detached.Id == 0)
-        {
-            // New PO -> add
-            await _repo.AddAsync(detached);
-        }
-        else
-        {
-            // Existing -> update (detached copy ensures no EF tracking collision)
-            await _repo.UpdateAsync(detached);
-        }
+                // create detached copy
+                var detached = new PurchaseOrder
+                {
+                    Id = SelectedPurchaseOrder.Id,
+                    PONumber = SelectedPurchaseOrder.PONumber,
+                    Date = SelectedPurchaseOrder.Date,
+                    Vendor = SelectedPurchaseOrder.Vendor,
+                    VendorId = SelectedPurchaseOrder.VendorId,
+                    Notes = SelectedPurchaseOrder.Notes,
+                    Discount = SelectedPurchaseOrder.Discount,
+                    Tax = SelectedPurchaseOrder.Tax,
+                    SubTotal = SelectedPurchaseOrder.SubTotal,
+                    Total = SelectedPurchaseOrder.Total,
+                    Currency = SelectedPurchaseOrder.Currency,
+                    Status = SelectedPurchaseOrder.Status,
+                    PaymentMethod = SelectedPurchaseOrder.PaymentMethod,
+                    BankName = SelectedPurchaseOrder.BankName,
+                    IBAN = SelectedPurchaseOrder.IBAN,
+                    ExpectedDeliveryDate = SelectedPurchaseOrder.ExpectedDeliveryDate,
+                    DeliveryLocation = SelectedPurchaseOrder.DeliveryLocation,
+                    CreatedAt = SelectedPurchaseOrder.CreatedAt,
+                    CreatedBy = SelectedPurchaseOrder.CreatedBy,
+                    UpdatedAt = SelectedPurchaseOrder.UpdatedAt,
+                    UpdatedBy = SelectedPurchaseOrder.UpdatedBy,
+                    Lines = new ObservableCollection<PurchaseOrderLine>()
+                };
 
-        // Reload canonical data from repository (this will provide any DB-set defaults/IDs)
-        await LoadAsync();
+                foreach (var l in SelectedPurchaseOrder.Lines)
+                {
+                    detached.Lines.Add(new PurchaseOrderLine
+                    {
+                        Description = l.Description,
+                        PartNumber = l.PartNumber,
+                        Quantity = l.Quantity,
+                        UnitPrice = l.UnitPrice,
+                        Unit = l.Unit,
+                        Notes = l.Notes,
+                        QuantityDelivered = l.QuantityDelivered,
+                        LineTotal = l.LineTotal
+                    });
+                }
 
-        // Restore selection using unique identifier (PONumber)
-        SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(p => p.PONumber == detached.PONumber) ?? SelectedPurchaseOrder;
-    }
-    catch (Exception ex)
-    {
-        // Show more detailed message so we can diagnose underlying issues.
-        var inner = ex.InnerException != null ? $"\nInner: {ex.InnerException.Message}" : string.Empty;
-        MessageBox.Show($"Failed to save purchase order: {ex.Message}{inner}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-    }
-}
+                if (detached.Id == 0)
+                    await _repo.AddAsync(detached);
+                else
+                    await _repo.UpdateAsync(detached);
+
+                await LoadAsync();
+                SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(p => p.PONumber == detached.PONumber) ?? SelectedPurchaseOrder;
+            }
+            catch (Exception ex)
+            {
+                var inner = ex.InnerException != null ? $"\nInner: {ex.InnerException.Message}" : string.Empty;
+                MessageBox.Show($"Failed to save purchase order: {ex.Message}{inner}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
         public async Task DeleteAsync()
@@ -271,7 +247,6 @@ public async Task SaveAsync()
             {
                 if (SelectedPurchaseOrder.Id == 0)
                 {
-                    // It's a local (unsaved) PO - just remove it from the collection
                     PurchaseOrders.Remove(SelectedPurchaseOrder);
                     SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault();
                 }
@@ -332,6 +307,7 @@ public async Task SaveAsync()
             }
         }
 
+        // Updated PrintAsync: use a detached copy and the injected PDF generator
         [RelayCommand(CanExecute = nameof(CanModify))]
         private async Task PrintAsync()
         {
@@ -380,7 +356,7 @@ public async Task SaveAsync()
                     });
                 }
 
-                model.RecalculateTotals(); // extension method from your model set (if present)
+                model.RecalculateTotals();
 
                 var dlg = new SaveFileDialog { Filter = "PDF files (*.pdf)|*.pdf", FileName = $"{model.PONumber}.pdf" };
                 if (dlg.ShowDialog() != true) return;
@@ -388,7 +364,6 @@ public async Task SaveAsync()
                 var path = dlg.FileName;
                 await _pdfGenerator.GeneratePdfAsync(new[] { model }, path);
 
-                // Try to open file
                 try
                 {
                     Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
@@ -407,7 +382,7 @@ public async Task SaveAsync()
         private bool CanModify() => SelectedPurchaseOrder != null;
     }
 
-    // Extension helper to recalc totals if needed (keeps parity with previous extension)
+    // Keep the same extension helper for recalc
     public static class PurchaseOrderExtensions
     {
         public static void RecalculateTotals(this PurchaseOrder po)
