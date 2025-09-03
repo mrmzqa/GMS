@@ -45,11 +45,13 @@ public partial class App : Application
                 services.AddTransient<CoreMainViewModel>();
                 services.AddTransient<JobContentViewModel>();
                 services.AddTransient<PurchaseOrderViewModel>();
+                services.AddTransient<VendorViewModel>();
                 services.AddTransient<JoborderViewModel>();
 
                 // Views - transient
                 services.AddTransient<MainWindow>();
                 services.AddTransient<JobContentView>();
+                services.AddTransient<VendorView>();
                 services.AddTransient<PurchaseOrder>();
                 services.AddTransient<JobOrder>();
 
