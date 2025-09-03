@@ -27,9 +27,10 @@ public partial class App : Application
             .ConfigureServices((context, services) =>
             {
                 // DbContext: keep your connection string here or use context.Configuration.GetConnectionString("DefaultConnection")
+                /* services.AddDbContext<AppDbContext>(options =>
+                     options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GMSAppDb;Trusted_Connection=True;"));*/
                 services.AddDbContext<AppDbContext>(options =>
-                    options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GMSAppDb;Trusted_Connection=True;"));
-
+                    options.UseSqlite("Data Source=db.db; Cache=Shared"));
                 // Repositories
                 services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
                 services.AddScoped<IFileRepository, FileRepository>();
