@@ -7,13 +7,13 @@ using GMSApp.ViewModels.Job;
 
 namespace GMSApp.Views.Job
 {
-    public partial class PurchaseOrderView : UserControl
+    public partial class PurchaseOrder : UserControl
     {
-        public PurchaseOrderView()
+        public PurchaseOrder()
         {
             InitializeComponent();
         }
-public PurchaseOrder(PurchaseOrderViewModel viewModel)
+        public PurchaseOrder(PurchaseOrderViewModel viewModel)
         {
             InitializeComponent();
             this.DataContext = viewModel;

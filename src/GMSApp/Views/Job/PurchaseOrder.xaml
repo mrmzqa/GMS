@@ -86,7 +86,7 @@
               Width="220"
               ItemsSource="{Binding Vendors}"
               SelectedItem="{Binding SelectedVendor, Mode=TwoWay}"
-              DisplayMemberPath="Name"               <!-- adjust if your vendor has different display property -->
+              DisplayMemberPath="Name"              
               IsEditable="True"
               IsTextSearchEnabled="True"
               StaysOpenOnEdit="False"

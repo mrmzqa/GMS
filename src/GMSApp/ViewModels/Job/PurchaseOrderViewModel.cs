@@ -52,7 +52,7 @@ namespace GMSApp.ViewModels.Job
             if (value != null)
             {
                 // try to set SelectedVendor from Vendors collection if present
-                var v = Vendors.FirstOrDefault(x => x.Id == value.VendorId || x.Name == value.Vendor);
+                var v = Vendors.FirstOrDefault(x => x.Id == value.VendorId || x.Name == value.Vendor.Name);
                 if (v != null)
                     SelectedVendor = v;
                 else
@@ -209,7 +209,7 @@ namespace GMSApp.ViewModels.Job
             }
             else
             {
-                SelectedPurchaseOrder.Vendor = value.Name; // adjust property if vendor has different name property
+                SelectedPurchaseOrder.Vendor.Name = value.Name; // adjust property if vendor has different name property
                 SelectedPurchaseOrder.VendorId = value.Id;
             }
 
