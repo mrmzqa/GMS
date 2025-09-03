@@ -1,21 +1,23 @@
-﻿<UserControl x:Class="GmsApp.Views.HrContentView"
+﻿<UserControl x:Class="GMSApp.Views.AcContentView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:GmsApp.Views" Height="Auto" Width="Auto"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:GMSApp.Views"
+             Height="450" Width="800"
+             mc:Ignorable="d" 
              >
-    <Grid Margin="1" Height="Auto" Width="Auto">
-
-        <TabControl SelectionChanged="TabControl_SelectionChanged">
+    <Grid Margin="1">
+                    <TabControl >
             <TabItem Header="Menu">
-                <TreeView RenderTransformOrigin="1,2.285" Margin="6,7,4,8" Height="250">
-                    <Button Margin="1" Content="Employee" /> 
-                    <Button  Margin="1" Content="Attendance"/> 
-                    <Button  Margin="1" Content="Asset" /> 
-                    <Button Margin="1" Content="Salary"/>
-                    <Button Margin="1" Content="Leave"/>
-                    <Button Margin="1" Content="Work"/>
+                <TreeView RenderTransformOrigin="1,2.285" Margin="0,0,2,0" Height="251">
+                    <Button Margin="5" Content="General Ledger" />
+                    <Button  Margin="5" Content="Account Payable"/>
+                    <Button  Margin="5" Content="Account Receivable" />
+                    <Button Margin="5" Content="Account Reconcile"/>
+                    <Button Margin="5" Content="Reports"/>
+                    <Button Margin="5" Content="Receipts"/>
                 </TreeView>
-                
             </TabItem>
             <TabItem Header="Leave">
                 <ContentControl x:Name="LevContent"
@@ -41,11 +43,9 @@ Height="Auto" Width="Auto" HorizontalAlignment="Center" VerticalAlignment="Cente
                 <ContentControl x:Name="WorkContent"
                 Height="Auto" Width="Auto" FontSize="9"/>
             </TabItem>
-          
+
 
 
         </TabControl>
-
-
     </Grid>
 </UserControl>

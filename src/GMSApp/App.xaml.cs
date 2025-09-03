@@ -51,6 +51,8 @@ public partial class App : Application
                 // Views - transient
                 services.AddTransient<MainWindow>();
                 services.AddTransient<JobContentView>();
+                services.AddTransient<HContentView>();
+                services.AddTransient<AcContentView>();
                 services.AddTransient<VendorView>();
                 services.AddTransient<PurchaseOrder>();
                 services.AddTransient<JobOrder>();

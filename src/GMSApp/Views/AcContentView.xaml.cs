@@ -16,15 +16,13 @@ using System.Windows.Shapes;
 namespace GMSApp.Views
 {
     /// <summary>
-    /// Interaction logic for AccountContentView.xaml
+    /// Interaction logic for AcContentView.xaml
     /// </summary>
-    public partial class AccountContentView : UserControl
+    public partial class AcContentView : UserControl
     {
-        public AccountContentView()
+        public AcContentView()
         {
             InitializeComponent();
         }
-
-     
     }
 }

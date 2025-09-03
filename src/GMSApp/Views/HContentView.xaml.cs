@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace GMSApp.Views
 {
     /// <summary>
-    /// Interaction logic for HrContentView.xaml
+    /// Interaction logic for HContentView.xaml
     /// </summary>
-    public partial class HrContentView : UserControl
+    public partial class HContentView : UserControl
     {
-        public HrContentView()
+        public HContentView()
         {
             InitializeComponent();
         }

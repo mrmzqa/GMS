@@ -8,14 +8,15 @@
         <TabControl>
             <TabItem Header="Menu">
                 <TreeView RenderTransformOrigin="0.504,2.285" Margin="0,44,1,-44">
-                    <Button >Quotation</Button>
-                    <Button Click="Jo_Click" Margin="5" > Joborder </Button>
-                    <Button Click="Po_Click" Margin="5"> Purchaseorder </Button>
-                    <Button>Invoice</Button>
+                    <Button Content="Quotation" Margin="5"/> 
+                    <Button Content="Joborder" Click="Jo_Click" Margin="5" /> 
+                    <Button Content="Purchaseorder" Click="Po_Click" Margin="5"/> 
+                    <Button Content="Invoice" Margin="5"/> 
                 </TreeView>
             </TabItem>
             <TabItem Header="Quotation">
-                
+                <ContentControl x:Name="QuotationContent"
+Height="Auto" Width="Auto" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
             </TabItem>
             <TabItem Header="JobOrder">
                 <ContentControl x:Name="JobContent"
