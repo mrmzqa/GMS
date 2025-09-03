@@ -1,11 +1,9 @@
-// PurchaseOrderViewModel.cs (updated PrintAsync uses detached copy and PurchaseOrderPdfGenerator)
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
 using GMSApp.Models.purchase;
 using GMSApp.Repositories;
 using Microsoft.Win32;
-using PdfSharpCore.Pdf;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -21,20 +19,25 @@ namespace GMSApp.ViewModels.Job
         private readonly IRepository<PurchaseOrder> _repo;
         private readonly IFileRepository _fileRepo;
         private readonly IGenericPdfGenerator<PurchaseOrder> _pdfGenerator;
+        private readonly IRepository<Vendor> _vendorRepo;
 
         public ObservableCollection<PurchaseOrder> PurchaseOrders { get; } = new();
+        public ObservableCollection<Vendor> Vendors { get; } = new();
 
         public PurchaseOrderViewModel(IRepository<PurchaseOrder> repo,
                                       IFileRepository fileRepo,
-                                      IGenericPdfGenerator<PurchaseOrder> pdfGenerator)
+                                      IGenericPdfGenerator<PurchaseOrder> pdfGenerator,
+                                      IRepository<Vendor> vendorRepo) // <-- new
         {
             _repo = repo ?? throw new ArgumentNullException(nameof(repo));
             _fileRepo = fileRepo ?? throw new ArgumentNullException(nameof(fileRepo));
             _pdfGenerator = pdfGenerator ?? throw new ArgumentNullException(nameof(pdfGenerator));
+            _vendorRepo = vendorRepo ?? throw new ArgumentNullException(nameof(vendorRepo));
 
             _ = LoadAsync();
         }
 
+        // PurchaseOrders selection
         [ObservableProperty]
         private PurchaseOrder? selectedPurchaseOrder;
 
@@ -44,6 +47,22 @@ namespace GMSApp.ViewModels.Job
             _previousLines = value?.Lines;
             SubscribeToLineEvents(value?.Lines);
             RecalculateTotals();
+
+            // Also keep SelectedVendor in sync if PO has vendor set
+            if (value != null)
+            {
+                // try to set SelectedVendor from Vendors collection if present
+                var v = Vendors.FirstOrDefault(x => x.Id == value.VendorId || x.Name == value.Vendor);
+                if (v != null)
+                    SelectedVendor = v;
+                else
+                    SelectedVendor = null;
+            }
+            else
+            {
+                SelectedVendor = null;
+            }
+
             NotifyCommands();
         }
 
@@ -123,6 +142,7 @@ namespace GMSApp.ViewModels.Job
             RemoveLineCommand.NotifyCanExecuteChanged();
             PrintCommand.NotifyCanExecuteChanged();
             UploadFileCommand.NotifyCanExecuteChanged();
+            LoadVendorsCommand.NotifyCanExecuteChanged();
         }
 
         [RelayCommand]
@@ -144,6 +164,57 @@ namespace GMSApp.ViewModels.Job
             {
                 MessageBox.Show($"Failed to load purchase orders: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        // New: Load vendors (called when ComboBox is opened)
+        [RelayCommand]
+        public async Task LoadVendorsAsync(bool forceReload = false)
+        {
+            try
+            {
+                if (!forceReload && Vendors.Count > 0) return; // already loaded
+
+                Vendors.Clear();
+                var list = await _vendorRepo.GetAllAsync();
+                foreach (var v in list)
+                {
+                    Vendors.Add(v);
+                }
+
+                // If a PO is selected and it has vendor id, set SelectedVendor
+                if (SelectedPurchaseOrder != null && SelectedPurchaseOrder.VendorId.HasValue)
+                {
+                    var selected = Vendors.FirstOrDefault(x => x.Id == SelectedPurchaseOrder.VendorId.Value);
+                    if (selected != null) SelectedVendor = selected;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to load vendors: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // New: SelectedVendor binds to ComboBox selection
+        [ObservableProperty]
+        private Vendor? selectedVendor;
+
+        partial void OnSelectedVendorChanged(Vendor? value)
+        {
+            if (SelectedPurchaseOrder == null) return;
+
+            if (value == null)
+            {
+                SelectedPurchaseOrder.Vendor = null;
+                SelectedPurchaseOrder.VendorId = null;
+            }
+            else
+            {
+                SelectedPurchaseOrder.Vendor = value.Name; // adjust property if vendor has different name property
+                SelectedPurchaseOrder.VendorId = value.Id;
+            }
+
+            // notify PO changed so UI/commands update
+            OnPropertyChanged(nameof(SelectedPurchaseOrder));
         }
 
         [RelayCommand]
@@ -178,7 +249,6 @@ namespace GMSApp.ViewModels.Job
             {
                 RecalculateTotals();
 
-                // create detached copy
                 var detached = new PurchaseOrder
                 {
                     Id = SelectedPurchaseOrder.Id,
@@ -307,7 +377,6 @@ namespace GMSApp.ViewModels.Job
             }
         }
 
-        // Updated PrintAsync: use a detached copy and the injected PDF generator
         [RelayCommand(CanExecute = nameof(CanModify))]
         private async Task PrintAsync()
         {
@@ -315,7 +384,6 @@ namespace GMSApp.ViewModels.Job
 
             try
             {
-                // Build a detached copy to avoid EF tracking issues
                 var model = new PurchaseOrder
                 {
                     Id = SelectedPurchaseOrder.Id,
@@ -368,10 +436,7 @@ namespace GMSApp.ViewModels.Job
                 {
                     Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
                 }
-                catch
-                {
-                    // ignore
-                }
+                catch { }
             }
             catch (Exception ex)
             {
@@ -382,7 +447,6 @@ namespace GMSApp.ViewModels.Job
         private bool CanModify() => SelectedPurchaseOrder != null;
     }
 
-    // Keep the same extension helper for recalc
     public static class PurchaseOrderExtensions
     {
         public static void RecalculateTotals(this PurchaseOrder po)
