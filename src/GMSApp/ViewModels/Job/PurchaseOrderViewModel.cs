@@ -1,8 +1,6 @@
-// File: ViewModels/PurchaseOrderViewModel.cs
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
-using GMSApp.Models.Enums;
 using GMSApp.Models.purchase;
 using GMSApp.Repositories;
 using Microsoft.Win32;
@@ -152,68 +150,34 @@ namespace GMSApp.ViewModels.Job
             }
         }
 
+        // Modified: Create a local "raw" purchase order but do NOT persist it immediately.
+        // The object stays in the PurchaseOrders collection so the UI can bind to it and user can edit.
+        // Only when SaveAsync is invoked will the repository be used to persist the PO.
         [RelayCommand]
-        public async Task AddAsync()
+        public Task AddAsync()
         {
             try
             {
-                // Build a plain POCO to save (avoid saving UI ObservableCollection / tracked objects directly)
-                var poToSave = new PurchaseOrder
+                var po = new PurchaseOrder
                 {
-                    // Do not set Id (leave default 0) so EF will insert
+                    // keep Id = 0 to indicate not yet persisted
                     PONumber = $"PO-{DateTime.UtcNow:yyyyMMddHHmmss}",
-                    Date = SelectedPurchaseOrder?.Date ?? DateTime.UtcNow,
-                    VendorId = (SelectedPurchaseOrder?.VendorId > 0) ? SelectedPurchaseOrder.VendorId : 0, // or null if you change model
-                    Notes = SelectedPurchaseOrder?.Notes,
-                    Discount = SelectedPurchaseOrder?.Discount ?? 0m,
-                    Tax = SelectedPurchaseOrder?.Tax ?? 0m,
-                    Currency = SelectedPurchaseOrder?.Currency ?? Currency.QAR,
-                    Status = SelectedPurchaseOrder?.Status ?? PurchaseOrderStatus.Draft,
-                    PaymentMethod = SelectedPurchaseOrder?.PaymentMethod ?? PaymentMethod.BankTransfer,
-                    BankName = SelectedPurchaseOrder?.BankName,
-                    IBAN = SelectedPurchaseOrder?.IBAN,
-                    ExpectedDeliveryDate = SelectedPurchaseOrder?.ExpectedDeliveryDate,
-                    DeliveryLocation = SelectedPurchaseOrder?.DeliveryLocation,
-                    CreatedAt = DateTime.UtcNow
+                    Date = DateTime.UtcNow,
+                    Lines = new ObservableCollection<PurchaseOrderLine>()
                 };
 
-                // Map lines into a plain List<PurchaseOrderLine>
-                if (SelectedPurchaseOrder?.Lines != null)
-                {
-                    foreach (var uiLine in SelectedPurchaseOrder.Lines)
-                    {
-                        // Create new POCO line. Do NOT copy Id if it's non-zero (unless you intentionally want updates)
-                        var line = new PurchaseOrderLine
-                        {
-                            Description = uiLine.Description ?? string.Empty,
-                            PartNumber = uiLine.PartNumber,
-                            UnitPrice = uiLine.UnitPrice,
-                            Quantity = uiLine.Quantity,
-                            Unit = uiLine.Unit,
-                            Notes = uiLine.Notes,
-                            QuantityDelivered = uiLine.QuantityDelivered
-                        };
+                // Add to the observable collection so the UI can edit immediately.
+                PurchaseOrders.Add(po);
+                SelectedPurchaseOrder = po;
 
-                        // EF will set PurchaseOrderId when saving if you attach to PO.Add
-                        poToSave.Lines.Add(line);
-                    }
-                }
-
-                // Recalculate totals before saving
-                poToSave.RecalculateTotals();
-
-                // Save via repository
-                await _repo.AddAsync(poToSave);
-
-                // Reload list and select created PO
-                await LoadAsync();
-                SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(p => p.PONumber == poToSave.PONumber);
+                // No repository call here. SaveAsync will handle Add vs Update based on Id.
             }
             catch (Exception ex)
             {
-                // Show full exception (important for troubleshooting)
-                MessageBox.Show($"Failed to add purchase order:\n{ex}\n\nInnerException:\n{ex.InnerException}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Failed to create new purchase order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+
+            return Task.CompletedTask;
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
@@ -223,58 +187,28 @@ namespace GMSApp.ViewModels.Job
 
             try
             {
-                // Build a detached plain entity for update
-                var poToSave = new PurchaseOrder
-                {
-                    Id = SelectedPurchaseOrder.Id,
-                    PONumber = SelectedPurchaseOrder.PONumber,
-                    Date = SelectedPurchaseOrder.Date,
-                    VendorId = SelectedPurchaseOrder.VendorId,
-                    Notes = SelectedPurchaseOrder.Notes,
-                    Discount = SelectedPurchaseOrder.Discount,
-                    Tax = SelectedPurchaseOrder.Tax,
-                    Currency = SelectedPurchaseOrder.Currency,
-                    Status = SelectedPurchaseOrder.Status,
-                    PaymentMethod = SelectedPurchaseOrder.PaymentMethod,
-                    BankName = SelectedPurchaseOrder.BankName,
-                    IBAN = SelectedPurchaseOrder.IBAN,
-                    ExpectedDeliveryDate = SelectedPurchaseOrder.ExpectedDeliveryDate,
-                    DeliveryLocation = SelectedPurchaseOrder.DeliveryLocation,
-                    CreatedAt = SelectedPurchaseOrder.CreatedAt,
-                    CreatedBy = SelectedPurchaseOrder.CreatedBy,
-                    UpdatedAt = DateTime.UtcNow,
-                    UpdatedBy = "CurrentUser" // replace with actual user
-                };
+                // Recalculate before saving
+                RecalculateTotals();
 
-                // Map lines; include existing Ids if you want EF to update them
-                foreach (var uiLine in SelectedPurchaseOrder.Lines)
+                if (SelectedPurchaseOrder.Id == 0)
                 {
-                    var line = new PurchaseOrderLine
-                    {
-                        Id = uiLine.Id, // if Id==0 EF will insert; if >0 EF will update
-                        Description = uiLine.Description ?? string.Empty,
-                        PartNumber = uiLine.PartNumber,
-                        UnitPrice = uiLine.UnitPrice,
-                        Quantity = uiLine.Quantity,
-                        Unit = uiLine.Unit,
-                        Notes = uiLine.Notes,
-                        QuantityDelivered = uiLine.QuantityDelivered
-                    };
-                    poToSave.Lines.Add(line);
+                    // New PO - persist
+                    await _repo.AddAsync(SelectedPurchaseOrder);
+                }
+                else
+                {
+                    await _repo.UpdateAsync(SelectedPurchaseOrder);
                 }
 
-                poToSave.RecalculateTotals();
-
-                // Call update
-                await _repo.UpdateAsync(poToSave);
-
-                // Reload and re-select
+                // Reload list from repo to get canonical state (IDs, any defaults set by backend, etc.)
                 await LoadAsync();
-                SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(p => p.Id == poToSave.Id);
+
+                // Restore selection to the saved PO (match by PONumber)
+                SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(p => p.PONumber == SelectedPurchaseOrder.PONumber) ?? SelectedPurchaseOrder;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to save purchase order:\n{ex}\n\nInnerException:\n{ex.InnerException}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Failed to save purchase order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -288,9 +222,18 @@ namespace GMSApp.ViewModels.Job
 
             try
             {
-                await _repo.DeleteAsync(SelectedPurchaseOrder.Id);
-                SelectedPurchaseOrder = null;
-                await LoadAsync();
+                if (SelectedPurchaseOrder.Id == 0)
+                {
+                    // It's a local (unsaved) PO - just remove it from the collection
+                    PurchaseOrders.Remove(SelectedPurchaseOrder);
+                    SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault();
+                }
+                else
+                {
+                    await _repo.DeleteAsync(SelectedPurchaseOrder.Id);
+                    SelectedPurchaseOrder = null;
+                    await LoadAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -372,7 +315,8 @@ namespace GMSApp.ViewModels.Job
                     CreatedAt = SelectedPurchaseOrder.CreatedAt,
                     CreatedBy = SelectedPurchaseOrder.CreatedBy,
                     UpdatedAt = SelectedPurchaseOrder.UpdatedAt,
-                    UpdatedBy = SelectedPurchaseOrder.UpdatedBy
+                    UpdatedBy = SelectedPurchaseOrder.UpdatedBy,
+                    Lines = new ObservableCollection<PurchaseOrderLine>()
                 };
 
                 foreach (var l in SelectedPurchaseOrder.Lines)
