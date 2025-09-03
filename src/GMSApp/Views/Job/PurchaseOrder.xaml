@@ -3,121 +3,160 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="clr-namespace:GMSApp.ViewModels.Job"
              mc:Ignorable="d"
-             d:DesignHeight="700" d:DesignWidth="1000">
-    
+             d:DesignHeight="700"
+             d:DesignWidth="1100">
+
+    <!--
+      Note: The ViewModel should be assigned to the DataContext from the hosting window/container.
+      This XAML assumes DataContext is PurchaseOrderViewModel with:
+       - ObservableCollection<PurchaseOrder> PurchaseOrders
+       - PurchaseOrder? SelectedPurchaseOrder
+       - ICommand LoadCommand, AddCommand, SaveCommand, DeleteCommand
+       - ICommand AddLineCommand, RemoveLineCommand, PrintCommand, UploadFileCommand
+    -->
 
     <Grid Margin="8">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*" />
-            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="360" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <!-- Left: list -->
-        <StackPanel Grid.Column="0" Margin="4">
-            <TextBlock Text="Purchase Orders" FontSize="16" FontWeight="Bold" Margin="0,0,0,8" />
-            <DataGrid ItemsSource="{Binding PurchaseOrders}" SelectedItem="{Binding SelectedPurchaseOrder, Mode=TwoWay}"
-                      AutoGenerateColumns="False" CanUserAddRows="False" Height="500">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="PO Number" Binding="{Binding PONumber}" Width="*"/>
-                    <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat=yyyy-MM-dd}" Width="120"/>
-                    <DataGridTextColumn Header="Vendor" Binding="{Binding Vendor.Name}" Width="*"/>
-                    <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=N2}" Width="100"/>
-                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
-                </DataGrid.Columns>
-            </DataGrid>
+        <!-- Left: Purchase Order list -->
+        <Border Grid.Column="0" Padding="8" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4" Background="WhiteSmoke">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0 0 0 8" HorizontalAlignment="Stretch">
+                    <Button Content="Reload" Command="{Binding LoadCommand}" Width="70" Margin="0,0,6,0"/>
+                    <Button Content="New" Command="{Binding AddCommand}" Width="70" Margin="0,0,6,0"/>
+                    <Button Content="Save" Command="{Binding SaveCommand}" Width="70" Margin="0,0,6,0"/>
+                    <Button Content="Delete" Command="{Binding DeleteCommand}" Width="70" />
+                </StackPanel>
 
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,0" HorizontalAlignment="Left">
-                <Button Content="Reload" Width="80" Margin="0,0,8,0" Command="{Binding LoadCommand}" />
-                <Button Content="Add" Width="80" Margin="0,0,8,0" Command="{Binding AddCommand}" />
-                <Button Content="Delete" Width="80" Command="{Binding DeleteCommand}" />
-            </StackPanel>
-        </StackPanel>
+                <DataGrid ItemsSource="{Binding PurchaseOrders}"
+                          SelectedItem="{Binding SelectedPurchaseOrder, Mode=TwoWay}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          IsReadOnly="False"
+                          Margin="0"
+                          MinHeight="300">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="PO #" Binding="{Binding PONumber}" Width="*"/>
+                        <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat=\{0:yyyy-MM-dd\}}" Width="120"/>
+                        <DataGridTextColumn Header="Vendor" Binding="{Binding Vendor}" Width="*"/>
+                        <DataGridTextColumn Header="SubTotal" Binding="{Binding SubTotal, StringFormat=N2}" Width="110"/>
+                        <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=N2}" Width="110"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+        </Border>
 
-        <!-- Right: details -->
-        <StackPanel Grid.Column="1" Margin="8">
-            <TextBlock Text="Purchase Order Details" FontSize="16" FontWeight="Bold" Margin="0,0,0,8" />
+        <!-- spacer -->
+        <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch" ShowsPreview="True" />
 
+        <!-- Right: Details and lines -->
+        <Border Grid.Column="2" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="8"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="8"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="PO Number:" VerticalAlignment="Center" Margin="4"/>
-                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SelectedPurchaseOrder.PONumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="4"/>
-
-                <TextBlock Grid.Row="0" Grid.Column="2" Text="Date:" VerticalAlignment="Center" Margin="4"/>
-                <DatePicker Grid.Row="0" Grid.Column="3" SelectedDate="{Binding SelectedPurchaseOrder.Date, Mode=TwoWay}" Margin="4"/>
-
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Vendor:" VerticalAlignment="Center" Margin="4"/>
-                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SelectedPurchaseOrder.Vendor.Name, Mode=TwoWay}" Margin="4" />
-
-                <TextBlock Grid.Row="1" Grid.Column="2" Text="Currency:" VerticalAlignment="Center" Margin="4"/>
-                <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding SelectedPurchaseOrder.Currency, Mode=TwoWay}" Margin="4"/>
-
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Discount:" VerticalAlignment="Center" Margin="4"/>
-                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SelectedPurchaseOrder.Discount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="4"/>
-
-                <TextBlock Grid.Row="2" Grid.Column="2" Text="Tax:" VerticalAlignment="Center" Margin="4"/>
-                <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding SelectedPurchaseOrder.Tax, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="4"/>
-
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Delivery:" VerticalAlignment="Center" Margin="4"/>
-                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding SelectedPurchaseOrder.DeliveryLocation, Mode=TwoWay}" Margin="4"/>
-
-                <TextBlock Grid.Row="3" Grid.Column="2" Text="Expected:" VerticalAlignment="Center" Margin="4"/>
-                <DatePicker Grid.Row="3" Grid.Column="3" SelectedDate="{Binding SelectedPurchaseOrder.ExpectedDeliveryDate, Mode=TwoWay}" Margin="4"/>
-
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="Notes:" VerticalAlignment="Top" Margin="4"/>
-                <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedPurchaseOrder.Notes, Mode=TwoWay}" AcceptsReturn="True" Height="60" Margin="4"/>
-            </Grid>
-
-            <!-- Lines -->
-            <GroupBox Header="Lines" Margin="0,8,0,0">
-                <DockPanel>
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="4">
-                        <Button Content="Add Line" Width="90" Command="{Binding AddLineCommand}" Margin="0,0,8,0"/>
-                        <Button Content="Remove Line" Width="110" Command="{Binding RemoveLineCommand}" CommandParameter="{Binding SelectedItem, ElementName=LinesGrid}" />
-                        <Button Content="Save" Width="90" Margin="12,0,0,0" Command="{Binding SaveCommand}" />
-                        <Button Content="Print" Width="90" Margin="8,0,0,0" Command="{Binding PrintCommand}" />
-                        <Button Content="Upload File" Width="100" Margin="8,0,0,0" Command="{Binding UploadFileCommand}" />
+                <!-- Header: basic fields -->
+                <StackPanel Orientation="Horizontal" Grid.Row="0" VerticalAlignment="Top" Margin="0,0,0,6">
+                    <StackPanel Width="420">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="PO Number:" Width="90" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SelectedPurchaseOrder.PONumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="Date:" Width="90" VerticalAlignment="Center"/>
+                            <DatePicker SelectedDate="{Binding SelectedPurchaseOrder.Date, Mode=TwoWay}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="Vendor:" Width="90" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SelectedPurchaseOrder.Vendor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="Currency:" Width="90" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SelectedPurchaseOrder.Currency, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="120"/>
+                            <TextBlock Text="Status:" Width="60" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SelectedPurchaseOrder.Status, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="120"/>
+                        </StackPanel>
                     </StackPanel>
 
-                    <DataGrid x:Name="LinesGrid" ItemsSource="{Binding SelectedPurchaseOrder.Lines}" AutoGenerateColumns="False" CanUserAddRows="False" Margin="4" Height="220" SelectionMode="Single">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Description" Binding="{Binding Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
-                            <DataGridTextColumn Header="Part No" Binding="{Binding PartNumber, Mode=TwoWay}" Width="120"/>
-                            <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="80"/>
-                            <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="100"/>
-                            <DataGridTextColumn Header="Line Total" Binding="{Binding LineTotal, Mode=OneWay, StringFormat=N2}" IsReadOnly="True" Width="110"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </DockPanel>
-            </GroupBox>
+                    <StackPanel Margin="24,0,0,0" Width="300">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="Discount:" Width="90" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SelectedPurchaseOrder.Discount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="Tax:" Width="90" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SelectedPurchaseOrder.Tax, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="SubTotal:" Width="90" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding SelectedPurchaseOrder.SubTotal, StringFormat=N2}" FontWeight="Bold"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="Total:" Width="90" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding SelectedPurchaseOrder.Total, StringFormat=N2}" FontSize="14" FontWeight="Bold"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
 
-            <!-- Totals -->
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-                <TextBlock Text="SubTotal:" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                <TextBlock Text="{Binding SelectedPurchaseOrder.SubTotal, StringFormat=N2}" FontWeight="Bold" Margin="0,0,20,0" VerticalAlignment="Center"/>
-                <TextBlock Text="Total:" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                <TextBlock Text="{Binding SelectedPurchaseOrder.Total, StringFormat=N2}" FontWeight="Bold" VerticalAlignment="Center"/>
-            </StackPanel>
+                <!-- Notes -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal">
+                    <TextBlock Text="Notes:" Width="70" VerticalAlignment="Top"/>
+                    <TextBox Text="{Binding SelectedPurchaseOrder.Notes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="60" TextWrapping="Wrap"/>
+                </StackPanel>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-                <Button Content="Reload" Width="90" Command="{Binding LoadCommand}" Margin="0,0,8,0"/>
-                <Button Content="Update" Width="90" Command="{Binding SaveCommand}" />
-            </StackPanel>
-        </StackPanel>
+                <!-- Lines grid -->
+                <GroupBox Grid.Row="4" Header="Lines" Padding="6">
+                    <DockPanel LastChildFill="True">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,6">
+                            <Button Content="Add Line" Command="{Binding AddLineCommand}" Width="90" Margin="0,0,6,0"/>
+                            <Button Content="Remove Line" Command="{Binding RemoveLineCommand}"
+                                    CommandParameter="{Binding SelectedItem, ElementName=LinesDataGrid}" Width="100" Margin="0,0,6,0"/>
+                            <Button Content="Upload File" Command="{Binding UploadFileCommand}" Width="100" Margin="0,0,6,0"/>
+                            <Button Content="Print" Command="{Binding PrintCommand}" Width="80" />
+                        </StackPanel>
+
+                        <DataGrid x:Name="LinesDataGrid"
+                                  ItemsSource="{Binding SelectedPurchaseOrder.Lines}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  SelectionMode="Single"
+                                  IsReadOnly="False">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Description" Binding="{Binding Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                                <DataGridTextColumn Header="Part #" Binding="{Binding PartNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="120" />
+                                <DataGridTextColumn Header="Unit" Binding="{Binding Unit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="80" />
+                                <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}" Width="80" />
+                                <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="110" />
+                                <DataGridTextColumn Header="Line Total" Binding="{Binding LineTotal, Mode=OneWay, StringFormat=N2}" Width="110" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Notes" Binding="{Binding Notes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="150"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </GroupBox>
+
+                <!-- Footer: Persist controls -->
+                <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <TextBlock VerticalAlignment="Center" Margin="0,0,12,0" Foreground="Gray" FontSize="11">
+                        Tip: Click New to create a draft PO. Click Save to persist.
+                    </TextBlock>
+                    <Button Content="Cancel" Width="90" Margin="0,0,6,0" Click="Cancel_Click"/>
+                    <Button Content="Save" Command="{Binding SaveCommand}" Width="100" />
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>
