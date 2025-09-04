@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GMSApp.ViewModels.Job;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,11 @@ namespace GMSApp.Views.Job
         public Invoice()
         {
             InitializeComponent();
+        }
+        public Invoice(InvoiceViewModel viewModel)
+        {
+            InitializeComponent();
+            this.DataContext = viewModel;
         }
     }
 }
