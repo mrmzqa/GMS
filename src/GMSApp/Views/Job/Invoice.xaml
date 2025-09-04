@@ -99,7 +99,7 @@
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,6">
                             <Button Content="Add Line" Command="{Binding AddLineCommand}" Width="90" Margin="0,0,6,0"/>
                             <Button Content="Remove Line" Command="{Binding RemoveLineCommand}" CommandParameter="{Binding SelectedItem, ElementName=LinesDataGrid}" Width="110" Margin="0,0,6,0"/>
-                            <Button Content="Recalculate" Width="100" Click="Recalculate_Click" />
+                            
                         </StackPanel>
 
                         <DataGrid x:Name="LinesDataGrid"
