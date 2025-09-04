@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GMSApp.ViewModels.Accounting;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,9 +21,10 @@ namespace GMSApp.Views.Accounting
     /// </summary>
     public partial class AccountPayable : UserControl
     {
-        public AccountPayable()
+        public AccountPayable( AccountsPayableViewModel viewModel)
         {
             InitializeComponent();
+            this.DataContext = viewModel;
         }
     }
 }

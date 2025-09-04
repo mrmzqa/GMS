@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GMSApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250904215459_Initial")]
+    [Migration("20250904221954_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -445,7 +445,7 @@ namespace GMSApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("GeneralLedgerEntry");
+                    b.ToTable("GeneralLedgerEntries");
                 });
 
             modelBuilder.Entity("GMSApp.Models.account.GeneralLedgerLine", b =>
@@ -474,7 +474,7 @@ namespace GMSApp.Migrations
 
                     b.HasIndex("GeneralLedgerEntryId");
 
-                    b.ToTable("GeneralLedgerLine");
+                    b.ToTable("GeneralLedgerLines");
                 });
 
             modelBuilder.Entity("GMSApp.Models.account.ReconciliationItem", b =>
@@ -500,7 +500,7 @@ namespace GMSApp.Migrations
 
                     b.HasIndex("GeneralLedgerLineId");
 
-                    b.ToTable("ReconciliationItem");
+                    b.ToTable("ReconciliationItems");
                 });
 
             modelBuilder.Entity("GMSApp.Models.invoice.Invoice", b =>
@@ -966,13 +966,13 @@ namespace GMSApp.Migrations
                     b.HasOne("GMSApp.Models.account.AccountReconciliation", "AccountReconciliation")
                         .WithMany("Items")
                         .HasForeignKey("AccountReconciliationId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("GMSApp.Models.account.GeneralLedgerLine", "GeneralLedgerLine")
-                        .WithMany()
+                        .WithMany("Items")
                         .HasForeignKey("GeneralLedgerLineId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("AccountReconciliation");
@@ -1053,6 +1053,11 @@ namespace GMSApp.Migrations
             modelBuilder.Entity("GMSApp.Models.account.GeneralLedgerEntry", b =>
                 {
                     b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.account.GeneralLedgerLine", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("GMSApp.Models.invoice.Invoice", b =>

@@ -18,5 +18,7 @@ namespace GMSApp.Models.account
 
         public decimal Debit { get; set; }
         public decimal Credit { get; set; }
+
+        public ICollection<ReconciliationItem> Items { get; set; }
     }
 }

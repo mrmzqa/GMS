@@ -123,7 +123,7 @@ namespace GMSApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "GeneralLedgerEntry",
+                name: "GeneralLedgerEntries",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -134,7 +134,7 @@ namespace GMSApp.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_GeneralLedgerEntry", x => x.Id);
+                    table.PrimaryKey("PK_GeneralLedgerEntries", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -267,7 +267,7 @@ namespace GMSApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "GeneralLedgerLine",
+                name: "GeneralLedgerLines",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -279,17 +279,17 @@ namespace GMSApp.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_GeneralLedgerLine", x => x.Id);
+                    table.PrimaryKey("PK_GeneralLedgerLines", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_GeneralLedgerLine_ChartOfAccounts_ChartOfAccountId",
+                        name: "FK_GeneralLedgerLines_ChartOfAccounts_ChartOfAccountId",
                         column: x => x.ChartOfAccountId,
                         principalTable: "ChartOfAccounts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_GeneralLedgerLine_GeneralLedgerEntry_GeneralLedgerEntryId",
+                        name: "FK_GeneralLedgerLines_GeneralLedgerEntries_GeneralLedgerEntryId",
                         column: x => x.GeneralLedgerEntryId,
-                        principalTable: "GeneralLedgerEntry",
+                        principalTable: "GeneralLedgerEntries",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -375,7 +375,7 @@ namespace GMSApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ReconciliationItem",
+                name: "ReconciliationItems",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -386,19 +386,19 @@ namespace GMSApp.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ReconciliationItem", x => x.Id);
+                    table.PrimaryKey("PK_ReconciliationItems", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ReconciliationItem_AccountReconciliations_AccountReconciliationId",
+                        name: "FK_ReconciliationItems_AccountReconciliations_AccountReconciliationId",
                         column: x => x.AccountReconciliationId,
                         principalTable: "AccountReconciliations",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_ReconciliationItem_GeneralLedgerLine_GeneralLedgerLineId",
+                        name: "FK_ReconciliationItems_GeneralLedgerLines_GeneralLedgerLineId",
                         column: x => x.GeneralLedgerLineId,
-                        principalTable: "GeneralLedgerLine",
+                        principalTable: "GeneralLedgerLines",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -535,13 +535,13 @@ namespace GMSApp.Migrations
                 column: "ParentAccountId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_GeneralLedgerLine_ChartOfAccountId",
-                table: "GeneralLedgerLine",
+                name: "IX_GeneralLedgerLines_ChartOfAccountId",
+                table: "GeneralLedgerLines",
                 column: "ChartOfAccountId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_GeneralLedgerLine_GeneralLedgerEntryId",
-                table: "GeneralLedgerLine",
+                name: "IX_GeneralLedgerLines_GeneralLedgerEntryId",
+                table: "GeneralLedgerLines",
                 column: "GeneralLedgerEntryId");
 
             migrationBuilder.CreateIndex(
@@ -590,13 +590,13 @@ namespace GMSApp.Migrations
                 column: "QuotationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ReconciliationItem_AccountReconciliationId",
-                table: "ReconciliationItem",
+                name: "IX_ReconciliationItems_AccountReconciliationId",
+                table: "ReconciliationItems",
                 column: "AccountReconciliationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ReconciliationItem_GeneralLedgerLineId",
-                table: "ReconciliationItem",
+                name: "IX_ReconciliationItems_GeneralLedgerLineId",
+                table: "ReconciliationItems",
                 column: "GeneralLedgerLineId");
 
             migrationBuilder.CreateIndex(
@@ -636,7 +636,7 @@ namespace GMSApp.Migrations
                 name: "QuotationItems");
 
             migrationBuilder.DropTable(
-                name: "ReconciliationItem");
+                name: "ReconciliationItems");
 
             migrationBuilder.DropTable(
                 name: "Statuses");
@@ -657,7 +657,7 @@ namespace GMSApp.Migrations
                 name: "AccountReconciliations");
 
             migrationBuilder.DropTable(
-                name: "GeneralLedgerLine");
+                name: "GeneralLedgerLines");
 
             migrationBuilder.DropTable(
                 name: "PurchaseOrders");
@@ -666,7 +666,7 @@ namespace GMSApp.Migrations
                 name: "ChartOfAccounts");
 
             migrationBuilder.DropTable(
-                name: "GeneralLedgerEntry");
+                name: "GeneralLedgerEntries");
 
             migrationBuilder.DropTable(
                 name: "Vendors");

@@ -35,6 +35,8 @@ namespace GMSApp.Data
 
         public DbSet<AccountReconciliation> AccountReconciliations { get; set; }
 
+        public DbSet<ReconciliationItem> ReconciliationItems { get; set; }
+
         public DbSet<AccountsPayable> AccountsPayables { get; set; }
 
         public DbSet<AccountsReceivable> AccountsReceivables { get; set; }
@@ -42,6 +44,10 @@ namespace GMSApp.Data
         public DbSet<ChartOfAccount> ChartOfAccounts { get; set; }
 
         public DbSet<PaymentReceipt> PaymentReceipts { get; set; }
+
+        public DbSet<GeneralLedgerEntry> GeneralLedgerEntries  { get; set; }
+
+        public DbSet<GeneralLedgerLine> GeneralLedgerLines { get; set; }
 
         /*protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -84,6 +90,24 @@ namespace GMSApp.Data
                 .HasForeignKey(r => r.InvoiceId)
                 .OnDelete(DeleteBehavior.Cascade);
         }*/
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<ReconciliationItem>()
+                .HasOne(ri => ri.AccountReconciliation)
+                .WithMany(ar => ar.Items)
+                .HasForeignKey(ri => ri.AccountReconciliationId)
+                .OnDelete(DeleteBehavior.Restrict); // or .NoAction()
+
+            modelBuilder.Entity<ReconciliationItem>()
+                .HasOne(ri => ri.GeneralLedgerLine)
+                .WithMany(gl => gl.Items)
+                .HasForeignKey(ri => ri.GeneralLedgerLineId)
+                .OnDelete(DeleteBehavior.Restrict); // or .NoAction()
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
 

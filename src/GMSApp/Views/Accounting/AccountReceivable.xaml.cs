@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GMSApp.ViewModels.Accounting;
+using GMSApp.ViewModels.Job;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +25,12 @@ namespace GMSApp.Views.Accounting
         public AccountReceivable()
         {
             InitializeComponent();
+        }
+
+        public AccountReceivable(AccountsReceivableViewModel viewModel)
+        {
+            InitializeComponent();
+            this.DataContext = viewModel;
         }
     }
 }
