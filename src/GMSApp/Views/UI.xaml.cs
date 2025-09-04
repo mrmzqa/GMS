@@ -1,3 +1,128 @@
+
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using GMSApp.Models;
+using GMSApp.Repositories;
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+
+namespace GMSApp.ViewModels.Finance
+{
+    public partial class ChartOfAccountViewModel : ObservableObject
+    {
+        private readonly IRepository<ChartOfAccount> _repo;
+
+        public ObservableCollection<ChartOfAccount> Accounts { get; } = new();
+
+        public ChartOfAccountViewModel(IRepository<ChartOfAccount> repo)
+        {
+            _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+            _ = LoadAsync();
+        }
+
+        [ObservableProperty]
+        private ChartOfAccount? selectedAccount;
+
+        [RelayCommand]
+        public async Task LoadAsync()
+        {
+            try
+            {
+                Accounts.Clear();
+                var list = await _repo.GetAllAsync();
+                foreach (var a in list.OrderBy(x => x.AccountCode))
+                {
+                    Accounts.Add(a);
+                }
+
+                SelectedAccount = Accounts.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to load chart of accounts: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand]
+        public Task AddAsync()
+        {
+            var newAcc = new ChartOfAccount
+            {
+                AccountCode = string.Empty,
+                AccountName = string.Empty,
+                AccountType = AccountType.Asset,
+                IsActive = true
+            };
+
+            Accounts.Add(newAcc);
+            SelectedAccount = newAcc;
+            return Task.CompletedTask;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task SaveAsync()
+        {
+            if (SelectedAccount == null) return;
+
+            try
+            {
+                var detached = new ChartOfAccount
+                {
+                    Id = SelectedAccount.Id,
+                    AccountCode = SelectedAccount.AccountCode?.Trim() ?? string.Empty,
+                    AccountName = SelectedAccount.AccountName?.Trim() ?? string.Empty,
+                    AccountType = SelectedAccount.AccountType,
+                    IsActive = SelectedAccount.IsActive,
+                    ParentAccountId = SelectedAccount.ParentAccountId
+                };
+
+                if (detached.Id == 0)
+                    await _repo.AddAsync(detached);
+                else
+                    await _repo.UpdateAsync(detached);
+
+                await LoadAsync();
+                SelectedAccount = Accounts.FirstOrDefault(a => a.AccountCode == detached.AccountCode) ?? SelectedAccount;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to save account: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task DeleteAsync()
+        {
+            if (SelectedAccount == null) return;
+            var ok = MessageBox.Show("Delete selected account?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (ok != MessageBoxResult.Yes) return;
+
+            try
+            {
+                if (SelectedAccount.Id == 0)
+                {
+                    Accounts.Remove(SelectedAccount);
+                    SelectedAccount = Accounts.FirstOrDefault();
+                }
+                else
+                {
+                    await _repo.DeleteAsync(SelectedAccount.Id);
+                    await LoadAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to delete account: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CanModify() => SelectedAccount != null;
+    }
+}
+
 public class AccountReconciliation
 {
     public int Id { get; set; }
