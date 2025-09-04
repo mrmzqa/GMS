@@ -43,7 +43,7 @@ public partial class App : Application
                 services.AddTransient<IGenericPdfGenerator<GMSApp.Models.purchase.PurchaseOrder>, GMSApp.Repositories.Pdf.PurchaseOrderPdfGenerator>();
                 // ViewModels - transient so UI gets fresh instances (avoids stale state)
                 services.AddTransient<FileViewModel>();
-                services.AddTransient<CoreMainViewModel>();
+                services.AddTransient<GarageViewModel>();
                 services.AddTransient<JobContentViewModel>();
                 services.AddTransient<PurchaseOrderViewModel>();
                 services.AddTransient<VendorViewModel>();
@@ -59,7 +59,7 @@ public partial class App : Application
                 services.AddTransient<JobOrder>();
 
                 services.AddTransient<FilesPage>();
-                services.AddTransient<CoreMain>();
+                services.AddTransient<Garage>();
             })
             .UseSerilog()
             .Build();

@@ -9,83 +9,83 @@ using System.Threading.Tasks;
 
 namespace GMSApp.ViewModels;
 
-public partial class CoreMainViewModel : ObservableObject
+public partial class GarageViewModel : ObservableObject
 {
-    private readonly IRepository<CoreMain> _coreMainRepo;
+    private readonly IRepository<Garage> _GarageRepo;
     private readonly IFileRepository _fileRepo;
 
-    public ObservableCollection<CoreMain> CoreMains { get; } = new();
+    public ObservableCollection<Garage> Garages { get; } = new();
 
-    public CoreMainViewModel(IRepository<CoreMain> coreMainRepo, IFileRepository fileRepo)
+    public GarageViewModel(IRepository<Garage> GarageRepo, IFileRepository fileRepo)
     {
-        _coreMainRepo = coreMainRepo;
+        _GarageRepo = GarageRepo;
         _fileRepo = fileRepo;
-        _ = LoadCoreMainsAsync();
+        _ = LoadGaragesAsync();
     }
 
   
 
     [ObservableProperty]
-    private CoreMain? selectedCoreMain;
+    private Garage? selectedGarage;
 
-    partial void OnSelectedCoreMainChanged(CoreMain? value)
+    partial void OnSelectedGarageChanged(Garage? value)
     {
-        UpdateCoreMainCommand.NotifyCanExecuteChanged();
-        DeleteCoreMainCommand.NotifyCanExecuteChanged();
+        UpdateGarageCommand.NotifyCanExecuteChanged();
+        DeleteGarageCommand.NotifyCanExecuteChanged();
         UploadHeaderFileCommand.NotifyCanExecuteChanged();
         UploadFooterFileCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand]
-    public async Task LoadCoreMainsAsync()
+    public async Task LoadGaragesAsync()
     {
-        CoreMains.Clear();
-        var items = await _coreMainRepo.GetAllAsync();
+        Garages.Clear();
+        var items = await _GarageRepo.GetAllAsync();
         foreach (var item in items)
-            CoreMains.Add(item);
-        SelectedCoreMain = CoreMains.Count > 0 ? CoreMains[0] : null;
+            Garages.Add(item);
+        SelectedGarage = Garages.Count > 0 ? Garages[0] : null;
     }
 
     [RelayCommand]
-    public async Task AddCoreMainAsync()
+    public async Task AddGarageAsync()
     {
-        // If SelectedCoreMain is null, create a blank CoreMain
-        var newCoreMain = SelectedCoreMain != null
-            ? new CoreMain
+        // If SelectedGarage is null, create a blank Garage
+        var newGarage = SelectedGarage != null
+            ? new Garage
             {
-                Name = SelectedCoreMain.Name,
-                HeaderFile = SelectedCoreMain.HeaderFile,
-                HeaderName = SelectedCoreMain.HeaderName,
-                FooterFile = SelectedCoreMain.FooterFile
+                Name = SelectedGarage.Name,
+                HeaderFile = SelectedGarage.HeaderFile,
+                HeaderName = SelectedGarage.HeaderName,
+                FooterFile = SelectedGarage.FooterFile
             }
-            : new CoreMain(); // Blank or with default values
+            : new Garage(); // Blank or with default values
 
-        await _coreMainRepo.AddAsync(newCoreMain);
-        await LoadCoreMainsAsync();
-        SelectedCoreMain = newCoreMain;
+        await _GarageRepo.AddAsync(newGarage);
+        await LoadGaragesAsync();
+        SelectedGarage = newGarage;
     }
 
     [RelayCommand(CanExecute = nameof(CanModify))]
-    public async Task UpdateCoreMainAsync()
+    public async Task UpdateGarageAsync()
     {
-        if (SelectedCoreMain == null) return;
-        await _coreMainRepo.UpdateAsync(SelectedCoreMain);
-        await LoadCoreMainsAsync();
+        if (SelectedGarage == null) return;
+        await _GarageRepo.UpdateAsync(SelectedGarage);
+        await LoadGaragesAsync();
     }
 
     [RelayCommand(CanExecute = nameof(CanModify))]
-    public async Task DeleteCoreMainAsync()
+    public async Task DeleteGarageAsync()
     {
-        if (SelectedCoreMain == null) return;
-        await _coreMainRepo.DeleteAsync(SelectedCoreMain.Id);
-        SelectedCoreMain = null;
-        await LoadCoreMainsAsync();
+        if (SelectedGarage == null) return;
+        await _GarageRepo.DeleteAsync(SelectedGarage.Id);
+        SelectedGarage = null;
+        await LoadGaragesAsync();
     }
 
     [RelayCommand(CanExecute = nameof(CanModify))]
     public void UploadHeaderFile()
     {
-        if (SelectedCoreMain == null) return;
+        if (SelectedGarage == null) return;
 
         var dialog = new OpenFileDialog
         {
@@ -95,16 +95,16 @@ public partial class CoreMainViewModel : ObservableObject
 
         if (dialog.ShowDialog() == true)
         {
-            SelectedCoreMain.HeaderFile = File.ReadAllBytes(dialog.FileName);
-            SelectedCoreMain.HeaderName = Path.GetFileName(dialog.FileName);
-            OnPropertyChanged(nameof(SelectedCoreMain));
+            SelectedGarage.HeaderFile = File.ReadAllBytes(dialog.FileName);
+            SelectedGarage.HeaderName = Path.GetFileName(dialog.FileName);
+            OnPropertyChanged(nameof(SelectedGarage));
         }
     }
 
     [RelayCommand(CanExecute = nameof(CanModify))]
     public void UploadFooterFile()
     {
-        if (SelectedCoreMain == null) return;
+        if (SelectedGarage == null) return;
 
         var dialog = new OpenFileDialog
         {
@@ -114,11 +114,11 @@ public partial class CoreMainViewModel : ObservableObject
 
         if (dialog.ShowDialog() == true)
         {
-            SelectedCoreMain.FooterFile = File.ReadAllBytes(dialog.FileName);
-            SelectedCoreMain.FooterName = Path.GetFileName(dialog.FileName);
-            OnPropertyChanged(nameof(SelectedCoreMain));
+            SelectedGarage.FooterFile = File.ReadAllBytes(dialog.FileName);
+            SelectedGarage.FooterName = Path.GetFileName(dialog.FileName);
+            OnPropertyChanged(nameof(SelectedGarage));
         }
     }
 
-    private bool CanModify() => SelectedCoreMain != null;
+    private bool CanModify() => SelectedGarage != null;
 }

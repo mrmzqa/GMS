@@ -3,9 +3,9 @@ using System.Windows.Controls;
 
 namespace GMSApp.Views
 {
-    public partial class CoreMain : UserControl
+    public partial class Garage : UserControl
     {
-        public CoreMain( CoreMainViewModel vm)
+        public Garage( GarageViewModel vm)
         {
             InitializeComponent();
             DataContext = vm;

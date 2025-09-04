@@ -13,18 +13,18 @@ namespace GMSApp.Views
         {
             private readonly MainViewModel _viewModel;
         private readonly FilesPage _filesPage;
-        private readonly CoreMain _coreMain;
+        private readonly Garage _Garage;
         private readonly PurchaseOrder _purchaseOrder;
         private readonly JobContentView _jobContentView;
         private readonly HContentView _hContentView;
         private readonly AcContentView _acContentView;
         private readonly VendorView _vendorView;
-        public MainWindow(FilesPage filesPage, CoreMain coreMain, PurchaseOrder purchaseOrderpage, JobContentView jobContentView, VendorView vendorView, HContentView hContentView, AcContentView acContentView)
+        public MainWindow(FilesPage filesPage, Garage Garage, PurchaseOrder purchaseOrderpage, JobContentView jobContentView, VendorView vendorView, HContentView hContentView, AcContentView acContentView)
         {
             
             InitializeComponent();
             _filesPage = filesPage;
-            _coreMain = coreMain;
+            _Garage = Garage;
             _purchaseOrder = purchaseOrderpage;
             _jobContentView = jobContentView;
             _vendorView = vendorView;
@@ -81,9 +81,9 @@ namespace GMSApp.Views
             MainContent.Content = _jobContentView;
         }
 
-        private void CoreMainButton_Click(object sender, RoutedEventArgs e)
+        private void GarageButton_Click(object sender, RoutedEventArgs e)
         {
-            MainContent.Content = _coreMain;
+            MainContent.Content = _Garage;
         }
 
 

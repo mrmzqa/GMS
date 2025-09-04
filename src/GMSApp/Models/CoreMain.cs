@@ -9,7 +9,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace GMSApp.Models
 {
    
-    public class CoreMain
+    public class Garage
     {
         [Key]
         public int Id { get; set; }

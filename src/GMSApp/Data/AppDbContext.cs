@@ -16,7 +16,7 @@ namespace GMSApp.Data
         }
         public DbSet<User> Users { get; set; }
         public DbSet<FileItem> Files { get; set; }
-        public DbSet<CoreMain> CoreMains { get; set; }
+        public DbSet<Garage> Garages { get; set; }
         public DbSet<ItemRow> ItemRows {  get; set; }
         public DbSet<Joborder> Joborders { get; set; }
         public DbSet<Status> Statuses { get; set; }
