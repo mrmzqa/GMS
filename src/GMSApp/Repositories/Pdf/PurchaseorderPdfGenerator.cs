@@ -1,6 +1,8 @@
 // PurchaseOrderPdfGenerator.cs
+using GMSApp.Data;
 using GMSApp.Models;
 using GMSApp.Models.purchase;
+using Microsoft.EntityFrameworkCore;
 using PdfSharpCore.Drawing;
 using PdfSharpCore.Pdf;
 using System;
@@ -13,6 +15,7 @@ namespace GMSApp.Repositories.Pdf
 {
     public class PurchaseOrderPdfGenerator : IGenericPdfGenerator<PurchaseOrder>
     {
+        private readonly AppDbContext _context;
         public class Template
         {
             public string HeaderEn { get; set; } = "PURCHASE ORDER";
@@ -87,11 +90,19 @@ namespace GMSApp.Repositories.Pdf
             public string ArabicFontFamily { get; set; } = "Arial";
 
             public byte[]? Logo { get; set; }
+
+            public byte[]? HeaderImage { get; set; }
+
+            public byte[]? FooterImage { get; set; }
         }
 
         public Template TemplateData { get; set; } = new Template();
 
-        public PurchaseOrderPdfGenerator() { }
+        public PurchaseOrderPdfGenerator( AppDbContext context) 
+        {
+
+            _context = context;
+        }
 
         // Arabic shaping forms (same approach used in JoborderPdfGenerator)
         static readonly Dictionary<char, (char isolated, char initial, char medial, char final)> ArabicForms = new()
@@ -214,7 +225,44 @@ namespace GMSApp.Repositories.Pdf
                         var headerText = $"{TemplateData.HeaderEn} — {ShapeArabic(TemplateData.HeaderAr)}";
                         gfx.DrawString(headerText, headerFont, XBrushes.Black, new XRect(ml, y, usableW, 24), XStringFormats.TopCenter);
                         y += 28;
+                        //header
+                        var HeaderImage = TemplateData.HeaderImage;
+                        var FooterImage = TemplateData.FooterImage;
+                        HeaderImage = _context.Garages.FirstOrDefault().HeaderFile;
+                        FooterImage = _context.Garages.FirstOrDefault().FooterFile;
 
+                        if (HeaderImage != null && HeaderImage.Length > 0)
+                        {
+                            try
+                            {
+                                using var msHeader = new MemoryStream(HeaderImage);
+                                using var headerImg = XImage.FromStream(() => msHeader);
+                                double hh = 60;
+                                double hw = headerImg.PixelWidth * hh / headerImg.PixelHeight;
+                                double hx = ml + (usableW - hw) / 2;
+                                double hy = y;
+                                gfx.DrawImage(headerImg, hx, hy, hw, hh);
+                                y += hh + 8;
+                            }
+                            catch { }
+                        }
+
+
+                        //footer
+                        if (FooterImage != null && FooterImage.Length > 0)
+                        {
+                            try
+                            {
+                                using var msFooter = new MemoryStream(FooterImage);
+                                using var footerImg = XImage.FromStream(() => msFooter);
+                                double fh = 60;
+                                double fw = footerImg.PixelWidth * fh / footerImg.PixelHeight;
+                                double fx = ml + (usableW - fw) / 2;
+                                double fy = pageH - mb - fh + 20;
+                                gfx.DrawImage(footerImg, fx, fy, fw, fh);
+                            }
+                            catch { }
+                        }
                         // Logo
                         double logoW = 90, logoH = 50;
                         if (TemplateData.Logo != null && TemplateData.Logo.Length > 0)

@@ -1,4 +1,5 @@
 ﻿
+using GMSApp.Data;
 using GMSApp.Models;
 using GMSApp.Models.job;
 using PdfSharpCore.Drawing;
@@ -13,10 +14,12 @@ namespace GMSApp.Repositories.Pdf
 {
     public class JoborderPdfGenerator : IGenericPdfGenerator<Joborder>
     {
+        private readonly AppDbContext _context;
         public class Template
         {
             public string HeaderEn { get; set; } = "JOB CARD";
             public string HeaderAr { get; set; } = "بطاقة العمل";
+
 
             public string FooterLeftEn { get; set; } = "";
             public string FooterLeftAr { get; set; } = "";
@@ -60,11 +63,24 @@ namespace GMSApp.Repositories.Pdf
             public string ArabicFontFamily { get; set; } = "Arial"; // Better Arabic support
 
             public byte[]? Logo { get; set; }
+
+           
+            public byte[]? HeaderImage { get; set; } 
+
+            public byte[]? FooterImage { get; set; } 
         }
+
 
         public Template TemplateData { get; set; } = new Template();
 
-        public JoborderPdfGenerator() { }
+        public JoborderPdfGenerator( AppDbContext appDbContext) 
+        
+        { 
+        
+            _context = appDbContext ?? throw new ArgumentNullException(nameof(appDbContext));
+
+
+        }
 
         // Arabic Unicode presentation forms (simplified)
         // Arabic letters with their isolated, initial, medial, and final forms.
@@ -233,6 +249,45 @@ namespace GMSApp.Repositories.Pdf
                         DrawDetail(TemplateData.OdoEn, TemplateData.OdoAr, job.OdoNumber?.ToString());
 
                         y += 8;
+                        //header
+                        var HeaderImage = TemplateData.HeaderImage;
+                        var FooterImage = TemplateData.FooterImage;
+                        HeaderImage = _context.Garages.FirstOrDefault().HeaderFile;
+                        FooterImage = _context.Garages.FirstOrDefault().FooterFile;
+
+                        if (HeaderImage != null && HeaderImage.Length > 0)
+                        {
+                            try
+                            {
+                                using var msHeader = new MemoryStream(HeaderImage);
+                                using var headerImg = XImage.FromStream(() => msHeader);
+                                double hh = 60;
+                                double hw = headerImg.PixelWidth * hh / headerImg.PixelHeight;
+                                double hx = ml + (usableW - hw) / 2;
+                                double hy = y;
+                                gfx.DrawImage(headerImg, hx, hy, hw, hh);
+                                y += hh + 8;
+                            }
+                            catch { }
+                        }
+
+
+                        //footer
+                        if (FooterImage != null && FooterImage.Length > 0)
+                        {
+                            try
+                            {
+                                using var msFooter = new MemoryStream(FooterImage);
+                                using var footerImg = XImage.FromStream(() => msFooter);
+                                double fh = 60;
+                                double fw = footerImg.PixelWidth * fh / footerImg.PixelHeight;
+                                double fx = ml + (usableW - fw) / 2;
+                                double fy = pageH - mb - fh + 20;
+                                gfx.DrawImage(footerImg, fx, fy, fw, fh);
+                            }
+                            catch { }
+                        }
+
 
                         // Image
                         double imgW = 120, imgH = 90;
@@ -264,19 +319,19 @@ namespace GMSApp.Repositories.Pdf
                             gfx.DrawRectangle(XBrushes.LightGray, new XRect(x, y, usableW, rowH));
 
                             gfx.DrawRectangle(XPens.Black, x, y, colNameW, rowH);
-                            gfx.DrawString($"{TemplateData.ItemEn} — {ShapeArabic(TemplateData.ItemAr)}", labelFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colNameW, rowH), XStringFormats.TopLeft);
+                            gfx.DrawString($"{TemplateData.ItemEn} | {ShapeArabic(TemplateData.ItemAr)}", labelFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colNameW, rowH), XStringFormats.TopLeft);
                             x += colNameW;
 
                             gfx.DrawRectangle(XPens.Black, x, y, colQtyW, rowH);
-                            gfx.DrawString($"{TemplateData.QtyEn} — {ShapeArabic(TemplateData.QtyAr)}", labelFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colQtyW, rowH), XStringFormats.TopLeft);
+                            gfx.DrawString($"{TemplateData.QtyEn} | {ShapeArabic(TemplateData.QtyAr)}", labelFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colQtyW, rowH), XStringFormats.TopLeft);
                             x += colQtyW;
 
                             gfx.DrawRectangle(XPens.Black, x, y, colPriceW, rowH);
-                            gfx.DrawString($"{TemplateData.PriceEn} — {ShapeArabic(TemplateData.PriceAr)}", labelFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colPriceW, rowH), XStringFormats.TopLeft);
+                            gfx.DrawString($"{TemplateData.PriceEn} | {ShapeArabic(TemplateData.PriceAr)}", labelFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colPriceW, rowH), XStringFormats.TopLeft);
                             x += colPriceW;
 
                             gfx.DrawRectangle(XPens.Black, x, y, colTotalW, rowH);
-                            gfx.DrawString($"{TemplateData.TotalEn} — {ShapeArabic(TemplateData.TotalAr)}", labelFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colTotalW, rowH), XStringFormats.TopLeft);
+                            gfx.DrawString($"{TemplateData.TotalEn} | {ShapeArabic(TemplateData.TotalAr)}", labelFontEn, XBrushes.Black, new XRect(x + 4, y + 4, colTotalW, rowH), XStringFormats.TopLeft);
                             y += rowH;
                         }
 
