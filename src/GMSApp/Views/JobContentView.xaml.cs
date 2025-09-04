@@ -43,7 +43,7 @@ namespace GmsApp.Views
         private void Q_Click(object sender, RoutedEventArgs e)
         {
 
-            IContent.Content = _quotation;
+            QContent.Content = _quotation;
 
         }
         private void I_Click(object sender, RoutedEventArgs e)
