@@ -1,19 +1,18 @@
-﻿<UserControl x:Class="GMSApp.Views.Job.Invoice"
+<UserControl x:Class="GMSApp.Views.Invoice.InvoiceView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1100">
-
     <Grid Margin="8">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="340"/>
-            <ColumnDefinition Width="12"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="360" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <!-- Left: Invoice list -->
+        <!-- Left: Invoice list & actions -->
         <Border Grid.Column="0" Padding="8" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4" Background="WhiteSmoke">
             <DockPanel>
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0 0 0 8">
@@ -28,12 +27,13 @@
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
                           CanUserDeleteRows="False"
-                          IsReadOnly="False">
+                          IsReadOnly="False"
+                          MinHeight="300">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Inv #" Binding="{Binding InvoiceNumber}" Width="*"/>
+                        <DataGridTextColumn Header="Invoice #" Binding="{Binding InvoiceNumber}" Width="*" />
                         <DataGridTextColumn Header="Date" Binding="{Binding InvoiceDate, StringFormat=\{0:yyyy-MM-dd\}}" Width="120"/>
-                        <DataGridTextColumn Header="Vendor" Binding="{Binding Vendor.Name}" Width="140"/>
-                        <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=N2}" Width="100"/>
+                        <DataGridTextColumn Header="VendorId" Binding="{Binding VendorId}" Width="80"/>
+                        <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=N2}" Width="110"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </DockPanel>
@@ -41,7 +41,7 @@
 
         <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch" ShowsPreview="True" />
 
-        <!-- Right: Invoice details & lines -->
+        <!-- Right: Invoice details -->
         <Border Grid.Column="2" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4">
             <Grid>
                 <Grid.RowDefinitions>
@@ -55,43 +55,111 @@
                 </Grid.RowDefinitions>
 
                 <!-- Header fields -->
-                <StackPanel Orientation="Horizontal" Grid.Row="0">
+                <StackPanel Orientation="Horizontal" Grid.Row="0" VerticalAlignment="Top">
                     <StackPanel Width="520">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <TextBlock Text="Invoice #" Width="110" VerticalAlignment="Center"/>
-                            <TextBox Text="{Binding SelectedInvoice.InvoiceNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="200"/>
-                            <TextBlock Text="Date:" Width="40" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Invoice #:" Width="110" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SelectedInvoice.InvoiceNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="240"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="Invoice Date:" Width="110" VerticalAlignment="Center"/>
                             <DatePicker SelectedDate="{Binding SelectedInvoice.InvoiceDate, Mode=TwoWay}" />
+                            <TextBlock Text="VendorId:" Width="70" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SelectedInvoice.VendorId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="80"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <TextBlock Text="Vendor:" Width="110" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="VendorCombo"
-                                      ItemsSource="{Binding Vendors}"
-                                      SelectedItem="{Binding SelectedVendor, Mode=TwoWay}"
-                                      DisplayMemberPath="Name"
-                                      Width="260"
-                                      DropDownOpened="VendorCombo_DropDownOpened"/>
-                            <Button Content="Vendors" Width="70" Margin="8,0,0,0" Command="{Binding LoadVendorsCommand}"/>
-                        </StackPanel>
-
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <TextBlock Text="Purchase Order:" Width="110" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="POCombo"
-                                      ItemsSource="{Binding PurchaseOrders}"
-                                      SelectedItem="{Binding SelectedPurchaseOrder, Mode=TwoWay}"
-                                      DisplayMemberPath="PONumber"
-                                      Width="260"
-                                      DropDownOpened="POCombo_DropDownOpened"/>
-                            <Button Content="POs" Width="70" Margin="8,0,0,0" Command="{Binding LoadPurchaseOrdersCommand}"/>
+                            <TextBlock Text="PO Id:" Width="110" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SelectedInvoice.PurchaseOrderId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="120"/>
                         </StackPanel>
                     </StackPanel>
 
                     <StackPanel Margin="24,0,0,0" Width="300">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <TextBlock Text="SubTotal:" Width="110" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding SelectedInvoice.SubTotal, StringFormat=N2}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <TextBlock Text="Discount:" Width="110" VerticalAlignment="Center"/>
-                           
+                            <TextBox Text="{Binding SelectedInvoice.Discount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="120"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="Tax:" Width="110" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SelectedInvoice.Tax, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="120"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="Amount Paid:" Width="110" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SelectedInvoice.AmountPaid, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="120"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Lines -->
+                <GroupBox Grid.Row="4" Header="Invoice Lines" Padding="6">
+                    <DockPanel LastChildFill="True">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,6">
+                            <Button Content="Add Line" Command="{Binding AddLineCommand}" Width="90" Margin="0,0,6,0"/>
+                            <Button Content="Remove Line" Command="{Binding RemoveLineCommand}" CommandParameter="{Binding SelectedItem, ElementName=LinesDataGrid}" Width="110" Margin="0,0,6,0"/>
+                            <Button Content="Recalculate" Width="100" Click="Recalculate_Click" />
+                        </StackPanel>
+
+                        <DataGrid x:Name="LinesDataGrid"
+                                  ItemsSource="{Binding Lines}"
+                                  SelectedItem="{Binding SelectedLine, Mode=TwoWay}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Description" Binding="{Binding Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                                <DataGridTextColumn Header="Part #" Binding="{Binding PartNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="120" />
+                                <DataGridTextColumn Header="Unit" Binding="{Binding Unit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="80" />
+                                <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="100" />
+                                <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="120" />
+                                <DataGridTextColumn Header="Line Total" Binding="{Binding LineTotal, Mode=OneWay, StringFormat=N2}" Width="120" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Notes" Binding="{Binding Notes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="150"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </GroupBox>
+
+                <!-- Totals footer -->
+                <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Right">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="SubTotal:" Width="120" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding SubTotal, StringFormat=N2}" Width="120" TextAlignment="Right"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Discount:" Width="120" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding SelectedInvoice.Discount, StringFormat=N2}" Width="120" TextAlignment="Right"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Tax:" Width="120" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding SelectedInvoice.Tax, StringFormat=N2}" Width="120" TextAlignment="Right"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Total:" Width="120" FontSize="14" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding Total, StringFormat=N2}" Width="120" TextAlignment="Right" FontSize="14" FontWeight="Bold"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Amount Paid:" Width="120" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding SelectedInvoice.AmountPaid, StringFormat=N2}" Width="120" TextAlignment="Right"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Balance:" Width="120" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding Balance, StringFormat=N2}" Width="120" TextAlignment="Right"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Status:" Width="120" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding Status}" Width="120" TextAlignment="Right"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="24,0,0,0" VerticalAlignment="Center">
+                        <Button Content="Save" Command="{Binding SaveCommand}" Width="100" Margin="0,0,6,0"/>
+                        <Button Content="Delete" Command="{Binding DeleteCommand}" Width="100"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
