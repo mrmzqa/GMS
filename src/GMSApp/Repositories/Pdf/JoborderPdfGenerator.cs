@@ -211,6 +211,30 @@ namespace GMSApp.Repositories.Pdf
                         var valueFontEn = new XFont(enFont, 10, XFontStyle.Regular);
                         var smallFontEn = new XFont(enFont, 9, XFontStyle.Regular);
 
+                        //header
+                        var HeaderImage = TemplateData.HeaderImage;
+                        var FooterImage = TemplateData.FooterImage;
+                        HeaderImage = _context.Garages.FirstOrDefault().HeaderFile;
+                        FooterImage = _context.Garages.FirstOrDefault().FooterFile;
+
+                        // HEADER IMAGE
+                        if (HeaderImage != null && HeaderImage.Length > 0)
+                        {
+                            try
+                            {
+                                using var msHeader = new MemoryStream(HeaderImage);
+                                using var headerImg = XImage.FromStream(() => msHeader);
+                                double hh = 60;
+                                double hw = headerImg.PixelWidth * hh / headerImg.PixelHeight;
+                                double hx = ml + (usableW - hw) / 2;
+                                double hy = y;
+                                gfx.DrawImage(headerImg, hx, hy, hw, hh);
+                                y += hh + 8;
+                            }
+                            catch { }
+                        }
+
+
                         var headerText = $"{TemplateData.HeaderEn} — {ShapeArabic(TemplateData.HeaderAr)}";
                         gfx.DrawString(headerText, headerFont, XBrushes.Black, new XRect(ml, y, usableW, 24), XStringFormats.TopCenter);
                         y += 28;
@@ -249,44 +273,10 @@ namespace GMSApp.Repositories.Pdf
                         DrawDetail(TemplateData.OdoEn, TemplateData.OdoAr, job.OdoNumber?.ToString());
 
                         y += 8;
-                        //header
-                        var HeaderImage = TemplateData.HeaderImage;
-                        var FooterImage = TemplateData.FooterImage;
-                        HeaderImage = _context.Garages.FirstOrDefault().HeaderFile;
-                        FooterImage = _context.Garages.FirstOrDefault().FooterFile;
-
-                        if (HeaderImage != null && HeaderImage.Length > 0)
-                        {
-                            try
-                            {
-                                using var msHeader = new MemoryStream(HeaderImage);
-                                using var headerImg = XImage.FromStream(() => msHeader);
-                                double hh = 60;
-                                double hw = headerImg.PixelWidth * hh / headerImg.PixelHeight;
-                                double hx = ml + (usableW - hw) / 2;
-                                double hy = y;
-                                gfx.DrawImage(headerImg, hx, hy, hw, hh);
-                                y += hh + 8;
-                            }
-                            catch { }
-                        }
+                        
 
 
-                        //footer
-                        if (FooterImage != null && FooterImage.Length > 0)
-                        {
-                            try
-                            {
-                                using var msFooter = new MemoryStream(FooterImage);
-                                using var footerImg = XImage.FromStream(() => msFooter);
-                                double fh = 60;
-                                double fw = footerImg.PixelWidth * fh / footerImg.PixelHeight;
-                                double fx = ml + (usableW - fw) / 2;
-                                double fy = pageH - mb - fh + 20;
-                                gfx.DrawImage(footerImg, fx, fy, fw, fh);
-                            }
-                            catch { }
-                        }
+                      
 
 
                         // Image
@@ -406,6 +396,24 @@ namespace GMSApp.Repositories.Pdf
                         {
                             gfx.DrawString(footerRight, smallFontEn, XBrushes.Gray, new XRect(ml, pageH - mb + 8, usableW, 20), XStringFormats.TopRight);
                         }
+                       
+
+                        // Footer Image at very bottom
+                        if (FooterImage != null && FooterImage.Length > 0)
+                        {
+                            try
+                            {
+                                using var msFooter = new MemoryStream(FooterImage);
+                                using var footerImg = XImage.FromStream(() => msFooter);
+                                double fh = 60;
+                                double fw = footerImg.PixelWidth * fh / footerImg.PixelHeight;
+                                double fx = ml + (usableW - fw) / 2;
+                                double fy = pageH - fh; // place at bottom
+                                gfx.DrawImage(footerImg, fx, fy, fw, fh);
+                            }
+                            catch { }
+                        }
+
                     }
                     finally
                     {
