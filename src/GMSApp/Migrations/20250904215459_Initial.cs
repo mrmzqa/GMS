@@ -12,6 +12,44 @@ namespace GMSApp.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "AccountsPayables",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    VendorId = table.Column<int>(type: "int", nullable: false),
+                    InvoiceDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    InvoiceNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PaidAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AccountsPayables", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AccountsReceivables",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    InvoiceDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    InvoiceNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ReceivedAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AccountsReceivables", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Addresses",
                 columns: table => new
                 {
@@ -27,6 +65,28 @@ namespace GMSApp.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Addresses", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ChartOfAccounts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AccountCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AccountName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AccountType = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    ParentAccountId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ChartOfAccounts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChartOfAccounts_ChartOfAccounts_ParentAccountId",
+                        column: x => x.ParentAccountId,
+                        principalTable: "ChartOfAccounts",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -63,6 +123,21 @@ namespace GMSApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "GeneralLedgerEntry",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EntryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ReferenceNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GeneralLedgerEntry", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Joborders",
                 columns: table => new
                 {
@@ -87,6 +162,32 @@ namespace GMSApp.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Joborders", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Quotations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    QuotationNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DateIssued = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ValidUntil = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CustomerName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ContactNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    VehicleMake = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    VehicleModel = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    VehicleYear = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RegistrationNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    VIN = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LabourCharges = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Discount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    VatRate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Quotations", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -143,6 +244,57 @@ namespace GMSApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AccountReconciliations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ChartOfAccountId = table.Column<int>(type: "int", nullable: false),
+                    ReconciliationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    StatementBalance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    LedgerBalance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    IsReconciled = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AccountReconciliations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AccountReconciliations_ChartOfAccounts_ChartOfAccountId",
+                        column: x => x.ChartOfAccountId,
+                        principalTable: "ChartOfAccounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "GeneralLedgerLine",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    GeneralLedgerEntryId = table.Column<int>(type: "int", nullable: false),
+                    ChartOfAccountId = table.Column<int>(type: "int", nullable: false),
+                    Debit = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Credit = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GeneralLedgerLine", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_GeneralLedgerLine_ChartOfAccounts_ChartOfAccountId",
+                        column: x => x.ChartOfAccountId,
+                        principalTable: "ChartOfAccounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_GeneralLedgerLine_GeneralLedgerEntry_GeneralLedgerEntryId",
+                        column: x => x.GeneralLedgerEntryId,
+                        principalTable: "GeneralLedgerEntry",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ItemRows",
                 columns: table => new
                 {
@@ -162,6 +314,28 @@ namespace GMSApp.Migrations
                         principalTable: "Joborders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "QuotationItems",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RepairQuotationId = table.Column<int>(type: "int", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    QuotationId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_QuotationItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_QuotationItems_Quotations_QuotationId",
+                        column: x => x.QuotationId,
+                        principalTable: "Quotations",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -198,6 +372,33 @@ namespace GMSApp.Migrations
                         column: x => x.VendorId,
                         principalTable: "Vendors",
                         principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ReconciliationItem",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AccountReconciliationId = table.Column<int>(type: "int", nullable: false),
+                    GeneralLedgerLineId = table.Column<int>(type: "int", nullable: false),
+                    IsMatched = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ReconciliationItem", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ReconciliationItem_AccountReconciliations_AccountReconciliationId",
+                        column: x => x.AccountReconciliationId,
+                        principalTable: "AccountReconciliations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ReconciliationItem_GeneralLedgerLine_GeneralLedgerLineId",
+                        column: x => x.GeneralLedgerLineId,
+                        principalTable: "GeneralLedgerLine",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -324,6 +525,26 @@ namespace GMSApp.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_AccountReconciliations_ChartOfAccountId",
+                table: "AccountReconciliations",
+                column: "ChartOfAccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChartOfAccounts_ParentAccountId",
+                table: "ChartOfAccounts",
+                column: "ParentAccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GeneralLedgerLine_ChartOfAccountId",
+                table: "GeneralLedgerLine",
+                column: "ChartOfAccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GeneralLedgerLine_GeneralLedgerEntryId",
+                table: "GeneralLedgerLine",
+                column: "GeneralLedgerEntryId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_InvoiceLines_InvoiceId",
                 table: "InvoiceLines",
                 column: "InvoiceId");
@@ -364,6 +585,21 @@ namespace GMSApp.Migrations
                 column: "VendorId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_QuotationItems_QuotationId",
+                table: "QuotationItems",
+                column: "QuotationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReconciliationItem_AccountReconciliationId",
+                table: "ReconciliationItem",
+                column: "AccountReconciliationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReconciliationItem_GeneralLedgerLineId",
+                table: "ReconciliationItem",
+                column: "GeneralLedgerLineId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Vendors_AddressId",
                 table: "Vendors",
                 column: "AddressId");
@@ -372,6 +608,12 @@ namespace GMSApp.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "AccountsPayables");
+
+            migrationBuilder.DropTable(
+                name: "AccountsReceivables");
+
             migrationBuilder.DropTable(
                 name: "Files");
 
@@ -391,6 +633,12 @@ namespace GMSApp.Migrations
                 name: "PurchaseOrderLines");
 
             migrationBuilder.DropTable(
+                name: "QuotationItems");
+
+            migrationBuilder.DropTable(
+                name: "ReconciliationItem");
+
+            migrationBuilder.DropTable(
                 name: "Statuses");
 
             migrationBuilder.DropTable(
@@ -403,7 +651,22 @@ namespace GMSApp.Migrations
                 name: "Invoices");
 
             migrationBuilder.DropTable(
+                name: "Quotations");
+
+            migrationBuilder.DropTable(
+                name: "AccountReconciliations");
+
+            migrationBuilder.DropTable(
+                name: "GeneralLedgerLine");
+
+            migrationBuilder.DropTable(
                 name: "PurchaseOrders");
+
+            migrationBuilder.DropTable(
+                name: "ChartOfAccounts");
+
+            migrationBuilder.DropTable(
+                name: "GeneralLedgerEntry");
 
             migrationBuilder.DropTable(
                 name: "Vendors");

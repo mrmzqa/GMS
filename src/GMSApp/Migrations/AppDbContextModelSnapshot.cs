@@ -289,6 +289,217 @@ namespace GMSApp.Migrations
                     b.ToTable("Vendors");
                 });
 
+            modelBuilder.Entity("GMSApp.Models.account.AccountReconciliation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChartOfAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsReconciled")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("LedgerBalance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("ReconciliationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("StatementBalance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChartOfAccountId");
+
+                    b.ToTable("AccountReconciliations");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.account.AccountsPayable", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("InvoiceDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("PaidAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VendorId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AccountsPayables");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.account.AccountsReceivable", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("InvoiceDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("ReceivedAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AccountsReceivables");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.account.ChartOfAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccountCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AccountName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("AccountType")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("ParentAccountId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentAccountId");
+
+                    b.ToTable("ChartOfAccounts");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.account.GeneralLedgerEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EntryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReferenceNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GeneralLedgerEntry");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.account.GeneralLedgerLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChartOfAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Credit")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Debit")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("GeneralLedgerEntryId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChartOfAccountId");
+
+                    b.HasIndex("GeneralLedgerEntryId");
+
+                    b.ToTable("GeneralLedgerLine");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.account.ReconciliationItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccountReconciliationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GeneralLedgerLineId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsMatched")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountReconciliationId");
+
+                    b.HasIndex("GeneralLedgerLineId");
+
+                    b.ToTable("ReconciliationItem");
+                });
+
             modelBuilder.Entity("GMSApp.Models.invoice.Invoice", b =>
                 {
                     b.Property<int>("Id")
@@ -577,6 +788,100 @@ namespace GMSApp.Migrations
                     b.ToTable("PurchaseOrderLines");
                 });
 
+            modelBuilder.Entity("GMSApp.Models.quotation.Quotation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContactNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateIssued")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Discount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("LabourCharges")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("QuotationNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RegistrationNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("VIN")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ValidUntil")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("VatRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("VehicleMake")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VehicleModel")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VehicleYear")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Quotations");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.quotation.QuotationItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("QuotationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RepairQuotationId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuotationId");
+
+                    b.ToTable("QuotationItems");
+                });
+
             modelBuilder.Entity("GMSApp.Models.ItemRow", b =>
                 {
                     b.HasOne("GMSApp.Models.job.Joborder", "Joborder")
@@ -612,6 +917,64 @@ namespace GMSApp.Migrations
                         .HasForeignKey("AddressId");
 
                     b.Navigation("Address");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.account.AccountReconciliation", b =>
+                {
+                    b.HasOne("GMSApp.Models.account.ChartOfAccount", "ChartOfAccount")
+                        .WithMany()
+                        .HasForeignKey("ChartOfAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChartOfAccount");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.account.ChartOfAccount", b =>
+                {
+                    b.HasOne("GMSApp.Models.account.ChartOfAccount", "ParentAccount")
+                        .WithMany("SubAccounts")
+                        .HasForeignKey("ParentAccountId");
+
+                    b.Navigation("ParentAccount");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.account.GeneralLedgerLine", b =>
+                {
+                    b.HasOne("GMSApp.Models.account.ChartOfAccount", "ChartOfAccount")
+                        .WithMany()
+                        .HasForeignKey("ChartOfAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GMSApp.Models.account.GeneralLedgerEntry", "GeneralLedgerEntry")
+                        .WithMany("Lines")
+                        .HasForeignKey("GeneralLedgerEntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChartOfAccount");
+
+                    b.Navigation("GeneralLedgerEntry");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.account.ReconciliationItem", b =>
+                {
+                    b.HasOne("GMSApp.Models.account.AccountReconciliation", "AccountReconciliation")
+                        .WithMany("Items")
+                        .HasForeignKey("AccountReconciliationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GMSApp.Models.account.GeneralLedgerLine", "GeneralLedgerLine")
+                        .WithMany()
+                        .HasForeignKey("GeneralLedgerLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AccountReconciliation");
+
+                    b.Navigation("GeneralLedgerLine");
                 });
 
             modelBuilder.Entity("GMSApp.Models.invoice.Invoice", b =>
@@ -658,6 +1021,13 @@ namespace GMSApp.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GMSApp.Models.quotation.QuotationItem", b =>
+                {
+                    b.HasOne("GMSApp.Models.quotation.Quotation", null)
+                        .WithMany("Items")
+                        .HasForeignKey("QuotationId");
+                });
+
             modelBuilder.Entity("GMSApp.Models.Vendor", b =>
                 {
                     b.Navigation("Invoices");
@@ -665,6 +1035,21 @@ namespace GMSApp.Migrations
                     b.Navigation("PaymentReceipts");
 
                     b.Navigation("Purchaseorders");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.account.AccountReconciliation", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.account.ChartOfAccount", b =>
+                {
+                    b.Navigation("SubAccounts");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.account.GeneralLedgerEntry", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("GMSApp.Models.invoice.Invoice", b =>
@@ -682,6 +1067,11 @@ namespace GMSApp.Migrations
             modelBuilder.Entity("GMSApp.Models.purchase.PurchaseOrder", b =>
                 {
                     b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.quotation.Quotation", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

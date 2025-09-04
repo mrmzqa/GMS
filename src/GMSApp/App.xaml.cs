@@ -3,6 +3,7 @@ using GMSApp.Data;
 using GMSApp.Repositories;
 using GMSApp.ViewModels;
 using GMSApp.ViewModels.Job;
+using GMSApp.ViewModels.Accounting;
 using GMSApp.Views;
 using GMSApp.Views.Job;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using System;
 using System.Windows;
+using GMSApp.Views.Accounting;
 namespace GMSApp;
 
 public partial class App : Application
@@ -50,6 +52,11 @@ public partial class App : Application
                 services.AddTransient<JoborderViewModel>();
                 services.AddTransient<InvoiceViewModel>();
                 services.AddTransient<QuotationViewModel>();
+                services.AddTransient<AccountsPayableViewModel>();
+                services.AddTransient<AccountsReceivableViewModel>();
+                services.AddTransient<AccountReconcileViewModel>();
+                services.AddTransient<ChartOfAccountViewModel>();
+                services.AddTransient<GeneralLedgerViewModel>();
 
                 // Views - transient
 
@@ -64,6 +71,11 @@ public partial class App : Application
                 services.AddTransient<Invoice>();
                 services.AddTransient<FilesPage>();
                 services.AddTransient<Garage>();
+                services.AddTransient<AccountPayable>();
+                services.AddTransient<AccountReceivable>();
+                services.AddTransient<AccountReconcile>();
+                services.AddTransient<ChartofAccount>();
+                services.AddTransient<GeneralLedger>();
             })
             .UseSerilog()
             .Build();

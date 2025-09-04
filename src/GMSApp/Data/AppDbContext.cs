@@ -1,4 +1,5 @@
 ﻿using GMSApp.Models;
+using GMSApp.Models.account;
 using GMSApp.Models.invoice;
 using GMSApp.Models.job;
 using GMSApp.Models.purchase;
@@ -32,7 +33,14 @@ namespace GMSApp.Data
 
         public DbSet<QuotationItem> QuotationItems { get; set; }
 
-        
+        public DbSet<AccountReconciliation> AccountReconciliations { get; set; }
+
+        public DbSet<AccountsPayable> AccountsPayables { get; set; }
+
+        public DbSet<AccountsReceivable> AccountsReceivables { get; set; }
+
+        public DbSet<ChartOfAccount> ChartOfAccounts { get; set; }
+
         public DbSet<PaymentReceipt> PaymentReceipts { get; set; }
 
         /*protected override void OnModelCreating(ModelBuilder modelBuilder)
