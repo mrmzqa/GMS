@@ -48,8 +48,11 @@ public partial class App : Application
                 services.AddTransient<PurchaseOrderViewModel>();
                 services.AddTransient<VendorViewModel>();
                 services.AddTransient<JoborderViewModel>();
+                services.AddTransient<InvoiceViewModel>();
+                services.AddTransient<QuotationViewModel>();
 
                 // Views - transient
+
                 services.AddTransient<MainWindow>();
                 services.AddTransient<JobContentView>();
                 services.AddTransient<HContentView>();
@@ -57,7 +60,8 @@ public partial class App : Application
                 services.AddTransient<VendorView>();
                 services.AddTransient<PurchaseOrder>();
                 services.AddTransient<JobOrder>();
-
+                services.AddTransient<Quotation>();
+                services.AddTransient<Invoice>();
                 services.AddTransient<FilesPage>();
                 services.AddTransient<Garage>();
             })
