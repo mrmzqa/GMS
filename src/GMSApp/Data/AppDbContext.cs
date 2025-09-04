@@ -2,6 +2,7 @@
 using GMSApp.Models.invoice;
 using GMSApp.Models.job;
 using GMSApp.Models.purchase;
+using GMSApp.Models.quotation;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection.Emit;
 
@@ -26,6 +27,12 @@ namespace GMSApp.Data
         public DbSet<PurchaseOrderLine> PurchaseOrderLines { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<Invoiceline> InvoiceLines { get; set; }
+
+        public DbSet<Quotation> Quotations { get; set; }
+
+        public DbSet<QuotationItem> QuotationItems { get; set; }
+
+        
         public DbSet<PaymentReceipt> PaymentReceipts { get; set; }
 
         /*protected override void OnModelCreating(ModelBuilder modelBuilder)
