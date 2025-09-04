@@ -12,14 +12,18 @@ namespace GmsApp.Views
         private readonly JobContentViewModel _viewModel;
         private readonly PurchaseOrder _purchaseOrder;
         private readonly JobOrder _jobOrder;
+        private readonly Invoice _invoice;
+        private readonly Quotation _quotation;
 
-        public JobContentView(JobContentViewModel viewModel,PurchaseOrder purchaseOrder,JobOrder jobOrder )
+        public JobContentView(JobContentViewModel viewModel,PurchaseOrder purchaseOrder,JobOrder jobOrder , Invoice invoice, Quotation quotation  )
         {
 
             InitializeComponent();
             DataContext = viewModel;
             _purchaseOrder = purchaseOrder;
             _jobOrder = jobOrder;
+            _invoice = invoice;
+            _quotation = quotation;
         }
 
       
@@ -34,6 +38,18 @@ namespace GmsApp.Views
         {
 
             POContent.Content = _purchaseOrder;
+
+        }
+        private void Q_Click(object sender, RoutedEventArgs e)
+        {
+
+            IContent.Content = _quotation;
+
+        }
+        private void I_Click(object sender, RoutedEventArgs e)
+        {
+
+            IContent.Content = _invoice;
 
         }
     }
