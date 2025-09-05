@@ -111,7 +111,7 @@ namespace GMSApp.Data
            .HasOne(c => c.ParentAccount)
            .WithMany(c => c.SubAccounts)
            .HasForeignKey(c => c.ParentAccountId)
-           .OnDelete(DeleteBehavior.SetNull);
+           .OnDelete(DeleteBehavior.Restrict);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

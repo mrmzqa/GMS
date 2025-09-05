@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GMSApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250905121320_ initial")]
-    partial class initial
+    [Migration("20250905123202_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1068,7 +1068,8 @@ namespace GMSApp.Migrations
                 {
                     b.HasOne("GMSApp.Models.account.ChartOfAccount", "ParentAccount")
                         .WithMany("SubAccounts")
-                        .HasForeignKey("ParentAccountId");
+                        .HasForeignKey("ParentAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("ParentAccount");
                 });

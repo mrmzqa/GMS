@@ -1065,7 +1065,8 @@ namespace GMSApp.Migrations
                 {
                     b.HasOne("GMSApp.Models.account.ChartOfAccount", "ParentAccount")
                         .WithMany("SubAccounts")
-                        .HasForeignKey("ParentAccountId");
+                        .HasForeignKey("ParentAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("ParentAccount");
                 });
