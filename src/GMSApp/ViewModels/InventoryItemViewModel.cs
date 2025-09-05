@@ -1,4 +1,79 @@
+<UserControl x:Class="GMSApp.Views.Inventory.InventoryItemView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             d:DesignHeight="600" d:DesignWidth="900">
+    <Grid Margin="8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="360"/>
+            <ColumnDefinition Width="12"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
+        <Border Grid.Column="0" Padding="8" Background="WhiteSmoke" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <Button Content="Reload" Command="{Binding LoadCommand}" Width="70" Margin="0,0,6,0"/>
+                    <Button Content="New" Command="{Binding AddCommand}" Width="70" Margin="0,0,6,0"/>
+                    <Button Content="Save" Command="{Binding SaveCommand}" Width="70" Margin="0,0,6,0"/>
+                    <Button Content="Delete" Command="{Binding DeleteCommand}" Width="70" />
+                </StackPanel>
+
+                <DataGrid ItemsSource="{Binding Items}"
+                          SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          MinHeight="300">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Code" Binding="{Binding ItemCode}" Width="120"/>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                        <DataGridTextColumn Header="Stock" Binding="{Binding QuantityInStock}" Width="90"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+        </Border>
+
+        <GridSplitter Grid.Column="1" Width="4" ShowsPreview="True"/>
+        <Border Grid.Column="2" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="Code:" Width="140" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding SelectedItem.ItemCode, Mode=TwoWay}" Width="260"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="Name:" Width="140" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding SelectedItem.Name, Mode=TwoWay}" Width="360"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="Category:" Width="140" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding SelectedItem.Category, Mode=TwoWay}" Width="200"/>
+                    <TextBlock Text="Unit:" Width="60" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding SelectedItem.Unit, Mode=TwoWay}" Width="80"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="QuantityInStock:" Width="140" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding SelectedItem.QuantityInStock, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="120"/>
+                    <TextBlock Text="Reorder level:" Width="120" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding SelectedItem.ReorderLevel, Mode=TwoWay}" Width="80"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="Cost price:" Width="140" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding SelectedItem.CostPrice, Mode=TwoWay, StringFormat=N2}" Width="140"/>
+                    <TextBlock Text="Sell price:" Width="100" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding SelectedItem.SellingPrice, Mode=TwoWay, StringFormat=N2}" Width="140"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                    <TextBlock Text="Last restocked:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="{Binding SelectedItem.LastRestocked, StringFormat=\{0:yyyy-MM-dd\}}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
