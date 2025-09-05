@@ -87,7 +87,7 @@ namespace GMSApp.Migrations
                         column: x => x.ParentAccountId,
                         principalTable: "ChartOfAccounts",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GMSApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250905123202_Initial")]
+    [Migration("20250905123414_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -1069,7 +1069,7 @@ namespace GMSApp.Migrations
                     b.HasOne("GMSApp.Models.account.ChartOfAccount", "ParentAccount")
                         .WithMany("SubAccounts")
                         .HasForeignKey("ParentAccountId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("ParentAccount");
                 });
