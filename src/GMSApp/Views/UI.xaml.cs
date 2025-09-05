@@ -35,3 +35,31 @@ public class InventoryItem
     // Navigation
     public ICollection<StockTransaction> Transactions { get; set; } = new List<StockTransaction>();
 }
+public class StockTransaction
+{
+    public int Id { get; set; }
+
+    public int InventoryItemId { get; set; }
+    public InventoryItem InventoryItem { get; set; }
+
+    public DateTime TransactionDate { get; set; } = DateTime.UtcNow;
+    public StockTransactionType TransactionType { get; set; } // Purchase, JobUsage, Adjustment, Return
+    public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; } // Snapshot at time of transaction
+
+    // References
+    public int? PurchaseOrderId { get; set; }
+    public PurchaseOrder? PurchaseOrder { get; set; }
+
+    public int? JobOrderId { get; set; }
+    public JobOrder? JobOrder { get; set; }
+
+    public string Notes { get; set; } = string.Empty;
+}
+public enum StockTransactionType
+{
+    Purchase = 1,
+    JobUsage = 2,
+    Adjustment = 3,
+    Return = 4
+}
