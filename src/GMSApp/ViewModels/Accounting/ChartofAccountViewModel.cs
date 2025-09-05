@@ -80,28 +80,22 @@ namespace GMSApp.ViewModels.Accounting
 
             try
             {
-                // create detached copy
-                var detached = new ChartOfAccount
-                {
-                    Id = SelectedAccount.Id,
-                    AccountCode = SelectedAccount.AccountCode?.Trim() ?? string.Empty,
-                    AccountName = SelectedAccount.AccountName?.Trim() ?? string.Empty,
-                    AccountType = SelectedAccount.AccountType,
-                    IsActive = SelectedAccount.IsActive,
-                    ParentAccountId = SelectedAccount.ParentAccountId
-                };
+                // Clean navigation properties
+                SelectedAccount.ParentAccount = null;
+                SelectedAccount.SubAccounts = null!;
 
-                if (detached.Id == 0)
-                    await _repo.AddAsync(detached);
+                if (SelectedAccount.Id == 0)
+                    await _repo.AddAsync(SelectedAccount);
                 else
-                    await _repo.UpdateAsync(detached);
+                    await _repo.UpdateAsync(SelectedAccount);
+
 
                 await LoadAsync();
-                SelectedAccount = Accounts.FirstOrDefault(a => a.Id == detached.Id) ?? SelectedAccount;
+                SelectedAccount = Accounts.FirstOrDefault(a => a.Id == SelectedAccount.Id) ?? SelectedAccount;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to save account: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Failed to save account:\n {ex}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

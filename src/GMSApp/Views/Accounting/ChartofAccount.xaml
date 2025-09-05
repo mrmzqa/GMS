@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:GMSApp.Views.Accounting"
              mc:Ignorable="d" 
-             d:DesignHeight="600" d:DesignWidth="900">
+             Height="Auto" Width="Auto">
     <Grid Margin="8">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="340" />

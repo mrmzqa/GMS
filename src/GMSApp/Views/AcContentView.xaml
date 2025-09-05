@@ -10,7 +10,7 @@
     <Grid Margin="1">
                     <TabControl >
             <TabItem Header="Menu">
-                <TreeView RenderTransformOrigin="1,2.285" Margin="0,0,2,0" Height="251">
+                <TreeView RenderTransformOrigin="1,2.285" Margin="0,0,2,0" >
                     <Button Margin="5" Click="Ch_Click" Content="ChartOfAccounts" />
                     <Button Margin="5" Click="G_Click" Content="General Ledger" />
                     <Button  Margin="5" Click="Ap_Click" Content="Account Payable"/>
@@ -22,19 +22,19 @@
             </TabItem>
             <TabItem Header="ChartofAccounts">
                 <ContentControl x:Name="CHContent"
-Height="Auto" Width="Auto" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
+Height="Auto" Width="Auto"  FontSize="10"/>
             </TabItem>
             <TabItem Header="General Ledger">
                 <ContentControl x:Name="GLContent"
-Height="Auto" Width="Auto" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
+Height="Auto" Width="Auto"  FontSize="10"/>
             </TabItem>
             <TabItem Header="Account Payable">
                 <ContentControl x:Name="ApContent"
-Height="Auto" Width="Auto" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
+Height="Auto" Width="Auto"  FontSize="10"/>
             </TabItem>
             <TabItem Header="Account Receivable">
                 <ContentControl x:Name="ArContent"
-            Height="Auto" Width="Auto" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
+            Height="Auto" Width="Auto"  FontSize="10"/>
             </TabItem>
             <TabItem Header="Account Reconcile">
                 <ContentControl x:Name="AcContent"

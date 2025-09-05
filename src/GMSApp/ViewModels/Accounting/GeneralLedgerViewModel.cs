@@ -34,7 +34,7 @@ namespace GMSApp.ViewModels.Accounting
         partial void OnSelectedEntryChanged(GeneralLedgerEntry? value)
         {
             Lines.Clear();
-            /*if (value != null)
+            if (value != null)
             {
                 foreach (var l in value.Lines)
                 {
@@ -42,7 +42,7 @@ namespace GMSApp.ViewModels.Accounting
                     ed.PropertyChanged += Line_PropertyChanged;
                     Lines.Add(ed);
                 }
-            }*/
+            }
 
             OnPropertyChanged(nameof(TotalDebits));
             OnPropertyChanged(nameof(TotalCredits));
@@ -205,6 +205,16 @@ namespace GMSApp.ViewModels.Accounting
 
         public partial class EditableLine : ObservableObject
         {
+            public EditableLine() { }
+
+            public EditableLine(GeneralLedgerLine line)
+            {
+                Id = line.Id;
+                ChartOfAccountId = line.ChartOfAccountId;
+                Debit = line.Debit;
+                Credit = line.Credit;
+            }
+
             [ObservableProperty]
             private int id;
 
@@ -223,5 +233,6 @@ namespace GMSApp.ViewModels.Accounting
 
             public decimal Amount => Debit - Credit;
         }
+
     }
 }
