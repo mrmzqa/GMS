@@ -51,54 +51,8 @@ namespace GMSApp.ViewModels.Inventory
             }
         }
 
-        // Add manual transaction (adjustment/return)
-        [RelayCommand]
-        public async Task AddAdjustmentAsync(int inventoryItemId, StockTransactionType type, int quantity, decimal unitPrice, string notes)
-        {
-            try
-            {
-                var txn = new StockTransaction
-                {
-                    InventoryItemId = inventoryItemId,
-                    TransactionType = type,
-                    TransactionDate = DateTime.UtcNow,
-                    Quantity = quantity,
-                    UnitPrice = unitPrice,
-                    Notes = notes
-                };
-
-                await _txnRepo.AddAsync(txn);
-
-                // update stock level: Purchase/Return increase, JobUsage/Adjustment decrease (Adjustment can be negative or positive depending on sign)
-                var item = (await _itemRepo.GetAllAsync()).FirstOrDefault(i => i.Id == inventoryItemId);
-                if (item != null)
-                {
-                    switch (type)
-                    {
-                        case StockTransactionType.Purchase:
-                        case StockTransactionType.Return:
-                            item.QuantityInStock += quantity;
-                            break;
-                        case StockTransactionType.JobUsage:
-                            item.QuantityInStock -= quantity;
-                            break;
-                        case StockTransactionType.Adjustment:
-                            // For adjustment, we accept signed quantity. Caller should pass negative to reduce stock.
-                            item.QuantityInStock += quantity;
-                            break;
-                    }
-
-                    item.UpdatedAt = DateTime.UtcNow;
-                    await _itemRepo.UpdateAsync(item);
-                }
-
-                await LoadAsync();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to add transaction: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
+        
+       
 
         [RelayCommand(CanExecute = nameof(CanModify))]
         public async Task DeleteAsync()
