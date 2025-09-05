@@ -67,7 +67,19 @@ namespace GMSApp.Repositories.Pdf
            
             public byte[]? HeaderImage { get; set; } 
 
-            public byte[]? FooterImage { get; set; } 
+            public byte[]? FooterImage { get; set; }
+
+            public List<(string En, string Ar)> Conditions { get; set; } = new List<(string, string)>
+{
+    ("The vehicle will be delivered after full payment.", "سيتم تسليم المركبة بعد السداد الكامل."),
+    ("The garage is not responsible for unclaimed vehicles after 30 days.", "المرآب غير مسؤول عن المركبات غير المستلمة بعد 30 يومًا.")
+};
+
+            public string CustomerSignatureEn { get; set; } = "Customer Signature";
+            public string CustomerSignatureAr { get; set; } = "توقيع العميل";
+
+            public string GarageSignatureEn { get; set; } = "Garage Representative";
+            public string GarageSignatureAr { get; set; } = "ممثل المرآب";
         }
 
 
@@ -224,12 +236,13 @@ namespace GMSApp.Repositories.Pdf
                             {
                                 using var msHeader = new MemoryStream(HeaderImage);
                                 using var headerImg = XImage.FromStream(() => msHeader);
-                                double hh = 60;
-                                double hw = headerImg.PixelWidth * hh / headerImg.PixelHeight;
-                                double hx = ml + (usableW - hw) / 2;
-                                double hy = y;
-                                gfx.DrawImage(headerImg, hx, hy, hw, hh);
-                                y += hh + 8;
+
+                                double targetHeight = 80;
+                                double aspectRatio = (double)headerImg.PixelWidth / headerImg.PixelHeight;
+                                double targetWidth = usableW;
+
+                                gfx.DrawImage(headerImg, ml, 0, targetWidth, targetHeight);
+                                y = targetHeight + 10;
                             }
                             catch { }
                         }
@@ -396,20 +409,62 @@ namespace GMSApp.Repositories.Pdf
                         {
                             gfx.DrawString(footerRight, smallFontEn, XBrushes.Gray, new XRect(ml, pageH - mb + 8, usableW, 20), XStringFormats.TopRight);
                         }
-                       
+                        // TERMS & CONDITIONS
+                        y += 20;
+                        gfx.DrawString("Terms & Conditions — " + ShapeArabic("الشروط والأحكام"), labelFontEn, XBrushes.Black, new XPoint(ml, y));
+                        y += 16;
 
-                        // Footer Image at very bottom
+                        foreach (var condition in TemplateData.Conditions)
+                        {
+                            string combined = $"{condition.En} — {ShapeArabic(condition.Ar)}";
+                            gfx.DrawString("- " + combined, smallFontEn, XBrushes.Black, new XRect(ml + 10, y, usableW - 20, 20), XStringFormats.TopLeft);
+                            y += 14;
+                        }
+
+                        // Ensure there's room for signatures
+                        if (y + 100 > pageH - mb - 80) // 80 for footer image
+                        {
+                            gfx.Dispose();
+                            page = document.AddPage();
+                            page.Size = PdfSharpCore.PageSize.A4;
+                            gfx = XGraphics.FromPdfPage(page);
+                            y = mt;
+                        }
+
+                        // SIGNATURES
+                        y += 30;
+
+                        double sigBoxW = 200;
+                        double sigBoxH = 50;
+
+                        double leftSigX = ml;
+                        double rightSigX = ml + usableW - sigBoxW;
+
+                        gfx.DrawRectangle(XPens.Black, new XRect(leftSigX, y, sigBoxW, sigBoxH));
+                        gfx.DrawString(
+                            $"{TemplateData.CustomerSignatureEn} — {ShapeArabic(TemplateData.CustomerSignatureAr)}",
+                            smallFontEn, XBrushes.Black, new XRect(leftSigX + 5, y + sigBoxH + 4, sigBoxW, 20),
+                            XStringFormats.TopLeft);
+
+                        gfx.DrawRectangle(XPens.Black, new XRect(rightSigX, y, sigBoxW, sigBoxH));
+                        gfx.DrawString(
+                            $"{TemplateData.GarageSignatureEn} — {ShapeArabic(TemplateData.GarageSignatureAr)}",
+                            smallFontEn, XBrushes.Black, new XRect(rightSigX + 5, y + sigBoxH + 4, sigBoxW, 20),
+                            XStringFormats.TopLeft);
+
+                        // FOOTER IMAGE (Full width)
                         if (FooterImage != null && FooterImage.Length > 0)
                         {
                             try
                             {
                                 using var msFooter = new MemoryStream(FooterImage);
                                 using var footerImg = XImage.FromStream(() => msFooter);
-                                double fh = 60;
-                                double fw = footerImg.PixelWidth * fh / footerImg.PixelHeight;
-                                double fx = ml + (usableW - fw) / 2;
-                                double fy = pageH - fh; // place at bottom
-                                gfx.DrawImage(footerImg, fx, fy, fw, fh);
+
+                                double targetHeight = 80;
+                                double aspectRatio = (double)footerImg.PixelWidth / footerImg.PixelHeight;
+                                double targetWidth = usableW;
+
+                                gfx.DrawImage(footerImg, ml, page.Height - targetHeight, targetWidth, targetHeight);
                             }
                             catch { }
                         }
