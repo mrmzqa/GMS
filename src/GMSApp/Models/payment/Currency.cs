@@ -4,11 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GMSApp.Models
+namespace GMSApp.Models.payment
 {
-   
 
-  
+    public enum Currency
+    {
+        QAR = 0,
+        USD = 1,
+        EUR = 2
+    }
 
-   
 }

@@ -1,9 +1,9 @@
-﻿using GMSApp.Models.Enums;
+﻿
 using GMSApp.Models.invoice;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GMSApp.Models
+namespace GMSApp.Models.payment
 {
     public class PaymentReceipt
     {

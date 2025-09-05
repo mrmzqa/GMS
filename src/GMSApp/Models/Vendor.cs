@@ -1,4 +1,5 @@
-﻿using GMSApp.Models.purchase;
+﻿using GMSApp.Models.payment;
+using GMSApp.Models.purchase;
 using GMSApp.Views.Job;
 using System;
 using System.Collections.Generic;
