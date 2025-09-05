@@ -63,3 +63,17 @@ public enum StockTransactionType
     Adjustment = 3,
     Return = 4
 }
+public class JobOrderItem
+{
+    public int Id { get; set; }
+
+    public int JobOrderId { get; set; }
+    public JobOrder JobOrder { get; set; }
+
+    public int InventoryItemId { get; set; }
+    public InventoryItem InventoryItem { get; set; }
+
+    public int QuantityUsed { get; set; }
+    public decimal UnitPrice { get; set; } // Selling price
+    public decimal TotalPrice => QuantityUsed * UnitPrice;
+}
