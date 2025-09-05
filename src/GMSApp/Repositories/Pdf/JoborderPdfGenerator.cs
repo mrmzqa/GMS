@@ -2,6 +2,7 @@
 using GMSApp.Data;
 using GMSApp.Models;
 using GMSApp.Models.job;
+using Microsoft.EntityFrameworkCore;
 using PdfSharpCore.Drawing;
 using PdfSharpCore.Pdf;
 using System;
@@ -17,6 +18,8 @@ namespace GMSApp.Repositories.Pdf
         private readonly AppDbContext _context;
         public class Template
         {
+          
+            
             public string HeaderEn { get; set; } = "JOB CARD";
             public string HeaderAr { get; set; } = "بطاقة العمل";
 
@@ -246,9 +249,13 @@ namespace GMSApp.Repositories.Pdf
                             }
                             catch { }
                         }
+                        //CompanyName
+                        var companyText = _context.Garages.FirstOrDefault().Name;
+                        gfx.DrawString(companyText, headerFont, XBrushes.Red, new XRect(ml, y, usableW, 27), XStringFormats.TopCenter);
+                        y += 32;
 
 
-                        var headerText = $"{TemplateData.HeaderEn} — {ShapeArabic(TemplateData.HeaderAr)}";
+                        var headerText = $"{TemplateData.HeaderEn} | {ShapeArabic(TemplateData.HeaderAr)}";
                         gfx.DrawString(headerText, headerFont, XBrushes.Black, new XRect(ml, y, usableW, 24), XStringFormats.TopCenter);
                         y += 28;
 
@@ -351,7 +358,7 @@ namespace GMSApp.Repositories.Pdf
                                 gfx = XGraphics.FromPdfPage(page);
                                 y = mt;
 
-                                gfx.DrawString($"{TemplateData.HeaderEn} — {ShapeArabic(TemplateData.HeaderAr)} (cont.)", headerFont, XBrushes.Black, new XRect(ml, y, usableW, 24), XStringFormats.TopCenter);
+                                gfx.DrawString($"{TemplateData.HeaderEn} | {ShapeArabic(TemplateData.HeaderAr)} (cont.)", headerFont, XBrushes.Black, new XRect(ml, y, usableW, 24), XStringFormats.TopCenter);
                                 y += 28;
 
                                 DrawTableHeader();
@@ -394,11 +401,11 @@ namespace GMSApp.Repositories.Pdf
 
                         var footerLeft = string.IsNullOrWhiteSpace(TemplateData.FooterLeftAr)
                             ? TemplateData.FooterLeftEn
-                            : $"{TemplateData.FooterLeftEn} — {ShapeArabic(TemplateData.FooterLeftAr)}";
+                            : $"{TemplateData.FooterLeftEn} | {ShapeArabic(TemplateData.FooterLeftAr)}";
 
                         var footerRight = string.IsNullOrWhiteSpace(TemplateData.FooterRightAr)
                             ? TemplateData.FooterRightEn
-                            : $"{TemplateData.FooterRightEn} — {ShapeArabic(TemplateData.FooterRightAr)}";
+                            : $"{TemplateData.FooterRightEn} | {ShapeArabic(TemplateData.FooterRightAr)}";
 
                         if (!string.IsNullOrWhiteSpace(footerLeft))
                         {
@@ -416,7 +423,7 @@ namespace GMSApp.Repositories.Pdf
 
                         foreach (var condition in TemplateData.Conditions)
                         {
-                            string combined = $"{condition.En} — {ShapeArabic(condition.Ar)}";
+                            string combined = $"{condition.En} | {ShapeArabic(condition.Ar)}";
                             gfx.DrawString("- " + combined, smallFontEn, XBrushes.Black, new XRect(ml + 10, y, usableW - 20, 20), XStringFormats.TopLeft);
                             y += 14;
                         }
@@ -442,13 +449,13 @@ namespace GMSApp.Repositories.Pdf
 
                         gfx.DrawRectangle(XPens.Black, new XRect(leftSigX, y, sigBoxW, sigBoxH));
                         gfx.DrawString(
-                            $"{TemplateData.CustomerSignatureEn} — {ShapeArabic(TemplateData.CustomerSignatureAr)}",
+                            $"{TemplateData.CustomerSignatureEn} | {ShapeArabic(TemplateData.CustomerSignatureAr)}",
                             smallFontEn, XBrushes.Black, new XRect(leftSigX + 5, y + sigBoxH + 4, sigBoxW, 20),
                             XStringFormats.TopLeft);
 
                         gfx.DrawRectangle(XPens.Black, new XRect(rightSigX, y, sigBoxW, sigBoxH));
                         gfx.DrawString(
-                            $"{TemplateData.GarageSignatureEn} — {ShapeArabic(TemplateData.GarageSignatureAr)}",
+                            $"{TemplateData.GarageSignatureEn} | {ShapeArabic(TemplateData.GarageSignatureAr)}",
                             smallFontEn, XBrushes.Black, new XRect(rightSigX + 5, y + sigBoxH + 4, sigBoxW, 20),
                             XStringFormats.TopLeft);
 

@@ -31,8 +31,8 @@ public partial class App : Application
                 // DbContext: keep your connection string here or use context.Configuration.GetConnectionString("DefaultConnection")
                 services.AddDbContext<AppDbContext>(options =>
                     options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=G;Trusted_Connection=True;"));
-                /*services.AddDbContext<AppDbContext>(options =>
-                    options.UseSqlite("Data Source=db.db; Cache=Shared"));*/
+                /* services.AddDbContext<AppDbContext>(options =>
+                     options.UseSqlite("Data Source=db.db; Cache=Shared"));*/
                 // Repositories
                 services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
                 services.AddScoped<IFileRepository, FileRepository>();
@@ -94,6 +94,7 @@ public partial class App : Application
             {
                 using var scope = _host.Services.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                /*dbContext.Database.EnsureCreated();*/
                 await dbContext.Database.MigrateAsync();
             }
             catch (Exception dbEx)

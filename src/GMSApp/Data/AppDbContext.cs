@@ -2,6 +2,7 @@
 using GMSApp.Models.account;
 using GMSApp.Models.invoice;
 using GMSApp.Models.job;
+using GMSApp.Models.payment;
 using GMSApp.Models.purchase;
 using GMSApp.Models.quotation;
 using Microsoft.EntityFrameworkCore;
