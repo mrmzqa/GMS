@@ -52,7 +52,7 @@ namespace GMSApp.ViewModels.Inventory
         }
 
         // Add manual transaction (adjustment/return)
-        [RelayCommand(CanExecute = nameof(CanModify))]
+        [RelayCommand]
         public async Task AddAdjustmentAsync(int inventoryItemId, StockTransactionType type, int quantity, decimal unitPrice, string notes)
         {
             try
