@@ -1,4 +1,5 @@
-﻿using GMSApp.Models.Enums;
+﻿
+using GMSApp.Models.account;
 using GMSApp.Models.invoice;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;

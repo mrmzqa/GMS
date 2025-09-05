@@ -4,13 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GMSApp.Models.account
+namespace GMSApp.Models.invoice
 {
     public enum InvoiceStatus
     {
-        Unpaid,
-        PartiallyPaid,
-        Paid,
-        Overdue
+        Draft = 0,
+        Pending = 1,
+        Paid = 2,
+        PartiallyPaid = 3,
+        Cancelled = 4,
+        Overdue = 5
     }
 }

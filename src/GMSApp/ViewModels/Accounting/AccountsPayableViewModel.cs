@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using GMSApp.Commands;
 using GMSApp.Models;
 using GMSApp.Models.account;
+using GMSApp.Models.invoice;
 using GMSApp.Repositories;
 using System;
 using System.Collections.ObjectModel;
@@ -67,7 +68,7 @@ namespace GMSApp.ViewModels.Accounting
                 Amount = 0m,
                 PaidAmount = 0m,
                 DueDate = DateTime.UtcNow.AddDays(30),
-                Status = InvoiceStatus.Unpaid
+                Status = InvoiceStatus.Draft
             };
             Payables.Add(ap);
             SelectedPayable = ap;
@@ -93,7 +94,7 @@ namespace GMSApp.ViewModels.Accounting
                     Status = SelectedPayable.Status
                 };
 
-                if (detached.PaidAmount <= 0) detached.Status = InvoiceStatus.Unpaid;
+                if (detached.PaidAmount <= 0) detached.Status = InvoiceStatus.Draft;
                 else if (detached.PaidAmount < detached.Amount) detached.Status = InvoiceStatus.PartiallyPaid;
                 else detached.Status = InvoiceStatus.Paid;
 

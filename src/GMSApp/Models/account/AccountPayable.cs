@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GMSApp.Models.invoice;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,6 +17,6 @@ namespace GMSApp.Models.account
         public decimal Amount { get; set; }
         public decimal PaidAmount { get; set; } = 0;
         public DateTime DueDate { get; set; }
-        public InvoiceStatus Status { get; set; } = InvoiceStatus.Unpaid;
+        public InvoiceStatus Status { get; set; } = InvoiceStatus.Draft;
     }
 }

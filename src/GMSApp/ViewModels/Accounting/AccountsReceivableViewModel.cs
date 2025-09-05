@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using GMSApp.Commands;
 using GMSApp.Models;
 using GMSApp.Models.account;
+using GMSApp.Models.invoice;
 using GMSApp.Repositories;
 using System;
 using System.Collections.ObjectModel;
@@ -67,7 +68,7 @@ namespace GMSApp.ViewModels.Accounting
                 Amount = 0m,
                 ReceivedAmount = 0m,
                 DueDate = DateTime.UtcNow.AddDays(30),
-                Status = InvoiceStatus.Unpaid
+                Status = InvoiceStatus.Draft
             };
             Receivables.Add(ar);
             SelectedReceivable = ar;
@@ -95,7 +96,7 @@ namespace GMSApp.ViewModels.Accounting
                 };
 
                 // update status based on amounts
-                if (detached.ReceivedAmount <= 0) detached.Status = InvoiceStatus.Unpaid;
+                if (detached.ReceivedAmount <= 0) detached.Status = InvoiceStatus.Draft;
                 else if (detached.ReceivedAmount < detached.Amount) detached.Status = InvoiceStatus.PartiallyPaid;
                 else detached.Status = InvoiceStatus.Paid;
 

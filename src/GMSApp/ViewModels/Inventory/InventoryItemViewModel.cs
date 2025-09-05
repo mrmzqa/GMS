@@ -2,9 +2,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
+using GMSApp.Models.inventory;
 using GMSApp.Repositories;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -25,6 +27,7 @@ namespace GMSApp.ViewModels.Inventory
         }
 
         [ObservableProperty] private InventoryItem? selectedItem;
+        [ObservableProperty] public Unit? unit;
 
         partial void OnSelectedItemChanged(InventoryItem? value)
         {
@@ -66,7 +69,7 @@ namespace GMSApp.ViewModels.Inventory
                 Description = string.Empty,
                 Category = string.Empty,
                 SubCategory = string.Empty,
-                Unit = "pcs",
+                Unit = unit.Value,
                 QuantityInStock = 0,
                 ReorderLevel = 5,
                 LastRestocked = DateTime.UtcNow

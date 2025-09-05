@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GMSApp.Models.account;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,12 +21,12 @@ namespace GMSApp.Models.inventory
         // Stock Info
         public int QuantityInStock { get; set; }
         public int ReorderLevel { get; set; } = 5;
-        public string Unit { get; set; } = "pcs";
+        public Unit Unit { get; set; } = Unit.Piece;
 
         // Pricing
         public decimal CostPrice { get; set; }
         public decimal SellingPrice { get; set; }
-        public string Currency { get; set; } = "QAR";
+        public Currency Currency { get; set; } = Currency.QAR;
 
         // Vendor Reference
         public int? VendorId { get; set; }

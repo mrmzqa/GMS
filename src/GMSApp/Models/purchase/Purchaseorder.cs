@@ -1,6 +1,7 @@
 // File: Models/PurchaseOrder.cs
 using CommunityToolkit.Mvvm.ComponentModel;
-using GMSApp.Models.Enums;
+using GMSApp.Models.account;
+
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
@@ -57,7 +58,7 @@ namespace GMSApp.Models.purchase
 
         public Currency Currency { get; set; } = Currency.QAR;
         public PurchaseOrderStatus Status { get; set; } = PurchaseOrderStatus.Draft;
-        public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.BankTransfer;
+        public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
 
         [MaxLength(100)]
         public string? BankName { get; set; }
