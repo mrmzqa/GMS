@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using GMSApp.Models.inventory;
 using GMSApp.Models.job;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -47,8 +48,16 @@ public class ItemRow : ObservableObject
     // FK to Joborder.Id
     public int JoborderId { get; set; }
 
+    public int InventoryItemId { get; set; }
+    
+
+
     // Navigation property
     public GMSApp.Models.job.Joborder? Joborder { get; set; }
+
+    public InventoryItem? InventoryItem { get; set; }
+
+
 }
 
 
