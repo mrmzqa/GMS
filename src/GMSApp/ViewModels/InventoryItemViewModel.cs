@@ -1,3 +1,356 @@
+
+
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using GMSApp.Models;
+using GMSApp.Repositories;
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+
+namespace GMSApp.ViewModels.Inventory
+{
+    public partial class PurchaseOrderViewModel : ObservableObject
+    {
+        private readonly IRepository<PurchaseOrder> _poRepo;
+        private readonly IRepository<InventoryItem> _itemRepo;
+        private readonly IRepository<StockTransaction> _txnRepo;
+
+        public ObservableCollection<PurchaseOrder> PurchaseOrders { get; } = new();
+        public ObservableCollection<InventoryItem> InventoryItems { get; } = new();
+
+        public PurchaseOrderViewModel(IRepository<PurchaseOrder> poRepo,
+                                      IRepository<InventoryItem> itemRepo,
+                                      IRepository<StockTransaction> txnRepo)
+        {
+            _poRepo = poRepo ?? throw new ArgumentNullException(nameof(poRepo));
+            _itemRepo = itemRepo ?? throw new ArgumentNullException(nameof(itemRepo));
+            _txnRepo = txnRepo ?? throw new ArgumentNullException(nameof(txnRepo));
+            _ = LoadAsync();
+        }
+
+        [ObservableProperty] private PurchaseOrder? selectedPurchaseOrder;
+        public ObservableCollection<EditablePOItem> POItems { get; } = new();
+
+        partial void OnSelectedPurchaseOrderChanged(PurchaseOrder? value)
+        {
+            POItems.Clear();
+            if (value != null)
+            {
+                foreach (var it in value.Items ?? Enumerable.Empty<PurchaseOrderItem>())
+                {
+                    var ed = new EditablePOItem(it);
+                    ed.PropertyChanged += ItemPropChanged;
+                    POItems.Add(ed);
+                }
+            }
+            LoadCommand.NotifyCanExecuteChanged();
+            SaveCommand.NotifyCanExecuteChanged();
+            ReceiveCommand.NotifyCanExecuteChanged();
+        }
+
+        private void ItemPropChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(EditablePOItem.Quantity) || e.PropertyName == nameof(EditablePOItem.UnitPrice))
+                UpdateTotals();
+        }
+
+        [ObservableProperty] private decimal totalAmount;
+
+        private void UpdateTotals()
+        {
+            TotalAmount = POItems.Sum(i => i.Quantity * i.UnitPrice);
+        }
+
+        [RelayCommand]
+        public async Task LoadAsync()
+        {
+            try
+            {
+                PurchaseOrders.Clear();
+                InventoryItems.Clear();
+
+                var list = await _poRepo.GetAllAsync();
+                foreach (var po in list) PurchaseOrders.Add(po);
+
+                var inv = await _itemRepo.GetAllAsync();
+                foreach (var i in inv) InventoryItems.Add(i);
+
+                SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to load purchase orders/items: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand]
+        public Task AddAsync()
+        {
+            var po = new PurchaseOrder
+            {
+                OrderNumber = $"PO-{DateTime.UtcNow:yyyyMMddHHmmss}",
+                OrderDate = DateTime.UtcNow,
+                Status = PurchaseOrderStatus.Pending,
+                Items = new System.Collections.Generic.List<PurchaseOrderItem>()
+            };
+            PurchaseOrders.Add(po);
+            SelectedPurchaseOrder = po;
+            return Task.CompletedTask;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task SaveAsync()
+        {
+            if (SelectedPurchaseOrder == null) return;
+
+            try
+            {
+                // map editable items to detached PO
+                var detached = new PurchaseOrder
+                {
+                    Id = SelectedPurchaseOrder.Id,
+                    OrderNumber = SelectedPurchaseOrder.OrderNumber,
+                    VendorId = SelectedPurchaseOrder.VendorId,
+                    OrderDate = SelectedPurchaseOrder.OrderDate,
+                    ExpectedDeliveryDate = SelectedPurchaseOrder.ExpectedDeliveryDate,
+                    Status = SelectedPurchaseOrder.Status,
+                    Currency = SelectedPurchaseOrder.Currency,
+                    Items = POItems.Select(p => new PurchaseOrderItem
+                    {
+                        Id = p.Id,
+                        InventoryItemId = p.InventoryItemId,
+                        Quantity = p.Quantity,
+                        UnitPrice = p.UnitPrice
+                    }).ToList()
+                };
+
+                detached.TotalAmount = detached.Items.Sum(i => i.Quantity * i.UnitPrice);
+
+                if (detached.Id == 0) await _poRepo.AddAsync(detached);
+                else await _poRepo.UpdateAsync(detached);
+
+                await LoadAsync();
+                SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault(x => x.OrderNumber == detached.OrderNumber) ?? SelectedPurchaseOrder;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to save PO: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // Mark PO as Received: create StockTransactions and update InventoryItem.QuantityInStock
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task ReceiveAsync()
+        {
+            if (SelectedPurchaseOrder == null) return;
+
+            try
+            {
+                // If already received skip
+                if (SelectedPurchaseOrder.Status == PurchaseOrderStatus.Received)
+                {
+                    MessageBox.Show("Purchase order already received.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                // Build stock transactions for each item
+                foreach (var p in SelectedPurchaseOrder.Items ?? Enumerable.Empty<PurchaseOrderItem>())
+                {
+                    // create stock txn
+                    var txn = new StockTransaction
+                    {
+                        InventoryItemId = p.InventoryItemId,
+                        TransactionDate = DateTime.UtcNow,
+                        TransactionType = StockTransactionType.Purchase,
+                        Quantity = p.Quantity,
+                        UnitPrice = p.UnitPrice,
+                        PurchaseOrderId = SelectedPurchaseOrder.Id,
+                        Notes = $"PO Receive {SelectedPurchaseOrder.OrderNumber}"
+                    };
+
+                    await _txnRepo.AddAsync(txn);
+
+                    // update inventory item stock (load item, apply increment, save via repository)
+                    var item = (await _itemRepo.GetAllAsync()).FirstOrDefault(i => i.Id == p.InventoryItemId);
+                    if (item != null)
+                    {
+                        item.QuantityInStock += p.Quantity;
+                        item.LastRestocked = DateTime.UtcNow;
+                        await _itemRepo.UpdateAsync(item);
+                    }
+                }
+
+                // update PO status
+                SelectedPurchaseOrder.Status = PurchaseOrderStatus.Received;
+                await _poRepo.UpdateAsync(new PurchaseOrder
+                {
+                    Id = SelectedPurchaseOrder.Id,
+                    Status = SelectedPurchaseOrder.Status
+                });
+
+                await LoadAsync();
+                MessageBox.Show("Purchase order received and stock updated.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to receive PO: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task DeleteAsync()
+        {
+            if (SelectedPurchaseOrder == null) return;
+            var confirm = MessageBox.Show("Delete selected PO?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirm != MessageBoxResult.Yes) return;
+
+            try
+            {
+                if (SelectedPurchaseOrder.Id == 0)
+                {
+                    PurchaseOrders.Remove(SelectedPurchaseOrder);
+                    SelectedPurchaseOrder = PurchaseOrders.FirstOrDefault();
+                }
+                else
+                {
+                    await _poRepo.DeleteAsync(SelectedPurchaseOrder.Id);
+                    await LoadAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to delete PO: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // Editable PO items for UI
+        public class EditablePOItem : ObservableObject
+        {
+            public EditablePOItem() { }
+
+            public EditablePOItem(PurchaseOrderItem src)
+            {
+                Id = src.Id;
+                InventoryItemId = src.InventoryItemId;
+                Quantity = src.Quantity;
+                UnitPrice = src.UnitPrice;
+            }
+
+            [ObservableProperty] private int id;
+            [ObservableProperty] private int inventoryItemId;
+            partial void OnInventoryItemIdChanged(int value) => OnPropertyChanged(nameof(InventoryItemId));
+            [ObservableProperty] private int quantity;
+            partial void OnQuantityChanged(int value) => OnPropertyChanged(nameof(LineTotal));
+            [ObservableProperty] private decimal unitPrice;
+            partial void OnUnitPriceChanged(decimal value) => OnPropertyChanged(nameof(LineTotal));
+            public decimal LineTotal => Math.Round(Quantity * UnitPrice, 2);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        private void AddItem()
+        {
+            POItems.Add(new EditablePOItem { Quantity = 1, UnitPrice = 0m });
+        }
+
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        private void RemoveItem(EditablePOItem? itm)
+        {
+            if (itm == null) return;
+            POItems.Remove(itm);
+            UpdateTotals();
+        }
+
+        private bool CanModify() => SelectedPurchaseOrder != null;
+    }
+}
+
+<UserControl x:Class="GMSApp.Views.Inventory.PurchaseOrderView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             d:DesignHeight="700" d:DesignWidth="1100">
+    <Grid Margin="8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="360"/>
+            <ColumnDefinition Width="12"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Padding="8" Background="WhiteSmoke" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0 0 0 8">
+                    <Button Content="Reload" Command="{Binding LoadCommand}" Width="70" Margin="0,0,6,0"/>
+                    <Button Content="New" Command="{Binding AddCommand}" Width="70" Margin="0,0,6,0"/>
+                    <Button Content="Save" Command="{Binding SaveCommand}" Width="70" Margin="0,0,6,0"/>
+                    <Button Content="Delete" Command="{Binding DeleteCommand}" Width="70" />
+                    <Button Content="Receive" Command="{Binding ReceiveCommand}" Width="80" Margin="6,0,0,0"/>
+                </StackPanel>
+
+                <DataGrid ItemsSource="{Binding PurchaseOrders}"
+                          SelectedItem="{Binding SelectedPurchaseOrder, Mode=TwoWay}"
+                          AutoGenerateColumns="False" MinHeight="300">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="PO #" Binding="{Binding OrderNumber}" Width="*"/>
+                        <DataGridTextColumn Header="Date" Binding="{Binding OrderDate, StringFormat=\{0:yyyy-MM-dd\}}" Width="120"/>
+                        <DataGridTextColumn Header="VendorId" Binding="{Binding VendorId}" Width="90"/>
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+        </Border>
+
+        <GridSplitter Grid.Column="1" Width="4" ShowsPreview="True"/>
+        <Border Grid.Column="2" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                    <TextBlock Text="PO #" Width="100" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding SelectedPurchaseOrder.OrderNumber, Mode=TwoWay}" Width="220"/>
+                    <TextBlock Text="Order Date:" Width="90" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                    <DatePicker SelectedDate="{Binding SelectedPurchaseOrder.OrderDate, Mode=TwoWay}" />
+                </StackPanel>
+
+                <GroupBox Grid.Row="2" Header="Items" Padding="6">
+                    <DockPanel LastChildFill="True">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,6">
+                            <Button Content="Add Item" Command="{Binding AddItemCommand}" Width="90" Margin="0,0,6,0"/>
+                            <Button Content="Remove Item" Command="{Binding RemoveItemCommand}" CommandParameter="{Binding SelectedItem, ElementName=POItemsGrid}" Width="110"/>
+                        </StackPanel>
+
+                        <DataGrid x:Name="POItemsGrid" ItemsSource="{Binding POItems}" AutoGenerateColumns="False" CanUserAddRows="False">
+                            <DataGrid.Columns>
+                                <DataGridComboBoxColumn Header="Item"
+                                                        SelectedValueBinding="{Binding InventoryItemId, Mode=TwoWay}"
+                                                        SelectedValuePath="Id"
+                                                        DisplayMemberPath="Name"
+                                                        ItemsSource="{Binding DataContext.InventoryItems, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        Width="300"/>
+                                <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay}" Width="80"/>
+                                <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, Mode=TwoWay, StringFormat=N2}" Width="120"/>
+                                <DataGridTextColumn Header="Line Total" Binding="{Binding LineTotal, Mode=OneWay, StringFormat=N2}" Width="120" IsReadOnly="True"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </GroupBox>
+
+                <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <TextBlock Text="Total:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="{Binding TotalAmount, StringFormat=N2}" FontWeight="Bold" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
+
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
