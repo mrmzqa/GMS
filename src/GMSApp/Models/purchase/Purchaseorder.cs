@@ -1,6 +1,6 @@
 // File: Models/PurchaseOrder.cs
 using CommunityToolkit.Mvvm.ComponentModel;
-using GMSApp.Models.Enums;
+using GMSApp.Models.payment;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;

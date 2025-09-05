@@ -1,4 +1,5 @@
-﻿using GMSApp.Models.Enums;
+﻿
+using GMSApp.Models.payment;
 using GMSApp.Models.purchase;
 using System;
 using System.Collections.Generic;
