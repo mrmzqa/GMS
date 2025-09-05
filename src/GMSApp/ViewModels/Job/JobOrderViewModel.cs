@@ -22,7 +22,7 @@ namespace GMSApp.ViewModels.Job
         private readonly IGenericPdfGenerator<Joborder> _pdfGenerator;
 
         public ObservableCollection<Joborder> Joborders { get; } = new();
-        public ObservableCollection<ItemRow> Items { get; } = new();
+        public ObservableCollection<JoborderItem> Items { get; } = new();
 
         public decimal Total => Items.Sum(i => i.Total);
 
@@ -73,7 +73,7 @@ namespace GMSApp.ViewModels.Job
                     // Only include items that belong to this job via JoborderId
                     if (mi.JoborderId == SelectedJoborder.Id)
                     {
-                        Items.Add(new ItemRow
+                        Items.Add(new JoborderItem
                         {
                             Id = mi.Id,
                             Name = mi.Name,
@@ -148,7 +148,7 @@ namespace GMSApp.ViewModels.Job
             // Add items from UI collection. For existing items keep Id; for new ones Id=0.
             foreach (var ui in Items)
             {
-                var child = new ItemRow
+                var child = new JoborderItem
                 {
                     Id = ui.Id, // 0 for new items
                     Name = ui.Name,
@@ -201,7 +201,7 @@ namespace GMSApp.ViewModels.Job
                 // Build a job preserving Id (baseModel = SelectedJoborder)
                 var updated = BuildJoborderFromUi(SelectedJoborder);
 
-                // Remove orphaned ItemRows (items that exist in DB but were removed in UI)
+                // Remove orphaned JoborderItems (items that exist in DB but were removed in UI)
                 await DeleteOrphanedItemsAsync(SelectedJoborder.Id, Items.Select(i => i.Id).Where(id => id > 0).ToList());
 
                 // Now update the job graph (will add new items, update existing ones)
@@ -233,7 +233,7 @@ namespace GMSApp.ViewModels.Job
                 var ctx = ctxField.GetValue(_jobRepo) as DbContext;
                 if (ctx == null) return;
 
-                var dbSet = ctx.Set<ItemRow>();
+                var dbSet = ctx.Set<JoborderItem>();
                 var existingIds = await dbSet.Where(i => i.JoborderId == jobOrderId).Select(i => i.Id).ToListAsync();
 
                 var toDelete = existingIds.Except(uiItemIds).ToList();
@@ -241,7 +241,7 @@ namespace GMSApp.ViewModels.Job
 
                 foreach (var id in toDelete)
                 {
-                    var entity = new ItemRow { Id = id };
+                    var entity = new JoborderItem { Id = id };
                     // Attach stub and remove to avoid extra query
                     ctx.Entry(entity).State = EntityState.Deleted;
                 }
@@ -277,7 +277,7 @@ namespace GMSApp.ViewModels.Job
         [RelayCommand]
         private void AddItem()
         {
-            var it = new ItemRow
+            var it = new JoborderItem
             {
                 Name = string.Empty,
                 Quantity = 1,
@@ -289,7 +289,7 @@ namespace GMSApp.ViewModels.Job
         }
 
         [RelayCommand]
-        private void RemoveItem(ItemRow item)
+        private void RemoveItem(JoborderItem item)
         {
             if (item == null) return;
             Items.Remove(item);

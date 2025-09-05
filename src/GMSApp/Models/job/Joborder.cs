@@ -20,7 +20,7 @@ namespace GMSApp.Models.job
         public decimal? OdoNumber { get; set; }
 
         // Navigation collection for EF
-        public ICollection<GMSApp.Models.ItemRow> Items { get; set; } = new List<GMSApp.Models.ItemRow>();
+        public ICollection<GMSApp.Models.JoborderItem> Items { get; set; } = new List<GMSApp.Models.JoborderItem>();
 
         // Image bytes and file names
         public byte[]? F { get; set; }

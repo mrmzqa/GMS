@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GMSApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250905000600_Initial")]
-    partial class Initial
+    [Migration("20250905121320_ initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -121,13 +121,16 @@ namespace GMSApp.Migrations
                     b.ToTable("Garages");
                 });
 
-            modelBuilder.Entity("GMSApp.Models.ItemRow", b =>
+            modelBuilder.Entity("GMSApp.Models.JoborderItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("InventoryItemId")
+                        .HasColumnType("int");
 
                     b.Property<int>("JoborderId")
                         .HasColumnType("int");
@@ -144,9 +147,11 @@ namespace GMSApp.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("InventoryItemId");
+
                     b.HasIndex("JoborderId");
 
-                    b.ToTable("ItemRows");
+                    b.ToTable("JoborderItems");
                 });
 
             modelBuilder.Entity("GMSApp.Models.PaymentReceipt", b =>
@@ -501,6 +506,124 @@ namespace GMSApp.Migrations
                     b.HasIndex("GeneralLedgerLineId");
 
                     b.ToTable("ReconciliationItems");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.inventory.InventoryItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("CostPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ItemCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastRestocked")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("QuantityInStock")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReorderLevel")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("SellingPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("SubCategory")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("VendorId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VendorId");
+
+                    b.ToTable("InventoryItem");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.inventory.StockTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("InventoryItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("JobOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PurchaseOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TransactionType")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InventoryItemId");
+
+                    b.HasIndex("JobOrderId");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.ToTable("StockTransaction");
                 });
 
             modelBuilder.Entity("GMSApp.Models.invoice.Invoice", b =>
@@ -885,13 +1008,21 @@ namespace GMSApp.Migrations
                     b.ToTable("QuotationItems");
                 });
 
-            modelBuilder.Entity("GMSApp.Models.ItemRow", b =>
+            modelBuilder.Entity("GMSApp.Models.JoborderItem", b =>
                 {
+                    b.HasOne("GMSApp.Models.inventory.InventoryItem", "InventoryItem")
+                        .WithMany()
+                        .HasForeignKey("InventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("GMSApp.Models.job.Joborder", "Joborder")
                         .WithMany("Items")
                         .HasForeignKey("JoborderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("InventoryItem");
 
                     b.Navigation("Joborder");
                 });
@@ -980,6 +1111,38 @@ namespace GMSApp.Migrations
                     b.Navigation("GeneralLedgerLine");
                 });
 
+            modelBuilder.Entity("GMSApp.Models.inventory.InventoryItem", b =>
+                {
+                    b.HasOne("GMSApp.Models.Vendor", "Vendor")
+                        .WithMany()
+                        .HasForeignKey("VendorId");
+
+                    b.Navigation("Vendor");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.inventory.StockTransaction", b =>
+                {
+                    b.HasOne("GMSApp.Models.inventory.InventoryItem", "InventoryItem")
+                        .WithMany("Transactions")
+                        .HasForeignKey("InventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GMSApp.Models.job.Joborder", "JobOrder")
+                        .WithMany()
+                        .HasForeignKey("JobOrderId");
+
+                    b.HasOne("GMSApp.Models.purchase.PurchaseOrder", "PurchaseOrder")
+                        .WithMany()
+                        .HasForeignKey("PurchaseOrderId");
+
+                    b.Navigation("InventoryItem");
+
+                    b.Navigation("JobOrder");
+
+                    b.Navigation("PurchaseOrder");
+                });
+
             modelBuilder.Entity("GMSApp.Models.invoice.Invoice", b =>
                 {
                     b.HasOne("GMSApp.Models.purchase.PurchaseOrder", "PurchaseOrder")
@@ -1058,6 +1221,11 @@ namespace GMSApp.Migrations
             modelBuilder.Entity("GMSApp.Models.account.GeneralLedgerLine", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("GMSApp.Models.inventory.InventoryItem", b =>
+                {
+                    b.Navigation("Transactions");
                 });
 
             modelBuilder.Entity("GMSApp.Models.invoice.Invoice", b =>

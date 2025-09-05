@@ -19,7 +19,7 @@ namespace GMSApp.Data
         public DbSet<User> Users { get; set; }
         public DbSet<FileItem> Files { get; set; }
         public DbSet<Garage> Garages { get; set; }
-        public DbSet<ItemRow> ItemRows {  get; set; }
+        public DbSet<JoborderItem> JoborderItems {  get; set; }
         public DbSet<Joborder> Joborders { get; set; }
         public DbSet<Status> Statuses { get; set; }
         public DbSet<Vendor> Vendors { get; set; }
@@ -106,6 +106,12 @@ namespace GMSApp.Data
                 .WithMany(gl => gl.Items)
                 .HasForeignKey(ri => ri.GeneralLedgerLineId)
                 .OnDelete(DeleteBehavior.Restrict); // or .NoAction()
+
+            modelBuilder.Entity<ChartOfAccount>()
+           .HasOne(c => c.ParentAccount)
+           .WithMany(c => c.SubAccounts)
+           .HasForeignKey(c => c.ParentAccountId)
+           .OnDelete(DeleteBehavior.SetNull);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

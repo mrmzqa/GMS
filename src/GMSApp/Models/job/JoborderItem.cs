@@ -4,7 +4,7 @@ using GMSApp.Models.job;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 namespace GMSApp.Models;
-public class ItemRow : ObservableObject
+public class JoborderItem : ObservableObject
 {
     [Key]
     public int Id { get; set; }

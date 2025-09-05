@@ -84,12 +84,27 @@ namespace GMSApp.ViewModels.Accounting
                 SelectedAccount.ParentAccount = null;
                 SelectedAccount.SubAccounts = null!;
 
-                if (SelectedAccount.Id == 0)
-                    await _repo.AddAsync(SelectedAccount);
+                // Set ParentAccountId to null if ParentAccount is null
+                if (SelectedAccount.ParentAccount == null)
+                {
+                    SelectedAccount.ParentAccountId = null;
+                }
                 else
+                {
+                    SelectedAccount.ParentAccountId = SelectedAccount.ParentAccount?.Id;
+                }
+
+                // Save or update the selected account
+                if (SelectedAccount.Id == 0)
+                {
+                    await _repo.AddAsync(SelectedAccount);
+                }
+                else
+                {
                     await _repo.UpdateAsync(SelectedAccount);
+                }
 
-
+                // Reload accounts after save
                 await LoadAsync();
                 SelectedAccount = Accounts.FirstOrDefault(a => a.Id == SelectedAccount.Id) ?? SelectedAccount;
             }
@@ -98,6 +113,7 @@ namespace GMSApp.ViewModels.Accounting
                 MessageBox.Show($"Failed to save account:\n {ex}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
 
         [RelayCommand(CanExecute = nameof(CanModify))]
         public async Task DeleteAsync()

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GMSApp.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -295,28 +295,6 @@ namespace GMSApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ItemRows",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Quantity = table.Column<int>(type: "int", nullable: false),
-                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    JoborderId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ItemRows", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ItemRows_Joborders_JoborderId",
-                        column: x => x.JoborderId,
-                        principalTable: "Joborders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "QuotationItems",
                 columns: table => new
                 {
@@ -335,6 +313,40 @@ namespace GMSApp.Migrations
                         name: "FK_QuotationItems_Quotations_QuotationId",
                         column: x => x.QuotationId,
                         principalTable: "Quotations",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "InventoryItem",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ItemCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Category = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SubCategory = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    QuantityInStock = table.Column<int>(type: "int", nullable: false),
+                    ReorderLevel = table.Column<int>(type: "int", nullable: false),
+                    Unit = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CostPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    SellingPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Currency = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    VendorId = table.Column<int>(type: "int", nullable: true),
+                    Location = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LastRestocked = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InventoryItem", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_InventoryItem_Vendors_VendorId",
+                        column: x => x.VendorId,
+                        principalTable: "Vendors",
                         principalColumn: "Id");
                 });
 
@@ -402,6 +414,35 @@ namespace GMSApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "JoborderItems",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    JoborderId = table.Column<int>(type: "int", nullable: false),
+                    InventoryItemId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_JoborderItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_JoborderItems_InventoryItem_InventoryItemId",
+                        column: x => x.InventoryItemId,
+                        principalTable: "InventoryItem",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_JoborderItems_Joborders_JoborderId",
+                        column: x => x.JoborderId,
+                        principalTable: "Joborders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Invoices",
                 columns: table => new
                 {
@@ -462,6 +503,42 @@ namespace GMSApp.Migrations
                         principalTable: "PurchaseOrders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StockTransaction",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    InventoryItemId = table.Column<int>(type: "int", nullable: false),
+                    TransactionDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    TransactionType = table.Column<int>(type: "int", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PurchaseOrderId = table.Column<int>(type: "int", nullable: true),
+                    JobOrderId = table.Column<int>(type: "int", nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StockTransaction", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_StockTransaction_InventoryItem_InventoryItemId",
+                        column: x => x.InventoryItemId,
+                        principalTable: "InventoryItem",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_StockTransaction_Joborders_JobOrderId",
+                        column: x => x.JobOrderId,
+                        principalTable: "Joborders",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_StockTransaction_PurchaseOrders_PurchaseOrderId",
+                        column: x => x.PurchaseOrderId,
+                        principalTable: "PurchaseOrders",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -545,6 +622,11 @@ namespace GMSApp.Migrations
                 column: "GeneralLedgerEntryId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_InventoryItem_VendorId",
+                table: "InventoryItem",
+                column: "VendorId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_InvoiceLines_InvoiceId",
                 table: "InvoiceLines",
                 column: "InvoiceId");
@@ -560,8 +642,13 @@ namespace GMSApp.Migrations
                 column: "VendorId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ItemRows_JoborderId",
-                table: "ItemRows",
+                name: "IX_JoborderItems_InventoryItemId",
+                table: "JoborderItems",
+                column: "InventoryItemId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JoborderItems_JoborderId",
+                table: "JoborderItems",
                 column: "JoborderId");
 
             migrationBuilder.CreateIndex(
@@ -600,6 +687,21 @@ namespace GMSApp.Migrations
                 column: "GeneralLedgerLineId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_StockTransaction_InventoryItemId",
+                table: "StockTransaction",
+                column: "InventoryItemId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StockTransaction_JobOrderId",
+                table: "StockTransaction",
+                column: "JobOrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StockTransaction_PurchaseOrderId",
+                table: "StockTransaction",
+                column: "PurchaseOrderId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Vendors_AddressId",
                 table: "Vendors",
                 column: "AddressId");
@@ -624,7 +726,7 @@ namespace GMSApp.Migrations
                 name: "InvoiceLines");
 
             migrationBuilder.DropTable(
-                name: "ItemRows");
+                name: "JoborderItems");
 
             migrationBuilder.DropTable(
                 name: "PaymentReceipts");
@@ -642,10 +744,10 @@ namespace GMSApp.Migrations
                 name: "Statuses");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "StockTransaction");
 
             migrationBuilder.DropTable(
-                name: "Joborders");
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "Invoices");
@@ -658,6 +760,12 @@ namespace GMSApp.Migrations
 
             migrationBuilder.DropTable(
                 name: "GeneralLedgerLines");
+
+            migrationBuilder.DropTable(
+                name: "InventoryItem");
+
+            migrationBuilder.DropTable(
+                name: "Joborders");
 
             migrationBuilder.DropTable(
                 name: "PurchaseOrders");

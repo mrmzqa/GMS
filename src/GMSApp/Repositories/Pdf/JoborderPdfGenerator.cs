@@ -296,7 +296,7 @@ namespace GMSApp.Repositories.Pdf
                         }
 
                         // Items
-                        var items = job.Items?.ToList() ?? new List<ItemRow>();
+                        var items = job.Items?.ToList() ?? new List<JoborderItem>();
                         double colNameW = usableW * 0.55;
                         double colQtyW = usableW * 0.12;
                         double colPriceW = usableW * 0.16;
