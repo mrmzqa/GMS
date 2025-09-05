@@ -1,5 +1,6 @@
 // File: Models/PurchaseOrderLine.cs
 using CommunityToolkit.Mvvm.ComponentModel;
+using GMSApp.Models.inventory;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -89,7 +90,8 @@ namespace GMSApp.Models.purchase
             get => _quantityDelivered;
             set => SetProperty(ref _quantityDelivered, value);
         }
-
+        public int InventoryItemId { get; set; }
+        public InventoryItem InventoryItem {  get; set; }
         [NotMapped]
         public decimal QuantityPending => Quantity - QuantityDelivered;
     }
