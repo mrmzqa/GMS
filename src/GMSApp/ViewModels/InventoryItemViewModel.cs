@@ -1,5 +1,41 @@
+using System;
+using System.Windows;
+using System.Windows.Controls;
+using GMSApp.ViewModels.Inventory;
 
+namespace GMSApp.Views.Inventory
+{
+    public partial class StockTransactionView : UserControl
+    {
+        public StockTransactionView()
+        {
+            InitializeComponent();
+        }
 
+        private async void Add_Click(object sender, RoutedEventArgs e)
+        {
+            if (!(DataContext is StockTransactionViewModel vm)) return;
+
+            if (ItemCombo.SelectedValue == null)
+            {
+                MessageBox.Show("Select an item first.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!(int.TryParse(QtyBox.Text, out int qty))) { MessageBox.Show("Invalid quantity."); return; }
+            if (!(decimal.TryParse(PriceBox.Text, out decimal price))) { MessageBox.Show("Invalid unit price."); return; }
+
+            var selectedTag = (TypeCombo.SelectedItem as ComboBoxItem)?.Tag?.ToString();
+            if (!Enum.TryParse(selectedTag, out StockTransactionType type))
+            {
+                MessageBox.Show("Select a valid type.");
+                return;
+            }
+
+            await vm.AddAdjustmentAsync((int)ItemCombo.SelectedValue, type, qty, price, NotesBox.Text ?? string.Empty);
+        }
+    }
+}
 <UserControl x:Class="GMSApp.Views.Inventory.JobUsageView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
