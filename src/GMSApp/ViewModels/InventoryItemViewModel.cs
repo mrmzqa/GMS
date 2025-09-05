@@ -1,3 +1,73 @@
+
+
+<UserControl x:Class="GMSApp.Views.Inventory.StockTransactionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             d:DesignHeight="600" d:DesignWidth="900">
+    <Grid Margin="8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="360"/>
+            <ColumnDefinition Width="12"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Padding="8" Background="WhiteSmoke" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0 0 0 8">
+                    <Button Content="Reload" Command="{Binding LoadCommand}" Width="70" Margin="0,0,6,0"/>
+                    <Button Content="Delete" Command="{Binding DeleteCommand}" Width="70" />
+                </StackPanel>
+
+                <DataGrid ItemsSource="{Binding Transactions}" SelectedItem="{Binding SelectedTransaction, Mode=TwoWay}" AutoGenerateColumns="False" MinHeight="300">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Date" Binding="{Binding TransactionDate, StringFormat=\{0:yyyy-MM-dd\}}" Width="120"/>
+                        <DataGridTextColumn Header="Item" Binding="{Binding InventoryItem.Name}" Width="220"/>
+                        <DataGridTextColumn Header="Type" Binding="{Binding TransactionType}" Width="110"/>
+                        <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" Width="90"/>
+                        <DataGridTextColumn Header="UnitPrice" Binding="{Binding UnitPrice, StringFormat=N2}" Width="110"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+        </Border>
+
+        <GridSplitter Grid.Column="1" Width="4"/>
+        <Border Grid.Column="2" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4">
+            <StackPanel>
+                <TextBlock Text="Add Manual Adjustment / Return" FontWeight="Bold" Margin="0,0,0,8"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <TextBlock Text="Item:" Width="120" VerticalAlignment="Center"/>
+                    <ComboBox ItemsSource="{Binding InventoryItems}" DisplayMemberPath="Name" SelectedValuePath="Id" x:Name="ItemCombo" Width="300"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <TextBlock Text="Type:" Width="120" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="TypeCombo" Width="200">
+                        <ComboBoxItem Tag="Purchase">Purchase</ComboBoxItem>
+                        <ComboBoxItem Tag="JobUsage">JobUsage</ComboBoxItem>
+                        <ComboBoxItem Tag="Adjustment">Adjustment</ComboBoxItem>
+                        <ComboBoxItem Tag="Return">Return</ComboBoxItem>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <TextBlock Text="Quantity:" Width="120" VerticalAlignment="Center"/>
+                    <TextBox x:Name="QtyBox" Width="120" Text="1"/>
+                    <TextBlock Text="Unit Price:" Width="100" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                    <TextBox x:Name="PriceBox" Width="120" Text="0.00"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <TextBlock Text="Notes:" Width="120" VerticalAlignment="Top"/>
+                    <TextBox x:Name="NotesBox" Width="420" Height="60" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                    <Button Content="Add" Width="100" Click="Add_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
 using System;
 using System.Windows;
 using System.Windows.Controls;
