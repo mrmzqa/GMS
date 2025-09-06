@@ -55,28 +55,28 @@
                     <StackPanel Width="620">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <TextBlock Text="Code:" Width="120" VerticalAlignment="Center" />
-                            <TextBox Text="{Binding SelectedItem.ItemCode, Mode=TwoWay}" Width="240" />
+                            <TextBox Text="{Binding SelectedItem.ItemCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="240" />
                             <TextBlock Text="Unit:" Width="80" Margin="12,0,0,0" VerticalAlignment="Center"/>
                             <ComboBox ItemsSource="{Binding Units}" SelectedItem="{Binding SelectedItem.Unit, Mode=TwoWay}" Width="140"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <TextBlock Text="Name:" Width="120" VerticalAlignment="Center" />
-                            <TextBox Text="{Binding SelectedItem.Name, Mode=TwoWay}" Width="480" />
+                            <TextBox Text="{Binding SelectedItem.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="480" />
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <TextBlock Text="Category:" Width="120" VerticalAlignment="Center" />
-                            <TextBox Text="{Binding SelectedItem.Category, Mode=TwoWay}" Width="180"/>
+                            <TextBox Text="{Binding SelectedItem.Category, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="180"/>
                             <TextBlock Text="Subcategory:" Width="100" Margin="12,0,0,0" VerticalAlignment="Center"/>
-                            <TextBox Text="{Binding SelectedItem.SubCategory, Mode=TwoWay}" Width="180"/>
+                            <TextBox Text="{Binding SelectedItem.SubCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="180"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <TextBlock Text="Cost Price:" Width="120" VerticalAlignment="Center" />
-                            <TextBox Text="{Binding SelectedItem.CostPrice, Mode=TwoWay, StringFormat=N2}" Width="120"/>
+                            <TextBox Text="{Binding SelectedItem.CostPrice, Mode=TwoWay, StringFormat=N2, UpdateSourceTrigger=PropertyChanged}" Width="120"/>
                             <TextBlock Text="Sell Price:" Width="100" Margin="12,0,0,0" VerticalAlignment="Center"/>
-                            <TextBox Text="{Binding SelectedItem.SellingPrice, Mode=TwoWay, StringFormat=N2}" Width="120"/>
+                            <TextBox Text="{Binding SelectedItem.SellingPrice, Mode=TwoWay, StringFormat=N2, UpdateSourceTrigger=PropertyChanged}" Width="120"/>
                             <TextBlock Text="Currency:" Width="80" Margin="12,0,0,0" VerticalAlignment="Center"/>
                             <TextBox Text="{Binding SelectedItem.Currency}" Width="80"/>
                         </StackPanel>
@@ -85,12 +85,12 @@
                             <TextBlock Text="Stock:" Width="120" VerticalAlignment="Center" />
                             <TextBlock Text="{Binding SelectedItem.QuantityInStock}" VerticalAlignment="Center" FontWeight="Bold"/>
                             <TextBlock Text="Reorder Level:" Width="140" Margin="40,0,0,0" VerticalAlignment="Center"/>
-                            <TextBox Text="{Binding SelectedItem.ReorderLevel, Mode=TwoWay}" Width="80"/>
+                            <TextBox Text="{Binding SelectedItem.ReorderLevel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="80"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <TextBlock Text="Location:" Width="120" VerticalAlignment="Center" />
-                            <TextBox Text="{Binding SelectedItem.Location, Mode=TwoWay}" Width="240"/>
+                            <TextBox Text="{Binding SelectedItem.Location, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="240"/>
                             <TextBlock Text="Last Restocked:" Width="140" Margin="12,0,0,0" VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding SelectedItem.LastRestocked, StringFormat=\{0:yyyy-MM-dd\}}" VerticalAlignment="Center"/>
                         </StackPanel>
