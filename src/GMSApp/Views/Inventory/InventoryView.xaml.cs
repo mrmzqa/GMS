@@ -74,3 +74,20 @@ namespace GMSApp.Views.Inventory
 
             var editable = new InventoryViewModel.EditableStockTransaction
             {
+                TransactionDate = DateTime.UtcNow,
+                TransactionType = type,
+                Quantity = qty,
+                UnitPrice = price,
+                Notes = TxnNotes.Text
+            };
+
+            await vm.AddTransactionAsync(editable);
+
+            // Optionally clear inputs after successful add
+            TxnQty.Text = "1";
+            TxnPrice.Text = "0.00";
+            TxnNotes.Text = string.Empty;
+            TxnType.SelectedIndex = 0;
+        }
+    }
+}
