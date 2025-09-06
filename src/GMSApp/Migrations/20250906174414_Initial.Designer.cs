@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GMSApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250906154609_Initial")]
+    [Migration("20250906174414_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -577,7 +577,7 @@ namespace GMSApp.Migrations
 
                     b.HasIndex("VendorId");
 
-                    b.ToTable("InventoryItem");
+                    b.ToTable("InventoryItems");
                 });
 
             modelBuilder.Entity("GMSApp.Models.inventory.StockTransaction", b =>
@@ -621,7 +621,7 @@ namespace GMSApp.Migrations
 
                     b.HasIndex("PurchaseOrderId");
 
-                    b.ToTable("StockTransaction");
+                    b.ToTable("StockTransactions");
                 });
 
             modelBuilder.Entity("GMSApp.Models.invoice.Invoice", b =>

@@ -12,7 +12,8 @@ namespace GMSApp.Services
         private readonly List<User> _users = new()
     {
         new User { Username = "admin", Password = "password123" },
-        new User { Username = "user", Password = "user123" }
+        new User { Username = "user", Password = "user123" },
+        new User { Username = "u", Password = "u" }
     };
 
         public User? CurrentUser { get; private set; }

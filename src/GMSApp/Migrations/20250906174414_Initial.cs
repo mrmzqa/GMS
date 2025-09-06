@@ -318,7 +318,7 @@ namespace GMSApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "InventoryItem",
+                name: "InventoryItems",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -343,9 +343,9 @@ namespace GMSApp.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_InventoryItem", x => x.Id);
+                    table.PrimaryKey("PK_InventoryItems", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_InventoryItem_Vendors_VendorId",
+                        name: "FK_InventoryItems_Vendors_VendorId",
                         column: x => x.VendorId,
                         principalTable: "Vendors",
                         principalColumn: "Id");
@@ -430,9 +430,9 @@ namespace GMSApp.Migrations
                 {
                     table.PrimaryKey("PK_JoborderItems", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_JoborderItems_InventoryItem_InventoryItemId",
+                        name: "FK_JoborderItems_InventoryItems_InventoryItemId",
                         column: x => x.InventoryItemId,
-                        principalTable: "InventoryItem",
+                        principalTable: "InventoryItems",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -500,9 +500,9 @@ namespace GMSApp.Migrations
                 {
                     table.PrimaryKey("PK_PurchaseOrderLines", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PurchaseOrderLines_InventoryItem_InventoryItemId",
+                        name: "FK_PurchaseOrderLines_InventoryItems_InventoryItemId",
                         column: x => x.InventoryItemId,
-                        principalTable: "InventoryItem",
+                        principalTable: "InventoryItems",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -514,7 +514,7 @@ namespace GMSApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "StockTransaction",
+                name: "StockTransactions",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -530,20 +530,20 @@ namespace GMSApp.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StockTransaction", x => x.Id);
+                    table.PrimaryKey("PK_StockTransactions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_StockTransaction_InventoryItem_InventoryItemId",
+                        name: "FK_StockTransactions_InventoryItems_InventoryItemId",
                         column: x => x.InventoryItemId,
-                        principalTable: "InventoryItem",
+                        principalTable: "InventoryItems",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_StockTransaction_Joborders_JobOrderId",
+                        name: "FK_StockTransactions_Joborders_JobOrderId",
                         column: x => x.JobOrderId,
                         principalTable: "Joborders",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_StockTransaction_PurchaseOrders_PurchaseOrderId",
+                        name: "FK_StockTransactions_PurchaseOrders_PurchaseOrderId",
                         column: x => x.PurchaseOrderId,
                         principalTable: "PurchaseOrders",
                         principalColumn: "Id");
@@ -630,8 +630,8 @@ namespace GMSApp.Migrations
                 column: "GeneralLedgerEntryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_InventoryItem_VendorId",
-                table: "InventoryItem",
+                name: "IX_InventoryItems_VendorId",
+                table: "InventoryItems",
                 column: "VendorId");
 
             migrationBuilder.CreateIndex(
@@ -700,18 +700,18 @@ namespace GMSApp.Migrations
                 column: "GeneralLedgerLineId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_StockTransaction_InventoryItemId",
-                table: "StockTransaction",
+                name: "IX_StockTransactions_InventoryItemId",
+                table: "StockTransactions",
                 column: "InventoryItemId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_StockTransaction_JobOrderId",
-                table: "StockTransaction",
+                name: "IX_StockTransactions_JobOrderId",
+                table: "StockTransactions",
                 column: "JobOrderId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_StockTransaction_PurchaseOrderId",
-                table: "StockTransaction",
+                name: "IX_StockTransactions_PurchaseOrderId",
+                table: "StockTransactions",
                 column: "PurchaseOrderId");
 
             migrationBuilder.CreateIndex(
@@ -757,7 +757,7 @@ namespace GMSApp.Migrations
                 name: "Statuses");
 
             migrationBuilder.DropTable(
-                name: "StockTransaction");
+                name: "StockTransactions");
 
             migrationBuilder.DropTable(
                 name: "Users");
@@ -775,7 +775,7 @@ namespace GMSApp.Migrations
                 name: "GeneralLedgerLines");
 
             migrationBuilder.DropTable(
-                name: "InventoryItem");
+                name: "InventoryItems");
 
             migrationBuilder.DropTable(
                 name: "Joborders");

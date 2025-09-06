@@ -574,7 +574,7 @@ namespace GMSApp.Migrations
 
                     b.HasIndex("VendorId");
 
-                    b.ToTable("InventoryItem");
+                    b.ToTable("InventoryItems");
                 });
 
             modelBuilder.Entity("GMSApp.Models.inventory.StockTransaction", b =>
@@ -618,7 +618,7 @@ namespace GMSApp.Migrations
 
                     b.HasIndex("PurchaseOrderId");
 
-                    b.ToTable("StockTransaction");
+                    b.ToTable("StockTransactions");
                 });
 
             modelBuilder.Entity("GMSApp.Models.invoice.Invoice", b =>
