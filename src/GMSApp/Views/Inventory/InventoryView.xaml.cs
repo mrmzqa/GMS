@@ -1,6 +1,5 @@
 using GMSApp.Models.inventory;
 using GMSApp.ViewModels.Inventory;
-using GMSApp.ViewModels.Job;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,10 +12,14 @@ namespace GMSApp.Views.Inventory
         {
             InitializeComponent();
         }
+
         public InventoryView(InventoryViewModel viewModel) : this()
         {
             DataContext = viewModel;
         }
+
+        // Quick-entry handler: ensures the SelectedItem is persisted before creating a transaction,
+        // validates inputs and calls the ViewModel command to add the transaction.
         private async void AddTxn_Click(object sender, RoutedEventArgs e)
         {
             if (!(DataContext is InventoryViewModel vm))
@@ -28,9 +31,9 @@ namespace GMSApp.Views.Inventory
                 return;
             }
 
-            if (!int.TryParse(TxnQty.Text, out var qty))
+            if (!int.TryParse(TxnQty.Text, out var qty) || qty == 0)
             {
-                MessageBox.Show("Invalid quantity.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Invalid quantity. Use non-zero integer.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -53,16 +56,21 @@ namespace GMSApp.Views.Inventory
                 return;
             }
 
+            // If SelectedItem is new (Id == 0) we must persist it first so the transaction has a valid InventoryItemId
+            if (vm.SelectedItem.Id == 0)
+            {
+                var saveConfirm = MessageBox.Show("This item is new and must be saved before adding a transaction. Save now?", "Save item", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (saveConfirm != MessageBoxResult.Yes) return;
+
+                await vm.SaveItemAsync();
+
+                // after save, ensure we have a persisted item
+                if (vm.SelectedItem == null || vm.SelectedItem.Id == 0)
+                {
+                    MessageBox.Show("Failed to persist the new item. Cannot add transaction.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+            }
+
             var editable = new InventoryViewModel.EditableStockTransaction
             {
-                TransactionDate = DateTime.UtcNow,
-                TransactionType = type,
-                Quantity = qty,
-                UnitPrice = price,
-                Notes = TxnNotes.Text
-            };
-
-            await vm.AddTransactionAsync(editable);
-        }
-    }
-}
