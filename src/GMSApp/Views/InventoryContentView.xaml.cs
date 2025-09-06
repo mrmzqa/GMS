@@ -23,31 +23,19 @@ namespace GMSApp.Views
     /// </summary>
     public partial class InventoryContentView : UserControl
     {
-        private readonly JobUsage _jobUsage;
-        private readonly InventoryItem _inventoryItem;
-        private readonly StockTransaction _stockTransaction;
+        
+        private readonly InventoryView _inventoryItem;
+     
 
 
-        public InventoryContentView(InventoryItem inventoryItem, StockTransaction stockTransaction, JobUsage jobUsage)
+        public InventoryContentView(InventoryView inventoryItem )
         {
             InitializeComponent();
             _inventoryItem = inventoryItem;
-            _stockTransaction = stockTransaction;
-            _jobUsage = jobUsage;
+         
          
         }
-        private void J_Click(object sender, RoutedEventArgs e)
-        {
-
-            InvContent.Content = _jobUsage;
-
-        }
-        private void S_Click(object sender, RoutedEventArgs e)
-        {
-
-            SContent.Content = _stockTransaction;
-
-        }
+      
         private void I_Click(object sender, RoutedEventArgs e)
         {
 

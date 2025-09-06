@@ -270,7 +270,7 @@ namespace GMSApp.ViewModels.Inventory
         private bool CanDeleteTransaction(EditableStockTransaction? txn) => txn != null;
 
         // Editable wrapper used by the UI for quick entry / listing
-        public class EditableStockTransaction : ObservableObject
+        public partial class EditableStockTransaction : ObservableObject
         {
             public EditableStockTransaction() { TransactionDate = DateTime.UtcNow; }
 

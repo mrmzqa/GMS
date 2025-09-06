@@ -1,4 +1,6 @@
+using GMSApp.Models.inventory;
 using GMSApp.ViewModels.Inventory;
+using GMSApp.ViewModels.Job;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,7 +13,10 @@ namespace GMSApp.Views.Inventory
         {
             InitializeComponent();
         }
-
+        public InventoryView(InventoryViewModel viewModel) : this()
+        {
+            DataContext = viewModel;
+        }
         private async void AddTxn_Click(object sender, RoutedEventArgs e)
         {
             if (!(DataContext is InventoryViewModel vm))

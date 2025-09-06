@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+/*using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
 using GMSApp.Repositories;
@@ -148,4 +148,4 @@ namespace GMSApp.ViewModels.Inventory
             public decimal Total => Math.Round(QuantityUsed * UnitPrice, 2);
         }
     }
-}
+}*/

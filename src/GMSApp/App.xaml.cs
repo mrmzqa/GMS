@@ -83,7 +83,7 @@ public partial class App : Application
                 services.AddTransient<ChartofAccount>();
                 services.AddTransient<GeneralLedger>();
               
-                services.AddTransient<InventoryItem>();
+                services.AddTransient<InventoryView>();
             })
             .UseSerilog()
             .Build();
