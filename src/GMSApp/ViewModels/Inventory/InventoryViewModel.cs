@@ -21,6 +21,9 @@ namespace GMSApp.ViewModels.Inventory
         // Helper collection for Unit enum binding in the view
         public ObservableCollection<Unit> Units { get; } = new(Enum.GetValues(typeof(Unit)).Cast<Unit>());
 
+        // Guard to prevent concurrent saves/transactions
+        private bool _isBusy;
+
         public InventoryViewModel(IRepository<InventoryItem> itemRepo, IRepository<StockTransaction> txnRepo)
         {
             _itemRepo = itemRepo ?? throw new ArgumentNullException(nameof(itemRepo));
@@ -32,7 +35,6 @@ namespace GMSApp.ViewModels.Inventory
         [ObservableProperty] private InventoryItem? selectedItem;
         partial void OnSelectedItemChanged(InventoryItem? value)
         {
-            // When selection changes, reload transactions for that item (if any)
             _ = LoadTransactionsForSelectedAsync();
             LoadCommand.NotifyCanExecuteChanged();
             AddItemCommand.NotifyCanExecuteChanged();
@@ -52,8 +54,6 @@ namespace GMSApp.ViewModels.Inventory
             try
             {
                 InventoryItems.Clear();
-                Transactions.Clear();
-
                 var items = await _itemRepo.GetAllAsync();
                 foreach (var i in items) InventoryItems.Add(i);
 
@@ -73,8 +73,7 @@ namespace GMSApp.ViewModels.Inventory
             try
             {
                 var allTx = await _txnRepo.GetAllAsync();
-                var forItem = allTx.Where(t => t.InventoryItemId == SelectedItem.Id)
-                                   .OrderByDescending(t => t.TransactionDate);
+                var forItem = allTx.Where(t => t.InventoryItemId == SelectedItem.Id).OrderByDescending(t => t.TransactionDate);
                 foreach (var t in forItem)
                 {
                     Transactions.Add(new EditableStockTransaction(t));
@@ -82,7 +81,6 @@ namespace GMSApp.ViewModels.Inventory
             }
             catch (Exception ex)
             {
-                // Non-fatal; just show message
                 MessageBox.Show($"Failed to load transactions: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -118,7 +116,9 @@ namespace GMSApp.ViewModels.Inventory
         public async Task SaveItemAsync()
         {
             if (SelectedItem == null) return;
+            if (_isBusy) return;
 
+            _isBusy = true;
             try
             {
                 var detached = new InventoryItem
@@ -152,19 +152,23 @@ namespace GMSApp.ViewModels.Inventory
                     await _itemRepo.UpdateAsync(detached);
                 }
 
-                // Reload item list and re-select the saved item (match by ItemCode)
-                var items = await _itemRepo.GetAllAsync();
-                InventoryItems.Clear();
-                foreach (var i in items) InventoryItems.Add(i);
-
-                SelectedItem = InventoryItems.FirstOrDefault(i => i.ItemCode == detached.ItemCode) ?? InventoryItems.FirstOrDefault();
-                await LoadTransactionsForSelectedAsync();
+                // Reload list and keep selection stable by matching Id (or ItemCode as fallback)
+                var prevId = detached.Id;
+                await LoadAsync();
+                if (prevId != 0)
+                    SelectedItem = InventoryItems.FirstOrDefault(i => i.Id == prevId) ?? InventoryItems.FirstOrDefault();
+                else
+                    SelectedItem = InventoryItems.FirstOrDefault(i => i.ItemCode == detached.ItemCode) ?? InventoryItems.FirstOrDefault();
 
                 MessageBox.Show("Item saved.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to save item: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isBusy = false;
             }
         }
 
@@ -186,7 +190,6 @@ namespace GMSApp.ViewModels.Inventory
                 }
 
                 await _itemRepo.DeleteAsync(SelectedItem.Id);
-
                 await LoadAsync();
             }
             catch (Exception ex)
@@ -195,16 +198,19 @@ namespace GMSApp.ViewModels.Inventory
             }
         }
 
-        private bool CanModifyItem() => SelectedItem != null;
+        private bool CanModifyItem() => SelectedItem != null && !_isBusy;
 
         // Add stock transaction (Purchase / JobUsage / Adjustment / Return)
-        // This method updates stock immediately using repository and creates transaction record
+        // This method updates stock immediately and creates transaction record.
+        // It no longer reloads the entire inventory; it refreshes transactions for the selected item and updates the item in-place.
         [RelayCommand(CanExecute = nameof(CanModifyItem))]
         public async Task AddTransactionAsync(EditableStockTransaction txn)
         {
             if (SelectedItem == null) return;
             if (txn == null) return;
+            if (_isBusy) return;
 
+            _isBusy = true;
             try
             {
                 // Build transaction model
@@ -220,11 +226,9 @@ namespace GMSApp.ViewModels.Inventory
                     Notes = txn.Notes ?? string.Empty
                 };
 
-                // Persist transaction
                 await _txnRepo.AddAsync(model);
 
                 // Update inventory stock according to transaction type
-                // Purchase / Return => increase | JobUsage => decrease | Adjustment => signed delta (txn.Quantity can be negative)
                 var item = SelectedItem;
                 switch (txn.TransactionType)
                 {
@@ -237,28 +241,23 @@ namespace GMSApp.ViewModels.Inventory
                         item.QuantityInStock -= txn.Quantity;
                         break;
                     case StockTransactionType.Adjustment:
-                        // For adjustments, the UI can supply negative quantities to reduce stock
                         item.QuantityInStock += txn.Quantity;
                         break;
                 }
 
-                if (item.QuantityInStock < 0) item.QuantityInStock = 0; // prevent negative
+                if (item.QuantityInStock < 0) item.QuantityInStock = 0;
                 item.UpdatedAt = DateTime.UtcNow;
 
-                // Persist updated inventory item (defensive: handle new item case)
+                // Persist updated inventory item (defensive: add if somehow missing)
                 if (item.Id == 0)
-                {
                     await _itemRepo.AddAsync(item);
-                }
                 else
-                {
                     await _itemRepo.UpdateAsync(item);
-                }
 
-                // Refresh transactions for the current selected item only (keeps selection stable)
+                // Refresh only transactions for the selected item (keeps selection and UI stable)
                 await LoadTransactionsForSelectedAsync();
 
-                // Update the in-memory InventoryItems entry if present so UI reflects new stock
+                // Update the item inside InventoryItems collection (if present) so DataGrid shows the updated stock immediately
                 var listItem = InventoryItems.FirstOrDefault(i => i.Id == item.Id);
                 if (listItem != null)
                 {
@@ -271,6 +270,10 @@ namespace GMSApp.ViewModels.Inventory
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to add transaction: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isBusy = false;
             }
         }
 
@@ -299,7 +302,7 @@ namespace GMSApp.ViewModels.Inventory
             }
         }
 
-        private bool CanDeleteTransaction(EditableStockTransaction? txn) => txn != null;
+        private bool CanDeleteTransaction(EditableStockTransaction? txn) => txn != null && !_isBusy;
 
         // Editable wrapper used by the UI for quick entry / listing
         public partial class EditableStockTransaction : ObservableObject
