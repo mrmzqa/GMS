@@ -1,37 +1,63 @@
-﻿using GMSApp.ViewModels.Inventory;
-using GMSApp.ViewModels.Job;
+using GMSApp.ViewModels.Inventory;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace GMSApp.Views.Inventory
 {
-    /// <summary>
-    /// Interaction logic for InventoryItem.xaml
-    /// </summary>
-    public partial class InventoryItem : UserControl
+    public partial class InventoryView : UserControl
     {
-        public InventoryItem()
+        public InventoryView()
         {
             InitializeComponent();
         }
-    
 
-        // Use this ctor when resolving the VM via DI so DataContext is set automatically.
-        public InventoryItem(InventoryItemViewModel viewModel) : this()
+        private async void AddTxn_Click(object sender, RoutedEventArgs e)
         {
-            DataContext = viewModel;
+            if (!(DataContext is InventoryViewModel vm))
+                return;
+
+            if (vm.SelectedItem == null)
+            {
+                MessageBox.Show("Select an inventory item first.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!int.TryParse(TxnQty.Text, out var qty))
+            {
+                MessageBox.Show("Invalid quantity.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!decimal.TryParse(TxnPrice.Text, out var price))
+            {
+                MessageBox.Show("Invalid unit price.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var selected = TxnType.SelectedItem as ComboBoxItem;
+            if (selected == null)
+            {
+                MessageBox.Show("Select transaction type.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!Enum.TryParse(selected.Tag?.ToString(), out StockTransactionType type))
+            {
+                MessageBox.Show("Invalid transaction type.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var editable = new InventoryViewModel.EditableStockTransaction
+            {
+                TransactionDate = DateTime.UtcNow,
+                TransactionType = type,
+                Quantity = qty,
+                UnitPrice = price,
+                Notes = TxnNotes.Text
+            };
+
+            await vm.AddTransactionAsync(editable);
         }
     }
 }
