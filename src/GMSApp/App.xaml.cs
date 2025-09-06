@@ -59,9 +59,9 @@ public partial class App : Application
                 services.AddTransient<AccountReconcileViewModel>();
                 services.AddTransient<ChartOfAccountViewModel>();
                 services.AddTransient<GeneralLedgerViewModel>();
-                services.AddTransient<JobUsageViewModel>();
-                services.AddTransient<InventoryItemViewModel>();
-                services.AddTransient<StockTransactionViewModel>();
+            
+                services.AddTransient<InventoryViewModel>();
+           
 
                 // Views - transient
 
@@ -82,8 +82,7 @@ public partial class App : Application
                 services.AddTransient<AccountReconcile>();
                 services.AddTransient<ChartofAccount>();
                 services.AddTransient<GeneralLedger>();
-                services.AddTransient<StockTransaction>();
-                services.AddTransient<JobUsage>();
+              
                 services.AddTransient<InventoryItem>();
             })
             .UseSerilog()
