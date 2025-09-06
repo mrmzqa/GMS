@@ -52,6 +52,8 @@ namespace GMSApp.ViewModels.Inventory
             try
             {
                 InventoryItems.Clear();
+                Transactions.Clear();
+
                 var items = await _itemRepo.GetAllAsync();
                 foreach (var i in items) InventoryItems.Add(i);
 
@@ -71,7 +73,8 @@ namespace GMSApp.ViewModels.Inventory
             try
             {
                 var allTx = await _txnRepo.GetAllAsync();
-                var forItem = allTx.Where(t => t.InventoryItemId == SelectedItem.Id).OrderByDescending(t => t.TransactionDate);
+                var forItem = allTx.Where(t => t.InventoryItemId == SelectedItem.Id)
+                                   .OrderByDescending(t => t.TransactionDate);
                 foreach (var t in forItem)
                 {
                     Transactions.Add(new EditableStockTransaction(t));
@@ -141,12 +144,22 @@ namespace GMSApp.ViewModels.Inventory
                 };
 
                 if (detached.Id == 0)
+                {
                     await _itemRepo.AddAsync(detached);
+                }
                 else
+                {
                     await _itemRepo.UpdateAsync(detached);
+                }
 
-                await LoadAsync();
-                SelectedItem = InventoryItems.FirstOrDefault(i => i.ItemCode == detached.ItemCode) ?? SelectedItem;
+                // Reload item list and re-select the saved item (match by ItemCode)
+                var items = await _itemRepo.GetAllAsync();
+                InventoryItems.Clear();
+                foreach (var i in items) InventoryItems.Add(i);
+
+                SelectedItem = InventoryItems.FirstOrDefault(i => i.ItemCode == detached.ItemCode) ?? InventoryItems.FirstOrDefault();
+                await LoadTransactionsForSelectedAsync();
+
                 MessageBox.Show("Item saved.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -173,6 +186,7 @@ namespace GMSApp.ViewModels.Inventory
                 }
 
                 await _itemRepo.DeleteAsync(SelectedItem.Id);
+
                 await LoadAsync();
             }
             catch (Exception ex)
@@ -206,6 +220,7 @@ namespace GMSApp.ViewModels.Inventory
                     Notes = txn.Notes ?? string.Empty
                 };
 
+                // Persist transaction
                 await _txnRepo.AddAsync(model);
 
                 // Update inventory stock according to transaction type
@@ -229,11 +244,28 @@ namespace GMSApp.ViewModels.Inventory
 
                 if (item.QuantityInStock < 0) item.QuantityInStock = 0; // prevent negative
                 item.UpdatedAt = DateTime.UtcNow;
-                await _itemRepo.UpdateAsync(item);
 
-                // refresh
-                await LoadAsync();
-                SelectedItem = InventoryItems.FirstOrDefault(i => i.Id == item.Id);
+                // Persist updated inventory item (defensive: handle new item case)
+                if (item.Id == 0)
+                {
+                    await _itemRepo.AddAsync(item);
+                }
+                else
+                {
+                    await _itemRepo.UpdateAsync(item);
+                }
+
+                // Refresh transactions for the current selected item only (keeps selection stable)
+                await LoadTransactionsForSelectedAsync();
+
+                // Update the in-memory InventoryItems entry if present so UI reflects new stock
+                var listItem = InventoryItems.FirstOrDefault(i => i.Id == item.Id);
+                if (listItem != null)
+                {
+                    listItem.QuantityInStock = item.QuantityInStock;
+                    listItem.UpdatedAt = item.UpdatedAt;
+                }
+
                 MessageBox.Show("Transaction recorded and stock updated.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
