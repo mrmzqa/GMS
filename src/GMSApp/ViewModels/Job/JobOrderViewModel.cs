@@ -1,18 +1,23 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMSApp.Models;
+using GMSApp.Models.inventory;
 using GMSApp.Models.job;
 using GMSApp.Repositories;
 using GMSApp.Views.Job;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
+
 namespace GMSApp.ViewModels.Job
 {
     public partial class JoborderViewModel : ObservableObject
@@ -20,19 +25,29 @@ namespace GMSApp.ViewModels.Job
         private readonly IRepository<Joborder> _jobRepo;
         private readonly IFileRepository _fileRepo;
         private readonly IGenericPdfGenerator<Joborder> _pdfGenerator;
+        private readonly IRepository<InventoryItem> _inventoryRepo;
+        private readonly IRepository<StockTransaction> _txnRepo;
 
         public ObservableCollection<Joborder> Joborders { get; } = new();
+        // UI collection of job items (uses JoborderItem model which has InventoryItemId)
         public ObservableCollection<JoborderItem> Items { get; } = new();
+
+        // Inventory list for ComboBox selection in the Items grid
+        public ObservableCollection<InventoryItem> InventoryItems { get; } = new();
 
         public decimal Total => Items.Sum(i => i.Total);
 
         public JoborderViewModel(IRepository<Joborder> jobRepo,
                                  IFileRepository fileRepo,
-                                 IGenericPdfGenerator<Joborder> pdfGenerator)
+                                 IGenericPdfGenerator<Joborder> pdfGenerator,
+                                 IRepository<InventoryItem> inventoryRepo,
+                                 IRepository<StockTransaction> txnRepo)
         {
             _jobRepo = jobRepo ?? throw new ArgumentNullException(nameof(jobRepo));
             _fileRepo = fileRepo ?? throw new ArgumentNullException(nameof(fileRepo));
             _pdfGenerator = pdfGenerator ?? throw new ArgumentNullException(nameof(pdfGenerator));
+            _inventoryRepo = inventoryRepo ?? throw new ArgumentNullException(nameof(inventoryRepo));
+            _txnRepo = txnRepo ?? throw new ArgumentNullException(nameof(txnRepo));
 
             _ = LoadJobordersAsync();
         }
@@ -57,6 +72,7 @@ namespace GMSApp.ViewModels.Job
             LeftFileCommand.NotifyCanExecuteChanged();
             RightFileCommand.NotifyCanExecuteChanged();
             PrintCommand.NotifyCanExecuteChanged();
+            CompleteJoborderCommand.NotifyCanExecuteChanged();
         }
 
         private void PopulateItemsFromSelected()
@@ -79,7 +95,9 @@ namespace GMSApp.ViewModels.Job
                             Name = mi.Name,
                             Quantity = mi.Quantity,
                             Price = mi.Price,
-                            JoborderId = mi.JoborderId
+                            JoborderId = mi.JoborderId,
+                            InventoryItemId = mi.InventoryItemId,
+                            InventoryItem = mi.InventoryItem
                         });
                     }
                 }
@@ -92,6 +110,18 @@ namespace GMSApp.ViewModels.Job
         public async Task LoadJobordersAsync()
         {
             Joborders.Clear();
+            InventoryItems.Clear();
+
+            // Load inventory items first
+            try
+            {
+                var inv = await _inventoryRepo.GetAllAsync();
+                foreach (var i in inv) InventoryItems.Add(i);
+            }
+            catch
+            {
+                // ignore - inventory may not be available
+            }
 
             // Try to get the underlying DbContext from the repository to use AsNoTracking + Include
             try
@@ -103,7 +133,11 @@ namespace GMSApp.ViewModels.Job
                     var ctx = ctxField.GetValue(_jobRepo) as DbContext;
                     if (ctx != null)
                     {
-                        var list = await ctx.Set<Joborder>().AsNoTracking().Include(j => j.Items).ToListAsync();
+                        var list = await ctx.Set<Joborder>()
+                                            .AsNoTracking()
+                                            .Include(j => j.Items)
+                                            .ThenInclude(it => it.InventoryItem)
+                                            .ToListAsync();
                         foreach (var j in list) Joborders.Add(j);
                         SelectedJoborder = Joborders.FirstOrDefault();
                         return;
@@ -122,12 +156,11 @@ namespace GMSApp.ViewModels.Job
         }
 
         // Build a Joborder entity from UI (SelectedJoborder fields + Items collection).
-        // baseModel: existing persisted model (used to preserve Id when updating)
         private Joborder BuildJoborderFromUi(Joborder? baseModel = null)
         {
             var job = new Joborder
             {
-                Id = baseModel?.Id ?? 0,
+                Id = baseModel?.Id ?? SelectedJoborder?.Id ?? 0,
                 CustomerName = SelectedJoborder?.CustomerName ?? baseModel?.CustomerName,
                 Phonenumber = SelectedJoborder?.Phonenumber ?? baseModel?.Phonenumber,
                 VehicleNumber = SelectedJoborder?.VehicleNumber ?? baseModel?.VehicleNumber,
@@ -142,7 +175,7 @@ namespace GMSApp.ViewModels.Job
                 LSN = SelectedJoborder?.LSN ?? baseModel?.LSN,
                 RS = SelectedJoborder?.RS ?? baseModel?.RS,
                 RSN = SelectedJoborder?.RSN ?? baseModel?.RSN,
-                Created = baseModel?.Created ?? DateTime.Now
+                Created = baseModel?.Created ?? SelectedJoborder?.Created ?? DateTime.Now
             };
 
             // Add items from UI collection. For existing items keep Id; for new ones Id=0.
@@ -154,9 +187,9 @@ namespace GMSApp.ViewModels.Job
                     Name = ui.Name,
                     Quantity = ui.Quantity,
                     Price = ui.Price,
-                    JoborderId = job.Id // may be 0 for new job; EF will set FK when adding via navigation
+                    JoborderId = job.Id, // may be 0 for new job; EF will set FK when adding via navigation
+                    InventoryItemId = ui.InventoryItemId
                 };
-                // Attach child to job's Items so EF inserts/updates as part of the graph
                 job.Items.Add(child);
             }
 
@@ -168,22 +201,12 @@ namespace GMSApp.ViewModels.Job
         {
             try
             {
-                // Build job from UI. If SelectedJoborder is null, Save empty job with current Items (if any).
                 var newJob = BuildJoborderFromUi(null);
-
-                // For new job, ensure children are linked via navigation so EF can set FK automatically.
-                // The child JoborderId property may be 0; EF will assign after insert.
-
                 await _jobRepo.AddAsync(newJob);
-
                 await LoadJobordersAsync();
 
-                // Select the newly created job (if repository preserved children and lists)
-                SelectedJoborder = Joborders.FirstOrDefault(j =>
-                    j.CustomerName == newJob.CustomerName &&
-                    j.Created.HasValue && newJob.Created.HasValue &&
-                    j.Created.Value.ToString() == newJob.Created.Value.ToString()) // crude match; better to requery in real repo
-                    ?? Joborders.LastOrDefault();
+                // Select the newly created job if possible
+                SelectedJoborder = Joborders.FirstOrDefault(j => j.Id == newJob.Id) ?? Joborders.LastOrDefault();
             }
             catch (Exception ex)
             {
@@ -198,18 +221,14 @@ namespace GMSApp.ViewModels.Job
 
             try
             {
-                // Build a job preserving Id (baseModel = SelectedJoborder)
                 var updated = BuildJoborderFromUi(SelectedJoborder);
 
                 // Remove orphaned JoborderItems (items that exist in DB but were removed in UI)
                 await DeleteOrphanedItemsAsync(SelectedJoborder.Id, Items.Select(i => i.Id).Where(id => id > 0).ToList());
 
-                // Now update the job graph (will add new items, update existing ones)
                 await _jobRepo.UpdateAsync(updated);
-
                 await LoadJobordersAsync();
 
-                // Re-select the updated job
                 SelectedJoborder = Joborders.FirstOrDefault(j => j.Id == updated.Id) ?? Joborders.FirstOrDefault();
             }
             catch (Exception ex)
@@ -218,8 +237,6 @@ namespace GMSApp.ViewModels.Job
             }
         }
 
-        // Deletes item rows present in DB but not present in the provided uiItemIds list.
-        // Uses repository's underlying DbContext if available via reflection; otherwise no-op (best-effort).
         private async Task DeleteOrphanedItemsAsync(int jobOrderId, System.Collections.Generic.List<int> uiItemIds)
         {
             if (jobOrderId <= 0) return;
@@ -242,7 +259,6 @@ namespace GMSApp.ViewModels.Job
                 foreach (var id in toDelete)
                 {
                     var entity = new JoborderItem { Id = id };
-                    // Attach stub and remove to avoid extra query
                     ctx.Entry(entity).State = EntityState.Deleted;
                 }
 
@@ -250,7 +266,7 @@ namespace GMSApp.ViewModels.Job
             }
             catch
             {
-                // ignore failures here; fall back to letting Update handle whatever it can.
+                // ignore failures here
             }
         }
 
@@ -282,7 +298,8 @@ namespace GMSApp.ViewModels.Job
                 Name = string.Empty,
                 Quantity = 1,
                 Price = 0m,
-                JoborderId = SelectedJoborder?.Id ?? 0
+                JoborderId = SelectedJoborder?.Id ?? 0,
+                InventoryItemId = 0 // default: not linked to inventory
             };
             Items.Add(it);
             OnPropertyChanged(nameof(Total));
@@ -303,7 +320,6 @@ namespace GMSApp.ViewModels.Job
 
             try
             {
-                // Act like Update: build job preserving Id and handle orphans
                 var toSave = BuildJoborderFromUi(SelectedJoborder);
 
                 await DeleteOrphanedItemsAsync(SelectedJoborder.Id, Items.Select(i => i.Id).Where(id => id > 0).ToList());
@@ -322,7 +338,95 @@ namespace GMSApp.ViewModels.Job
             }
         }
 
-        // File pickers
+        // NEW: Complete joborder -> consume inventory for items that reference InventoryItemId
+        // Validates stock and creates JobUsage stock transactions; decrements QuantityInStock atomically per item
+        [RelayCommand(CanExecute = nameof(CanModify))]
+        public async Task CompleteJoborderAsync()
+        {
+            if (SelectedJoborder == null) return;
+
+            // Collect items that are linked to inventory
+            var linkedItems = Items.Where(i => i.InventoryItemId > 0).ToList();
+            if (!linkedItems.Any())
+            {
+                var res = MessageBox.Show("No items are linked to inventory. Mark job as completed anyway?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (res != MessageBoxResult.Yes) return;
+            }
+
+            try
+            {
+                // Reload latest inventory data to validate stock levels
+                var inventory = (await _inventoryRepo.GetAllAsync()).ToDictionary(x => x.Id);
+
+                // Check shortages
+                var shortageList = linkedItems
+                    .Where(i => !inventory.ContainsKey(i.InventoryItemId) || inventory[i.InventoryItemId].QuantityInStock < i.Quantity)
+                    .Select(i =>
+                    {
+                        var available = inventory.ContainsKey(i.InventoryItemId) ? inventory[i.InventoryItemId].QuantityInStock : 0;
+                        var name = inventory.ContainsKey(i.InventoryItemId) ? inventory[i.InventoryItemId].Name : $"ItemId {i.InventoryItemId}";
+                        return $"{name}: required {i.Quantity}, available {available}";
+                    }).ToList();
+
+                if (shortageList.Any())
+                {
+                    var msg = "Insufficient stock for the following items:\n" + string.Join("\n", shortageList) + "\n\nPlease adjust quantities or receive stock before completing.";
+                    MessageBox.Show(msg, "Stock shortage", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Save job first (in case new job needs to get Id)
+                var toSave = BuildJoborderFromUi(SelectedJoborder);
+                if (toSave.Id == 0)
+                {
+                    await _jobRepo.AddAsync(toSave);
+                    // reload to get persisted id
+                    await LoadJobordersAsync();
+                    SelectedJoborder = Joborders.FirstOrDefault(j => j.Id == toSave.Id) ?? SelectedJoborder;
+                }
+                else
+                {
+                    await DeleteOrphanedItemsAsync(SelectedJoborder.Id, Items.Select(i => i.Id).Where(id => id > 0).ToList());
+                    await _jobRepo.UpdateAsync(toSave);
+                }
+
+                // Now for each linked item create txn and decrement stock
+                foreach (var ui in linkedItems)
+                {
+                    // Create stock transaction
+                    var txn = new StockTransaction
+                    {
+                        InventoryItemId = ui.InventoryItemId,
+                        TransactionDate = DateTime.UtcNow,
+                        TransactionType = StockTransactionType.JobUsage,
+                        Quantity = ui.Quantity,
+                        UnitPrice = ui.Price,
+                        JobOrderId = SelectedJoborder.Id,
+                        Notes = $"Used in Job {SelectedJoborder.Id}"
+                    };
+
+                    await _txnRepo.AddAsync(txn);
+
+                    // Update inventory item
+                    var item = inventory[ui.InventoryItemId];
+                    item.QuantityInStock -= ui.Quantity;
+                    if (item.QuantityInStock < 0) item.QuantityInStock = 0; // enforce non-negative just in case
+                    item.UpdatedAt = DateTime.UtcNow;
+                    await _inventoryRepo.UpdateAsync(item);
+                }
+
+                // Optionally you can set a "Completed" flag on the job if you have such property.
+                MessageBox.Show("Job completed. Inventory updated and transactions created.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                await LoadJobordersAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to complete joborder: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // File pickers (unchanged)
         [RelayCommand(CanExecute = nameof(CanModify))]
         public void FrontFile()
         {
@@ -375,7 +479,7 @@ namespace GMSApp.ViewModels.Job
             }
         }
 
-        // Print/Generate PDF for selected joborder
+        // Print/Generate PDF for selected joborder (unchanged)
         [RelayCommand(CanExecute = nameof(CanModify))]
         public async Task PrintAsync()
         {
@@ -384,16 +488,9 @@ namespace GMSApp.ViewModels.Job
 
             try
             {
-                // Build a fresh Joborder model containing the current Items (UI edits)
-                var model = BuildJoborderFromUi(SelectedJoborder); // your existing helper that returns Joborder with Items
-
-                // Build file path
+                var model = BuildJoborderFromUi(SelectedJoborder);
                 var temp = Path.Combine(Path.GetTempPath(), $"joborder_{model.Id}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
-
-                // Use the injected PDF generator (ensure DI registers JoborderPdfGenerator for Joborder)
                 await _pdfGenerator.GeneratePdfAsync(new[] { model }, temp);
-
-                // Open the generated PDF using the default system app
                 var psi = new ProcessStartInfo(temp) { UseShellExecute = true };
                 Process.Start(psi);
             }
@@ -406,6 +503,3 @@ namespace GMSApp.ViewModels.Job
         private bool CanModify() => SelectedJoborder != null;
     }
 }
-
-
-
