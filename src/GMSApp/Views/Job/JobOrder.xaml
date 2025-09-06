@@ -5,7 +5,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1100">
-
     <Grid Margin="8">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="360"/>
@@ -120,16 +119,15 @@
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
                                   CanUserDeleteRows="False"
-                                  IsReadOnly="False">
+                                  IsReadOnly="False"
+                                  SelectionUnit="FullRow">
                             <DataGrid.Columns>
-                                <!-- Inventory selection column -->
                                 <DataGridComboBoxColumn Header="Inventory Item"
                                                         SelectedValueBinding="{Binding InventoryItemId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                         SelectedValuePath="Id"
                                                         DisplayMemberPath="Name"
                                                         ItemsSource="{Binding DataContext.InventoryItems, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         Width="300"/>
-                                <!-- Name (editable) -->
                                 <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="220"/>
                                 <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="80"/>
                                 <DataGridTextColumn Header="Price" Binding="{Binding Price, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="100"/>
