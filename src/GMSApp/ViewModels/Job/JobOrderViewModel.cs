@@ -28,6 +28,9 @@ namespace GMSApp.ViewModels.Job
         private readonly IRepository<InventoryItem> _inventoryRepo;
         private readonly IRepository<StockTransaction> _txnRepo;
 
+        // Guard to prevent concurrent duplicate saves
+        private bool _isSaving = false;
+
         public ObservableCollection<Joborder> Joborders { get; } = new();
         // UI collection of job items (uses JoborderItem model which has InventoryItemId)
         public ObservableCollection<JoborderItem> Items { get; } = new();
@@ -123,7 +126,7 @@ namespace GMSApp.ViewModels.Job
                 // ignore - inventory may not be available
             }
 
-            // Try to get the underlying DbContext from the repository to use AsNoTracking + Include
+            // Try to use underlying DbContext for include performance if available
             try
             {
                 var repoType = _jobRepo.GetType();
@@ -175,7 +178,7 @@ namespace GMSApp.ViewModels.Job
                 LSN = SelectedJoborder?.LSN ?? baseModel?.LSN,
                 RS = SelectedJoborder?.RS ?? baseModel?.RS,
                 RSN = SelectedJoborder?.RSN ?? baseModel?.RSN,
-                Created = baseModel?.Created ?? SelectedJoborder?.Created ?? DateTime.Now
+                Created = baseModel?.Created ?? SelectedJoborder?.Created ?? DateTime.UtcNow
             };
 
             // Add items from UI collection. For existing items keep Id; for new ones Id=0.
@@ -196,22 +199,20 @@ namespace GMSApp.ViewModels.Job
             return job;
         }
 
+        // Create a new blank job order in the UI (does NOT persist). This avoids accidentally re-using Items
+        // present in the Items collection when the user wants to create a brand new job.
         [RelayCommand]
-        public async Task AddJoborderAsync()
+        public Task AddJoborderAsync()
         {
-            try
+            // Clear UI items and create a new Joborder template
+            Items.Clear();
+            var newJob = new Joborder
             {
-                var newJob = BuildJoborderFromUi(null);
-                await _jobRepo.AddAsync(newJob);
-                await LoadJobordersAsync();
+                Created = DateTime.UtcNow
+            };
 
-                // Select the newly created job if possible
-                SelectedJoborder = Joborders.FirstOrDefault(j => j.Id == newJob.Id) ?? Joborders.LastOrDefault();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to add joborder: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            SelectedJoborder = newJob;
+            return Task.CompletedTask;
         }
 
         [RelayCommand(CanExecute = nameof(CanModify))]
@@ -280,6 +281,14 @@ namespace GMSApp.ViewModels.Job
 
             try
             {
+                // If the selected job is a template (Id==0 and not persisted), just clear selection
+                if (SelectedJoborder.Id == 0)
+                {
+                    Items.Clear();
+                    SelectedJoborder = null;
+                    return;
+                }
+
                 await _jobRepo.DeleteAsync(SelectedJoborder.Id);
                 SelectedJoborder = null;
                 await LoadJobordersAsync();
@@ -313,28 +322,80 @@ namespace GMSApp.ViewModels.Job
             OnPropertyChanged(nameof(Total));
         }
 
+        // Save joborder: handles both create and update, prevents duplicate creation
         [RelayCommand(CanExecute = nameof(CanModify))]
         public async Task SaveJoborderAsync()
         {
             if (SelectedJoborder == null) return;
 
+            if (_isSaving)
+                return;
+
+            _isSaving = true;
             try
             {
                 var toSave = BuildJoborderFromUi(SelectedJoborder);
 
-                await DeleteOrphanedItemsAsync(SelectedJoborder.Id, Items.Select(i => i.Id).Where(id => id > 0).ToList());
-
+                // If new job (Id==0) then ensure we are not creating duplicates.
                 if (toSave.Id == 0)
-                    await _jobRepo.AddAsync(toSave);
-                else
-                    await _jobRepo.UpdateAsync(toSave);
+                {
+                    // Basic duplicate detection using Created timestamp (within small tolerance) and key identifying fields.
+                    var all = await _jobRepo.GetAllAsync();
+                    bool duplicate = false;
 
-                await LoadJobordersAsync();
-                SelectedJoborder = Joborders.FirstOrDefault(j => j.Id == toSave.Id) ?? SelectedJoborder;
+                    if (toSave.Created != null)
+                    {
+                        // compare Created within 5 seconds + same Customer and Vehicle (if provided)
+                        duplicate = all.Any(j =>
+                            j.Created != null &&
+                            Math.Abs((j.Created.Value - toSave.Created.Value).TotalSeconds) < 5 &&
+                            string.Equals(j.CustomerName?.Trim(), toSave.CustomerName?.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                            string.Equals(j.VehicleNumber?.Trim(), toSave.VehicleNumber?.Trim(), StringComparison.OrdinalIgnoreCase));
+                    }
+
+                    if (duplicate)
+                    {
+                        MessageBox.Show("A similar joborder was recently created. Operation aborted to avoid duplicates.", "Duplicate detected", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        _isSaving = false;
+                        return;
+                    }
+
+                    // Persist
+                    await _jobRepo.AddAsync(toSave);
+
+                    // Reload canonical data and re-select the persisted job.
+                    await LoadJobordersAsync();
+
+                    // Attempt to find the newly persisted job by Created timestamp and customer/vehicle, otherwise fallback to last item
+                    Joborder? persisted = Joborders
+                        .OrderByDescending(j => j.Created ?? DateTime.MinValue)
+                        .FirstOrDefault(j =>
+                            toSave.Created != null &&
+                            j.Created != null &&
+                            Math.Abs((j.Created.Value - toSave.Created.Value).TotalSeconds) < 10 &&
+                            string.Equals(j.CustomerName?.Trim(), toSave.CustomerName?.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                            string.Equals(j.VehicleNumber?.Trim(), toSave.VehicleNumber?.Trim(), StringComparison.OrdinalIgnoreCase));
+
+                    SelectedJoborder = persisted ?? Joborders.FirstOrDefault();
+                }
+                else
+                {
+                    // Existing job - remove orphaned items and update
+                    await DeleteOrphanedItemsAsync(toSave.Id, Items.Select(i => i.Id).Where(id => id > 0).ToList());
+                    await _jobRepo.UpdateAsync(toSave);
+                    await LoadJobordersAsync();
+                    SelectedJoborder = Joborders.FirstOrDefault(j => j.Id == toSave.Id) ?? SelectedJoborder;
+                }
+
+                MessageBox.Show("Joborder saved successfully.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to save joborder: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isSaving = false;
             }
         }
 
@@ -355,6 +416,18 @@ namespace GMSApp.ViewModels.Job
 
             try
             {
+                // Save job first if not persisted
+                if (SelectedJoborder.Id == 0)
+                {
+                    await SaveJoborderAsync();
+                    // reload selected job after save
+                    if (SelectedJoborder == null || SelectedJoborder.Id == 0)
+                    {
+                        MessageBox.Show("Failed to persist joborder before completing.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                }
+
                 // Reload latest inventory data to validate stock levels
                 var inventory = (await _inventoryRepo.GetAllAsync()).ToDictionary(x => x.Id);
 
@@ -373,21 +446,6 @@ namespace GMSApp.ViewModels.Job
                     var msg = "Insufficient stock for the following items:\n" + string.Join("\n", shortageList) + "\n\nPlease adjust quantities or receive stock before completing.";
                     MessageBox.Show(msg, "Stock shortage", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
-                }
-
-                // Save job first (in case new job needs to get Id)
-                var toSave = BuildJoborderFromUi(SelectedJoborder);
-                if (toSave.Id == 0)
-                {
-                    await _jobRepo.AddAsync(toSave);
-                    // reload to get persisted id
-                    await LoadJobordersAsync();
-                    SelectedJoborder = Joborders.FirstOrDefault(j => j.Id == toSave.Id) ?? SelectedJoborder;
-                }
-                else
-                {
-                    await DeleteOrphanedItemsAsync(SelectedJoborder.Id, Items.Select(i => i.Id).Where(id => id > 0).ToList());
-                    await _jobRepo.UpdateAsync(toSave);
                 }
 
                 // Now for each linked item create txn and decrement stock
@@ -415,7 +473,6 @@ namespace GMSApp.ViewModels.Job
                     await _inventoryRepo.UpdateAsync(item);
                 }
 
-                // Optionally you can set a "Completed" flag on the job if you have such property.
                 MessageBox.Show("Job completed. Inventory updated and transactions created.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 await LoadJobordersAsync();
