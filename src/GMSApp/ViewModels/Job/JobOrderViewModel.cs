@@ -4,13 +4,10 @@ using GMSApp.Models;
 using GMSApp.Models.inventory;
 using GMSApp.Models.job;
 using GMSApp.Repositories;
-using GMSApp.Views.Job;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -28,14 +25,11 @@ namespace GMSApp.ViewModels.Job
         private readonly IRepository<InventoryItem> _inventoryRepo;
         private readonly IRepository<StockTransaction> _txnRepo;
 
-        // Guard to prevent concurrent duplicate saves
+        // Guard to prevent concurrent saves/completions
         private bool _isSaving = false;
 
         public ObservableCollection<Joborder> Joborders { get; } = new();
-        // UI collection of job items (uses JoborderItem model which has InventoryItemId)
         public ObservableCollection<JoborderItem> Items { get; } = new();
-
-        // Inventory list for ComboBox selection in the Items grid
         public ObservableCollection<InventoryItem> InventoryItems { get; } = new();
 
         public decimal Total => Items.Sum(i => i.Total);
@@ -55,8 +49,7 @@ namespace GMSApp.ViewModels.Job
             _ = LoadJobordersAsync();
         }
 
-        [ObservableProperty]
-        private Joborder? selectedJoborder;
+        [ObservableProperty] private Joborder? selectedJoborder;
 
         partial void OnSelectedJoborderChanged(Joborder? value)
         {
@@ -67,9 +60,9 @@ namespace GMSApp.ViewModels.Job
         private void UpdateCommandStates()
         {
             AddJoborderCommand.NotifyCanExecuteChanged();
+            SaveJoborderCommand.NotifyCanExecuteChanged();
             UpdateJoborderCommand.NotifyCanExecuteChanged();
             DeleteJoborderCommand.NotifyCanExecuteChanged();
-            SaveJoborderCommand.NotifyCanExecuteChanged();
             FrontFileCommand.NotifyCanExecuteChanged();
             BackFileCommand.NotifyCanExecuteChanged();
             LeftFileCommand.NotifyCanExecuteChanged();
@@ -84,25 +77,21 @@ namespace GMSApp.ViewModels.Job
 
             if (SelectedJoborder == null) return;
 
-            // If Items loaded by EF, use those. Copy into UI collection to allow safe editing.
             if (SelectedJoborder.Items != null)
             {
                 foreach (var mi in SelectedJoborder.Items)
                 {
-                    // Only include items that belong to this job via JoborderId
-                    if (mi.JoborderId == SelectedJoborder.Id)
+                    // Ensure we include items that belong to this job
+                    Items.Add(new JoborderItem
                     {
-                        Items.Add(new JoborderItem
-                        {
-                            Id = mi.Id,
-                            Name = mi.Name,
-                            Quantity = mi.Quantity,
-                            Price = mi.Price,
-                            JoborderId = mi.JoborderId,
-                            InventoryItemId = mi.InventoryItemId,
-                            InventoryItem = mi.InventoryItem
-                        });
-                    }
+                        Id = mi.Id,
+                        Name = mi.Name,
+                        Quantity = mi.Quantity,
+                        Price = mi.Price,
+                        JoborderId = mi.JoborderId,
+                        InventoryItemId = mi.InventoryItemId,
+                        InventoryItem = mi.InventoryItem
+                    });
                 }
             }
 
@@ -115,7 +104,7 @@ namespace GMSApp.ViewModels.Job
             Joborders.Clear();
             InventoryItems.Clear();
 
-            // Load inventory items first
+            // Load inventory
             try
             {
                 var inv = await _inventoryRepo.GetAllAsync();
@@ -123,42 +112,36 @@ namespace GMSApp.ViewModels.Job
             }
             catch
             {
-                // ignore - inventory may not be available
+                // ignore
             }
 
-            // Try to use underlying DbContext for include performance if available
+            // Try to use DbContext for efficient Include; fallback to repo
             try
             {
-                var repoType = _jobRepo.GetType();
-                var ctxField = repoType.GetField("_context", BindingFlags.Instance | BindingFlags.NonPublic);
-                if (ctxField != null)
+                var ctx = TryGetDbContext();
+                if (ctx != null)
                 {
-                    var ctx = ctxField.GetValue(_jobRepo) as DbContext;
-                    if (ctx != null)
-                    {
-                        var list = await ctx.Set<Joborder>()
-                                            .AsNoTracking()
-                                            .Include(j => j.Items)
-                                            .ThenInclude(it => it.InventoryItem)
-                                            .ToListAsync();
-                        foreach (var j in list) Joborders.Add(j);
-                        SelectedJoborder = Joborders.FirstOrDefault();
-                        return;
-                    }
+                    var list = await ctx.Set<Joborder>()
+                                        .AsNoTracking()
+                                        .Include(j => j.Items)
+                                        .ThenInclude(it => it.InventoryItem)
+                                        .OrderByDescending(j => j.Created)
+                                        .ToListAsync();
+                    foreach (var j in list) Joborders.Add(j);
+                    SelectedJoborder = Joborders.FirstOrDefault();
+                    return;
                 }
             }
             catch
             {
-                // ignore and fall back to repository
+                // ignore
             }
 
-            // Fallback - repository.GetAllAsync()
             var all = await _jobRepo.GetAllAsync();
             foreach (var j in all) Joborders.Add(j);
             SelectedJoborder = Joborders.FirstOrDefault();
         }
 
-        // Build a Joborder entity from UI (SelectedJoborder fields + Items collection).
         private Joborder BuildJoborderFromUi(Joborder? baseModel = null)
         {
             var job = new Joborder
@@ -181,16 +164,15 @@ namespace GMSApp.ViewModels.Job
                 Created = baseModel?.Created ?? SelectedJoborder?.Created ?? DateTime.UtcNow
             };
 
-            // Add items from UI collection. For existing items keep Id; for new ones Id=0.
             foreach (var ui in Items)
             {
                 var child = new JoborderItem
                 {
-                    Id = ui.Id, // 0 for new items
+                    Id = ui.Id,
                     Name = ui.Name,
                     Quantity = ui.Quantity,
                     Price = ui.Price,
-                    JoborderId = job.Id, // may be 0 for new job; EF will set FK when adding via navigation
+                    JoborderId = job.Id,
                     InventoryItemId = ui.InventoryItemId
                 };
                 job.Items.Add(child);
@@ -199,18 +181,12 @@ namespace GMSApp.ViewModels.Job
             return job;
         }
 
-        // Create a new blank job order in the UI (does NOT persist). This avoids accidentally re-using Items
-        // present in the Items collection when the user wants to create a brand new job.
         [RelayCommand]
         public Task AddJoborderAsync()
         {
-            // Clear UI items and create a new Joborder template
+            // Prepare a new blank job/template in UI (not persisted)
             Items.Clear();
-            var newJob = new Joborder
-            {
-                Created = DateTime.UtcNow
-            };
-
+            var newJob = new Joborder { Created = DateTime.UtcNow };
             SelectedJoborder = newJob;
             return Task.CompletedTask;
         }
@@ -219,18 +195,33 @@ namespace GMSApp.ViewModels.Job
         public async Task UpdateJoborderAsync()
         {
             if (SelectedJoborder == null) return;
+            if (SelectedJoborder.Id == 0)
+            {
+                // If it's not persisted yet, Save should be used
+                MessageBox.Show("This is a new job. Use Save to persist it first.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
 
             try
             {
                 var updated = BuildJoborderFromUi(SelectedJoborder);
-
-                // Remove orphaned JoborderItems (items that exist in DB but were removed in UI)
+                // Remove orphaned items
                 await DeleteOrphanedItemsAsync(SelectedJoborder.Id, Items.Select(i => i.Id).Where(id => id > 0).ToList());
 
-                await _jobRepo.UpdateAsync(updated);
-                await LoadJobordersAsync();
+                var ctx = TryGetDbContext();
+                if (ctx != null)
+                {
+                    ctx.Update(updated);
+                    await ctx.SaveChangesAsync();
+                }
+                else
+                {
+                    await _jobRepo.UpdateAsync(updated);
+                }
 
-                SelectedJoborder = Joborders.FirstOrDefault(j => j.Id == updated.Id) ?? Joborders.FirstOrDefault();
+                await LoadJobordersAsync();
+                SelectedJoborder = Joborders.FirstOrDefault(j => j.Id == updated.Id) ?? SelectedJoborder;
+                MessageBox.Show("Joborder updated.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
@@ -244,16 +235,11 @@ namespace GMSApp.ViewModels.Job
 
             try
             {
-                var repoType = _jobRepo.GetType();
-                var ctxField = repoType.GetField("_context", BindingFlags.Instance | BindingFlags.NonPublic);
-                if (ctxField == null) return;
-
-                var ctx = ctxField.GetValue(_jobRepo) as DbContext;
+                var ctx = TryGetDbContext();
                 if (ctx == null) return;
 
                 var dbSet = ctx.Set<JoborderItem>();
                 var existingIds = await dbSet.Where(i => i.JoborderId == jobOrderId).Select(i => i.Id).ToListAsync();
-
                 var toDelete = existingIds.Except(uiItemIds).ToList();
                 if (!toDelete.Any()) return;
 
@@ -267,7 +253,7 @@ namespace GMSApp.ViewModels.Job
             }
             catch
             {
-                // ignore failures here
+                // ignore
             }
         }
 
@@ -281,7 +267,6 @@ namespace GMSApp.ViewModels.Job
 
             try
             {
-                // If the selected job is a template (Id==0 and not persisted), just clear selection
                 if (SelectedJoborder.Id == 0)
                 {
                     Items.Clear();
@@ -289,7 +274,18 @@ namespace GMSApp.ViewModels.Job
                     return;
                 }
 
-                await _jobRepo.DeleteAsync(SelectedJoborder.Id);
+                var ctx = TryGetDbContext();
+                if (ctx != null)
+                {
+                    var stub = new Joborder { Id = SelectedJoborder.Id };
+                    ctx.Entry(stub).State = EntityState.Deleted;
+                    await ctx.SaveChangesAsync();
+                }
+                else
+                {
+                    await _jobRepo.DeleteAsync(SelectedJoborder.Id);
+                }
+
                 SelectedJoborder = null;
                 await LoadJobordersAsync();
             }
@@ -308,7 +304,7 @@ namespace GMSApp.ViewModels.Job
                 Quantity = 1,
                 Price = 0m,
                 JoborderId = SelectedJoborder?.Id ?? 0,
-                InventoryItemId = 0 // default: not linked to inventory
+                InventoryItemId = 0
             };
             Items.Add(it);
             OnPropertyChanged(nameof(Total));
@@ -322,72 +318,34 @@ namespace GMSApp.ViewModels.Job
             OnPropertyChanged(nameof(Total));
         }
 
-        // Save joborder: handles both create and update, prevents duplicate creation
         [RelayCommand(CanExecute = nameof(CanModify))]
         public async Task SaveJoborderAsync()
         {
             if (SelectedJoborder == null) return;
-
-            if (_isSaving)
-                return;
+            if (_isSaving) return;
 
             _isSaving = true;
             try
             {
                 var toSave = BuildJoborderFromUi(SelectedJoborder);
 
-                // If new job (Id==0) then ensure we are not creating duplicates.
-                if (toSave.Id == 0)
+                // Persist using DbContext if available to ensure children are handled properly
+                var ctx = TryGetDbContext();
+                if (ctx != null)
                 {
-                    // Basic duplicate detection using Created timestamp (within small tolerance) and key identifying fields.
-                    var all = await _jobRepo.GetAllAsync();
-                    bool duplicate = false;
-
-                    if (toSave.Created != null)
-                    {
-                        // compare Created within 5 seconds + same Customer and Vehicle (if provided)
-                        duplicate = all.Any(j =>
-                            j.Created != null &&
-                            Math.Abs((j.Created.Value - toSave.Created.Value).TotalSeconds) < 5 &&
-                            string.Equals(j.CustomerName?.Trim(), toSave.CustomerName?.Trim(), StringComparison.OrdinalIgnoreCase) &&
-                            string.Equals(j.VehicleNumber?.Trim(), toSave.VehicleNumber?.Trim(), StringComparison.OrdinalIgnoreCase));
-                    }
-
-                    if (duplicate)
-                    {
-                        MessageBox.Show("A similar joborder was recently created. Operation aborted to avoid duplicates.", "Duplicate detected", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        _isSaving = false;
-                        return;
-                    }
-
-                    // Persist
-                    await _jobRepo.AddAsync(toSave);
-
-                    // Reload canonical data and re-select the persisted job.
-                    await LoadJobordersAsync();
-
-                    // Attempt to find the newly persisted job by Created timestamp and customer/vehicle, otherwise fallback to last item
-                    Joborder? persisted = Joborders
-                        .OrderByDescending(j => j.Created ?? DateTime.MinValue)
-                        .FirstOrDefault(j =>
-                            toSave.Created != null &&
-                            j.Created != null &&
-                            Math.Abs((j.Created.Value - toSave.Created.Value).TotalSeconds) < 10 &&
-                            string.Equals(j.CustomerName?.Trim(), toSave.CustomerName?.Trim(), StringComparison.OrdinalIgnoreCase) &&
-                            string.Equals(j.VehicleNumber?.Trim(), toSave.VehicleNumber?.Trim(), StringComparison.OrdinalIgnoreCase));
-
-                    SelectedJoborder = persisted ?? Joborders.FirstOrDefault();
+                    ctx.Add(toSave);
+                    await ctx.SaveChangesAsync();
                 }
                 else
                 {
-                    // Existing job - remove orphaned items and update
-                    await DeleteOrphanedItemsAsync(toSave.Id, Items.Select(i => i.Id).Where(id => id > 0).ToList());
-                    await _jobRepo.UpdateAsync(toSave);
-                    await LoadJobordersAsync();
-                    SelectedJoborder = Joborders.FirstOrDefault(j => j.Id == toSave.Id) ?? SelectedJoborder;
+                    await _jobRepo.AddAsync(toSave);
                 }
 
-                MessageBox.Show("Joborder saved successfully.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                // Reload and select the persisted job by Id
+                await LoadJobordersAsync();
+                SelectedJoborder = Joborders.FirstOrDefault(j => j.Id == toSave.Id) ?? Joborders.FirstOrDefault();
+
+                MessageBox.Show("Joborder saved.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
@@ -399,14 +357,11 @@ namespace GMSApp.ViewModels.Job
             }
         }
 
-        // NEW: Complete joborder -> consume inventory for items that reference InventoryItemId
-        // Validates stock and creates JobUsage stock transactions; decrements QuantityInStock atomically per item
         [RelayCommand(CanExecute = nameof(CanModify))]
         public async Task CompleteJoborderAsync()
         {
             if (SelectedJoborder == null) return;
 
-            // Collect items that are linked to inventory
             var linkedItems = Items.Where(i => i.InventoryItemId > 0).ToList();
             if (!linkedItems.Any())
             {
@@ -416,11 +371,9 @@ namespace GMSApp.ViewModels.Job
 
             try
             {
-                // Save job first if not persisted
                 if (SelectedJoborder.Id == 0)
                 {
                     await SaveJoborderAsync();
-                    // reload selected job after save
                     if (SelectedJoborder == null || SelectedJoborder.Id == 0)
                     {
                         MessageBox.Show("Failed to persist joborder before completing.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -428,10 +381,8 @@ namespace GMSApp.ViewModels.Job
                     }
                 }
 
-                // Reload latest inventory data to validate stock levels
                 var inventory = (await _inventoryRepo.GetAllAsync()).ToDictionary(x => x.Id);
 
-                // Check shortages
                 var shortageList = linkedItems
                     .Where(i => !inventory.ContainsKey(i.InventoryItemId) || inventory[i.InventoryItemId].QuantityInStock < i.Quantity)
                     .Select(i =>
@@ -448,10 +399,8 @@ namespace GMSApp.ViewModels.Job
                     return;
                 }
 
-                // Now for each linked item create txn and decrement stock
                 foreach (var ui in linkedItems)
                 {
-                    // Create stock transaction
                     var txn = new StockTransaction
                     {
                         InventoryItemId = ui.InventoryItemId,
@@ -465,10 +414,9 @@ namespace GMSApp.ViewModels.Job
 
                     await _txnRepo.AddAsync(txn);
 
-                    // Update inventory item
                     var item = inventory[ui.InventoryItemId];
                     item.QuantityInStock -= ui.Quantity;
-                    if (item.QuantityInStock < 0) item.QuantityInStock = 0; // enforce non-negative just in case
+                    if (item.QuantityInStock < 0) item.QuantityInStock = 0;
                     item.UpdatedAt = DateTime.UtcNow;
                     await _inventoryRepo.UpdateAsync(item);
                 }
@@ -483,7 +431,6 @@ namespace GMSApp.ViewModels.Job
             }
         }
 
-        // File pickers (unchanged)
         [RelayCommand(CanExecute = nameof(CanModify))]
         public void FrontFile()
         {
@@ -536,12 +483,10 @@ namespace GMSApp.ViewModels.Job
             }
         }
 
-        // Print/Generate PDF for selected joborder (unchanged)
         [RelayCommand(CanExecute = nameof(CanModify))]
         public async Task PrintAsync()
         {
-            if (SelectedJoborder == null)
-                return;
+            if (SelectedJoborder == null) return;
 
             try
             {
@@ -558,5 +503,21 @@ namespace GMSApp.ViewModels.Job
         }
 
         private bool CanModify() => SelectedJoborder != null;
+
+        // Try to get underlying DbContext from repository via reflection (returns null if not available)
+        private DbContext? TryGetDbContext()
+        {
+            try
+            {
+                var repoType = _jobRepo.GetType();
+                var ctxField = repoType.GetField("_context", BindingFlags.Instance | BindingFlags.NonPublic);
+                if (ctxField == null) return null;
+                return ctxField.GetValue(_jobRepo) as DbContext;
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }
