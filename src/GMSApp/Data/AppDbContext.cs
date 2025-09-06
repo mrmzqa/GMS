@@ -1,5 +1,6 @@
 ﻿using GMSApp.Models;
 using GMSApp.Models.account;
+using GMSApp.Models.inventory;
 using GMSApp.Models.invoice;
 using GMSApp.Models.job;
 using GMSApp.Models.payment;
@@ -49,6 +50,10 @@ namespace GMSApp.Data
         public DbSet<GeneralLedgerEntry> GeneralLedgerEntries  { get; set; }
 
         public DbSet<GeneralLedgerLine> GeneralLedgerLines { get; set; }
+
+        public DbSet<InventoryItem> InventoryItems { get; set; }
+
+        public DbSet<StockTransaction> StockTransactions { get; set; }
 
         /*protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
