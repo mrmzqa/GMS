@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GMSApp.ViewModels.Inventory;
+using GMSApp.ViewModels.Job;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +25,13 @@ namespace GMSApp.Views.Inventory
         public InventoryItem()
         {
             InitializeComponent();
+        }
+    
+
+        // Use this ctor when resolving the VM via DI so DataContext is set automatically.
+        public InventoryItem(InventoryItemViewModel viewModel) : this()
+        {
+            DataContext = viewModel;
         }
     }
 }

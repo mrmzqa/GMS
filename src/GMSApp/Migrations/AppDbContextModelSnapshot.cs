@@ -523,9 +523,8 @@ namespace GMSApp.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Currency")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -562,9 +561,8 @@ namespace GMSApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Unit")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Unit")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -880,6 +878,9 @@ namespace GMSApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("InventoryItemId")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("LineTotal")
                         .HasColumnType("decimal(18,2)");
 
@@ -905,6 +906,8 @@ namespace GMSApp.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("InventoryItemId");
 
                     b.HasIndex("PurchaseOrderId");
 
@@ -1178,11 +1181,19 @@ namespace GMSApp.Migrations
 
             modelBuilder.Entity("GMSApp.Models.purchase.PurchaseOrderLine", b =>
                 {
+                    b.HasOne("GMSApp.Models.inventory.InventoryItem", "InventoryItem")
+                        .WithMany()
+                        .HasForeignKey("InventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("GMSApp.Models.purchase.PurchaseOrder", null)
                         .WithMany("Lines")
                         .HasForeignKey("PurchaseOrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("InventoryItem");
                 });
 
             modelBuilder.Entity("GMSApp.Models.quotation.QuotationItem", b =>

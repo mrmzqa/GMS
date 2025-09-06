@@ -13,6 +13,8 @@ using Serilog;
 using System;
 using System.Windows;
 using GMSApp.Views.Accounting;
+using GMSApp.ViewModels.Inventory;
+using GMSApp.Views.Inventory;
 namespace GMSApp;
 
 public partial class App : Application
@@ -30,7 +32,7 @@ public partial class App : Application
             {
                 // DbContext: keep your connection string here or use context.Configuration.GetConnectionString("DefaultConnection")
                 services.AddDbContext<AppDbContext>(options =>
-                    options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=G;Trusted_Connection=True;"));
+                    options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=Db;Trusted_Connection=True;"));
                 /* services.AddDbContext<AppDbContext>(options =>
                      options.UseSqlite("Data Source=db.db; Cache=Shared"));*/
                 // Repositories
@@ -57,11 +59,15 @@ public partial class App : Application
                 services.AddTransient<AccountReconcileViewModel>();
                 services.AddTransient<ChartOfAccountViewModel>();
                 services.AddTransient<GeneralLedgerViewModel>();
+                services.AddTransient<JobUsageViewModel>();
+                services.AddTransient<InventoryItemViewModel>();
+                services.AddTransient<StockTransactionViewModel>();
 
                 // Views - transient
 
                 services.AddTransient<MainWindow>();
                 services.AddTransient<JobContentView>();
+                services.AddTransient<InventoryContentView>();
                 services.AddTransient<HContentView>();
                 services.AddTransient<AcContentView>();
                 services.AddTransient<VendorView>();
@@ -76,6 +82,9 @@ public partial class App : Application
                 services.AddTransient<AccountReconcile>();
                 services.AddTransient<ChartofAccount>();
                 services.AddTransient<GeneralLedger>();
+                services.AddTransient<StockTransaction>();
+                services.AddTransient<JobUsage>();
+                services.AddTransient<InventoryItem>();
             })
             .UseSerilog()
             .Build();

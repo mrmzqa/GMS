@@ -33,8 +33,8 @@
         </Border>
 
         <GridSplitter Grid.Column="1" Width="4"/>
-        <Border Grid.Column="2" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4" Margin="0,0,10,0">
-            <StackPanel Margin="0,0,146,0" >
+        <Border Grid.Column="2" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4" Margin="0,0,-13,0">
+            <StackPanel Margin="0,0,133,0" >
                 <TextBlock Text="Add Manual Adjustment / Return" FontWeight="Bold" Margin="0,0,0,8"/>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                     <TextBlock Text="Item:" Width="120" VerticalAlignment="Center"/>
@@ -46,7 +46,6 @@
                     <ComboBox x:Name="TypeCombo" Width="200">
                         <ComboBoxItem Tag="Purchase">Purchase</ComboBoxItem>
                         <ComboBoxItem Tag="JobUsage">JobUsage</ComboBoxItem>
-                        <ComboBoxItem Tag="Adjustment">Adjustment</ComboBoxItem>
                         <ComboBoxItem Tag="Return">Return</ComboBoxItem>
                     </ComboBox>
                 </StackPanel>
@@ -63,9 +62,7 @@
                     <TextBox x:Name="NotesBox" Width="270" Height="60" TextWrapping="Wrap"/>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-                    <Button Content="Add" Width="100" Click="Add_Click"/>
-                </StackPanel>
+                
             </StackPanel>
         </Border>
     </Grid>

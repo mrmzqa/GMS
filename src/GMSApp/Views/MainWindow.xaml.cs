@@ -1,15 +1,14 @@
 using GmsApp.Views;
 using GMSApp.ViewModels;
 using GMSApp.Views;
+using GMSApp.Views.Inventory;
 using GMSApp.Views.Job;
 using System.Windows;
 using System.Windows.Controls;
 
 namespace GMSApp.Views
 {
-    
-
-        public partial class MainWindow : Window
+   public partial class MainWindow : Window
         {
             private readonly MainViewModel _viewModel;
         private readonly FilesPage _filesPage;
@@ -19,11 +18,13 @@ namespace GMSApp.Views
         private readonly HContentView _hContentView;
         private readonly AcContentView _acContentView;
         private readonly VendorView _vendorView;
-        public MainWindow(FilesPage filesPage, Garage Garage, PurchaseOrder purchaseOrderpage, JobContentView jobContentView, VendorView vendorView, HContentView hContentView, AcContentView acContentView)
+        private readonly InventoryContentView _inventory;
+        public MainWindow(FilesPage filesPage, Garage Garage, PurchaseOrder purchaseOrderpage, JobContentView jobContentView, VendorView vendorView, HContentView hContentView, AcContentView acContentView, InventoryContentView inventory )
         {
             
             InitializeComponent();
             _filesPage = filesPage;
+            _inventory = inventory;
             _Garage = Garage;
             _purchaseOrder = purchaseOrderpage;
             _jobContentView = jobContentView;
@@ -99,8 +100,12 @@ namespace GMSApp.Views
         {
             MainContent.Content = _vendorView;
         }
+        private void In_click(object sender, RoutedEventArgs e)
+        {
+            MainContent.Content = _inventory;
+        }
     }
-    }
+}
 
 
 

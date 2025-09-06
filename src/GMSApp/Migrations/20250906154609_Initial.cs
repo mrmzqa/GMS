@@ -330,10 +330,10 @@ namespace GMSApp.Migrations
                     SubCategory = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     QuantityInStock = table.Column<int>(type: "int", nullable: false),
                     ReorderLevel = table.Column<int>(type: "int", nullable: false),
-                    Unit = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Unit = table.Column<int>(type: "int", nullable: false),
                     CostPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     SellingPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    Currency = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Currency = table.Column<int>(type: "int", nullable: false),
                     VendorId = table.Column<int>(type: "int", nullable: true),
                     Location = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LastRestocked = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -493,11 +493,18 @@ namespace GMSApp.Migrations
                     LineTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Unit = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    QuantityDelivered = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                    QuantityDelivered = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    InventoryItemId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PurchaseOrderLines", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PurchaseOrderLines_InventoryItem_InventoryItemId",
+                        column: x => x.InventoryItemId,
+                        principalTable: "InventoryItem",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_PurchaseOrderLines_PurchaseOrders_PurchaseOrderId",
                         column: x => x.PurchaseOrderId,
@@ -661,6 +668,11 @@ namespace GMSApp.Migrations
                 name: "IX_PaymentReceipts_VendorId",
                 table: "PaymentReceipts",
                 column: "VendorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PurchaseOrderLines_InventoryItemId",
+                table: "PurchaseOrderLines",
+                column: "InventoryItemId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PurchaseOrderLines_PurchaseOrderId",

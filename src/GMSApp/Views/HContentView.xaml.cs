@@ -24,5 +24,7 @@ namespace GMSApp.Views
         {
             InitializeComponent();
         }
+
+
     }
 }

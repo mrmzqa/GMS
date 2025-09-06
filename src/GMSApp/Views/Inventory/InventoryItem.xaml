@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:GMSApp.Views.Inventory"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" Width="1065">
     <Grid Margin="8">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="360"/>
@@ -70,7 +70,7 @@
                     <TextBox Text="{Binding SelectedItem.SellingPrice, Mode=TwoWay, StringFormat=N2}" Width="140"/>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,200,0">
                     <TextBlock Text="Last restocked:" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <TextBlock Text="{Binding SelectedItem.LastRestocked, StringFormat=\{0:yyyy-MM-dd\}}" VerticalAlignment="Center"/>
                 </StackPanel>

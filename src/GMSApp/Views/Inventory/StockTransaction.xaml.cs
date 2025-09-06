@@ -27,27 +27,6 @@ namespace GMSApp.Views.Inventory
             InitializeComponent();
         }
 
-        private async void Add_Click(object sender, RoutedEventArgs e)
-        {
-            if (!(DataContext is StockTransactionViewModel vm)) return;
-
-            if (ItemCombo.SelectedValue == null)
-            {
-                MessageBox.Show("Select an item first.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!(int.TryParse(QtyBox.Text, out int qty))) { MessageBox.Show("Invalid quantity."); return; }
-            if (!(decimal.TryParse(PriceBox.Text, out decimal price))) { MessageBox.Show("Invalid unit price."); return; }
-
-            var selectedTag = (TypeCombo.SelectedItem as ComboBoxItem)?.Tag?.ToString();
-            if (!Enum.TryParse(selectedTag, out StockTransactionType type))
-            {
-                MessageBox.Show("Select a valid type.");
-                return;
-            }
-
-            await vm.AddAdjustmentAsync((int)ItemCombo.SelectedValue, type, qty, price, NotesBox.Text ?? string.Empty);
-        }
+       
     }
 }

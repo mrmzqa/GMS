@@ -96,6 +96,7 @@
                     <Button Content="HRMS" Click="HContent_Click" Margin="10" />
                     <Button Content="Accounts" Click="AContent_Click" Margin="10" />
                     <Button Content="Garage" Click="GarageButton_Click" Margin="10" />
+                    <Button Content="Inventory" Click="In_click" Margin="10" />
                 </StackPanel>
 
                 <!-- Main Content Area -->
